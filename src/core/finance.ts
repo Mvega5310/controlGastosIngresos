@@ -119,6 +119,31 @@ export const dailySeries = (movements: Movement[], p: Period): DailyPoint[] => {
   return points
 }
 
+/** Fecha de hoy en formato AAAA-MM-DD, en la zona horaria del dispositivo. */
+export const todayISO = (today = new Date()) =>
+  `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+
+export type DayCell = { date: string; day: number; inMonth: boolean }
+
+/**
+ * Rejilla del mes empezando en lunes, con los días de relleno del mes anterior
+ * y el siguiente. Devuelve 35 celdas cuando el mes cabe en cinco semanas y 42
+ * cuando necesita seis, en vez del desplazamiento fijo que había antes.
+ */
+export const monthGrid = (p: Period): DayCell[] => {
+  const firstWeekday = (new Date(p.year, p.month - 1, 1).getDay() + 6) % 7 // lunes = 0
+  const cells: DayCell[] = []
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(p.year, p.month - 1, 1 - firstWeekday + i)
+    cells.push({
+      date: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
+      day: d.getDate(),
+      inMonth: d.getMonth() === p.month - 1 && d.getFullYear() === p.year
+    })
+  }
+  return cells.slice(35).some(c => c.inMonth) ? cells : cells.slice(0, 35)
+}
+
 /** Más recientes primero; a igualdad de fecha, el último registrado va antes. */
 export const byDateDesc = (a: Movement, b: Movement) =>
   a.date === b.date ? b.id.localeCompare(a.id) : b.date.localeCompare(a.date)
