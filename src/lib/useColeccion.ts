@@ -1,38 +1,60 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { newId } from '../core/finance'
+import { Registro, sellar, sellarBorrado, vivos } from '../core/sincronizacion'
 
 /**
  * Colección guardada en el navegador, con alta, edición y baja.
  *
- * Es el mismo patrón que ya usaban los movimientos, extraído para que las seis
- * secciones nuevas no repitan la lectura y escritura de localStorage. Cuando
- * llegue la sincronización en la nube, se sustituye aquí y las vistas no cambian.
+ * Cada escritura deja marca de tiempo y cada baja deja rastro, que es lo que
+ * la sincronización entre dispositivos necesitará para saber qué versión es
+ * la buena y para enterarse de lo que se borró en el otro aparato. Las vistas
+ * solo ven los registros vivos.
+ *
+ * Los registros de ejemplo no se sellan a propósito: sin marca cuentan como
+ * lo más antiguo posible, así que cualquier edición real les gana.
  */
 export function useColeccion<T extends { id: string }>(clave: string, iniciales: T[]) {
-  const [items, setItems] = useState<T[]>(() => {
+  type Fila = T & Partial<Registro>
+
+  const [todos, setTodos] = useState<Fila[]>(() => {
     try {
       const guardado = localStorage.getItem(clave)
-      if (!guardado) return iniciales
+      if (!guardado) return iniciales as Fila[]
       const leido = JSON.parse(guardado)
-      return Array.isArray(leido) ? leido : iniciales
-    } catch { return iniciales }
+      return Array.isArray(leido) ? leido : (iniciales as Fila[])
+    } catch { return iniciales as Fila[] }
   })
 
   useEffect(() => {
-    try { localStorage.setItem(clave, JSON.stringify(items)) } catch { /* modo privado */ }
-  }, [clave, items])
+    try { localStorage.setItem(clave, JSON.stringify(todos)) } catch { /* modo privado */ }
+  }, [clave, todos])
+
+  /** Lo que ven las vistas: sin los borrados. */
+  const items = useMemo(() => vivos(todos) as T[], [todos])
 
   const agregar = useCallback((datos: Omit<T, 'id'>) => {
-    setItems(previos => [...previos, { ...datos, id: newId() } as T])
+    setTodos(previos => [...previos, sellar({ ...datos, id: newId() } as T)])
+  }, [])
+
+  /** Alta de varios registros ya formados, como los dos apuntes de un traslado. */
+  const agregarVarios = useCallback((registros: T[]) => {
+    setTodos(previos => [...registros.map(r => sellar(r)), ...previos])
   }, [])
 
   const actualizar = useCallback((id: string, cambios: Partial<T>) => {
-    setItems(previos => previos.map(x => x.id === id ? { ...x, ...cambios } : x))
+    setTodos(previos => previos.map(x => x.id === id ? sellar({ ...x, ...cambios }) : x))
   }, [])
 
   const eliminar = useCallback((id: string) => {
-    setItems(previos => previos.filter(x => x.id !== id))
+    setTodos(previos => previos.map(x => x.id === id ? sellarBorrado({ ...x, actualizadoEn: x.actualizadoEn || '' }) : x))
   }, [])
 
-  return { items, agregar, actualizar, eliminar }
+  const eliminarVarios = useCallback((ids: string[]) => {
+    if (!ids.length) return
+    const fuera = new Set(ids)
+    setTodos(previos => previos.map(x =>
+      fuera.has(x.id) ? sellarBorrado({ ...x, actualizadoEn: x.actualizadoEn || '' }) : x))
+  }, [])
+
+  return { items, todos, agregar, agregarVarios, actualizar, eliminar, eliminarVarios }
 }

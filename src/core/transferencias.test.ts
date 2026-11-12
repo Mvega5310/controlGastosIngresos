@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { crearApuntes, quitarMovimiento, apuntesVisibles, accountBalance, totalBalance, totalsFor } from './finance'
+import { crearApuntes, quitarMovimiento, idsAEliminar, apuntesVisibles, accountBalance, totalBalance, totalsFor } from './finance'
 import { aCentavos } from './dinero'
 import { Account, Movement } from '../data/mock'
 
@@ -118,5 +118,25 @@ describe('apuntesVisibles', () => {
       { id: 'c', title: 'T', category: 'Otros', account: 'Cuenta principal', date: '2026-11-03', amount: 1, type: 'Transferencia' }
     ]
     expect(apuntesVisibles(otros)).toHaveLength(3)
+  })
+})
+
+describe('idsAEliminar', () => {
+  it('de un traslado devuelve sus dos apuntes', () => {
+    const t = alta()
+    expect(idsAEliminar(t, t[0].id).sort()).toEqual([t[0].id, t[1].id].sort())
+    expect(idsAEliminar(t, t[1].id).sort()).toEqual([t[0].id, t[1].id].sort())
+  })
+
+  it('de un gasto devuelve solo el suyo', () => {
+    const g = crearApuntes({
+      title: 'Mercado', category: 'Alimentación', account: 'Cuenta principal',
+      date: '2026-11-03', amount: aCentavos(285000), type: 'Gasto'
+    })
+    expect(idsAEliminar([...g, ...alta()], g[0].id)).toEqual([g[0].id])
+  })
+
+  it('de un identificador que no existe no devuelve nada', () => {
+    expect(idsAEliminar(alta(), 'no-existe')).toEqual([])
   })
 })

@@ -4,24 +4,25 @@ import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis } f
 import Sidebar from './components/Sidebar'
 import StatCard from './components/StatCard'
 import Modal from './components/Modal'
+import { useColeccion } from './lib/useColeccion'
 import { Presupuestos, Suscripciones, Deudas, Metas } from './secciones/Planificacion'
 import { Inversiones, Transporte, Reportes } from './secciones/Patrimonio'
 import { initialMovements, money, Movement, accounts } from './data/mock'
 import { Period, Totals, periodOf, periodLabel, shiftPeriod, longDate, totalsFor, totalBalance,
   accountBalance, change, dailySeries, byDateDesc, monthGrid, todayISO, inPeriod,
-  crearApuntes, quitarMovimiento, apuntesVisibles, NuevoMovimiento } from './core/finance'
+  crearApuntes, idsAEliminar, apuntesVisibles, NuevoMovimiento } from './core/finance'
 
 const fmtDate=(d:string)=>new Date(d+'T12:00:00').toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'})
 function App(){
  const [period,setPeriod]=useState<Period>(()=>periodOf(new Date()))
  const [active,setActive]=useState('Inicio'),[dark,setDark]=useState(()=>{try{const v=localStorage.getItem('fc-theme');if(v)return v==='dark';return window.matchMedia('(prefers-color-scheme: dark)').matches}catch{return false}}),[sidebarOpen,setSidebarOpen]=useState(false),[modal,setModal]=useState(false),[query,setQuery]=useState(''),[filter,setFilter]=useState('Todos')
- const [movements,setMovements]=useState<Movement[]>(()=>{try{return JSON.parse(localStorage.getItem('fc-movements')||'null')||initialMovements}catch{return initialMovements}})
- useEffect(()=>{localStorage.setItem('fc-movements',JSON.stringify(movements))},[movements])
+ const movs=useColeccion<Movement>('fc-movements',initialMovements)
+ const movements=movs.items
  useEffect(()=>{try{localStorage.setItem('fc-theme',dark?'dark':'light')}catch{/* modo privado */}},[dark])
  const totals=useMemo(()=>totalsFor(movements,period),[movements,period])
  const previous=useMemo(()=>totalsFor(movements,shiftPeriod(period,-1)),[movements,period])
- const addMovement=(m:NuevoMovimiento)=>setMovements(p=>[...crearApuntes(m),...p])
- const eliminarMovimiento=(id:string)=>setMovements(p=>quitarMovimiento(p,id))
+ const addMovement=(m:NuevoMovimiento)=>movs.agregarVarios(crearApuntes(m))
+ const eliminarMovimiento=(id:string)=>movs.eliminarVarios(idsAEliminar(movements,id))
  const filtered=apuntesVisibles(movements).sort(byDateDesc).filter(m=>(filter==='Todos'||m.type===filter)&&`${m.title} ${m.category} ${m.account}`.toLowerCase().includes(query.toLowerCase()))
  const go=(s:string)=>setActive(s)
  return <div className={`app ${dark?'dark':''}`}><Sidebar active={active} onNavigate={go} open={sidebarOpen} onClose={()=>setSidebarOpen(false)}/>

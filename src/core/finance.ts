@@ -95,14 +95,21 @@ export const crearApuntes = (datos: NuevoMovimiento): Movement[] => {
 }
 
 /**
- * Quita un movimiento. Si forma parte de una transferencia, se van los dos
- * apuntes: dejar uno suelto haría aparecer o desaparecer dinero.
+ * Identificadores que hay que dar de baja junto con este. Si el movimiento
+ * forma parte de una transferencia son sus dos apuntes: dejar uno suelto
+ * haría aparecer o desaparecer dinero.
  */
-export const quitarMovimiento = (movements: Movement[], id: string): Movement[] => {
+export const idsAEliminar = (movements: Movement[], id: string): string[] => {
   const objetivo = movements.find(m => m.id === id)
-  if (!objetivo) return movements
-  if (objetivo.transferId) return movements.filter(m => m.transferId !== objetivo.transferId)
-  return movements.filter(m => m.id !== id)
+  if (!objetivo) return []
+  if (objetivo.transferId) return movements.filter(m => m.transferId === objetivo.transferId).map(m => m.id)
+  return [objetivo.id]
+}
+
+/** Quita un movimiento de una lista, con sus apuntes hermanos si los tiene. */
+export const quitarMovimiento = (movements: Movement[], id: string): Movement[] => {
+  const fuera = new Set(idsAEliminar(movements, id))
+  return fuera.size ? movements.filter(m => !fuera.has(m.id)) : movements
 }
 
 /**
