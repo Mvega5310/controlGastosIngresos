@@ -1,64 +1,49 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { newId } from '../core/finance'
 import { Registro, sellar, sellarBorrado, vivos } from '../core/sincronizacion'
+import {
+  alCambiarDatos, escribirLista, escribirPendientes, leerLista, leerPendientes
+} from './almacenLocal'
 
 /**
  * Colección guardada en el navegador, con alta, edición y baja.
  *
  * Cada escritura deja marca de tiempo y cada baja deja rastro, que es lo que
- * la sincronización entre dispositivos necesitará para saber qué versión es
- * la buena y para enterarse de lo que se borró en el otro aparato. Las vistas
- * solo ven los registros vivos.
+ * la sincronización necesita para saber qué versión es la buena y para
+ * enterarse de lo que se borró en el otro aparato. Las vistas solo ven los
+ * registros vivos.
  *
- * Los registros de ejemplo no se sellan a propósito: sin marca cuentan como
- * lo más antiguo posible, así que cualquier edición real les gana.
+ * Los registros de ejemplo no se sellan a propósito: sin marca cuentan como lo
+ * más antiguo posible, así que cualquier edición real les gana.
  */
 export function useColeccion<T extends { id: string }>(clave: string, iniciales: T[]) {
   type Fila = T & Partial<Registro>
 
-  const [todos, setTodos] = useState<Fila[]>(() => {
-    try {
-      const guardado = localStorage.getItem(clave)
-      if (!guardado) return iniciales as Fila[]
-      const leido = JSON.parse(guardado)
-      return Array.isArray(leido) ? leido : (iniciales as Fila[])
-    } catch { return iniciales as Fila[] }
-  })
+  const [todos, setTodos] = useState<Fila[]>(() => leerLista<Fila>(clave, iniciales as Fila[]))
+  const [pendientes, setPendientes] = useState<string[]>(() => leerPendientes(clave))
 
+  // La primera escritura no debe pisar lo leído, ni marcar nada como pendiente
+  // solo por haberse montado el componente.
+  const montado = useRef(false)
   useEffect(() => {
-    try { localStorage.setItem(clave, JSON.stringify(todos)) } catch { /* modo privado */ }
+    if (!montado.current) { montado.current = true; return }
+    escribirLista(clave, todos)
   }, [clave, todos])
 
-  /**
-   * Identificadores escritos aquí que aún no se han subido. No se deduce de
-   * las marcas de tiempo, porque el reloj del dispositivo y el del servidor
-   * no son el mismo: se anota al escribir y se limpia al subir.
-   */
-  const clavePendientes = `${clave}:pendientes`
-  const [pendientes, setPendientes] = useState<string[]>(() => {
-    try {
-      const leido = JSON.parse(localStorage.getItem(clavePendientes) || '[]')
-      return Array.isArray(leido) ? leido : []
-    } catch { return [] }
-  })
+  useEffect(() => { escribirPendientes(clave, pendientes) }, [clave, pendientes])
 
-  useEffect(() => {
-    try { localStorage.setItem(clavePendientes, JSON.stringify(pendientes)) } catch { /* modo privado */ }
-  }, [clavePendientes, pendientes])
+  /** Cuando la sincronización reescribe el almacenamiento, se vuelve a leer. */
+  useEffect(() => alCambiarDatos(() => {
+    setTodos(leerLista<Fila>(clave, iniciales as Fila[]))
+    setPendientes(leerPendientes(clave))
+  }), [clave])
+
+  /** Lo que ven las vistas: sin los borrados. */
+  const items = useMemo(() => vivos(todos) as T[], [todos])
 
   const anotar = useCallback((ids: string[]) => {
     setPendientes(previos => [...new Set([...previos, ...ids])])
   }, [])
-
-  /** Tras subir con éxito: deja de estar pendiente. */
-  const marcarSubidos = useCallback((ids: string[]) => {
-    if (!ids.length) return
-    const fuera = new Set(ids)
-    setPendientes(previos => previos.filter(id => !fuera.has(id)))
-  }, [])
-
-  /** Lo que ven las vistas: sin los borrados. */
-  const items = useMemo(() => vivos(todos) as T[], [todos])
 
   const agregar = useCallback((datos: Omit<T, 'id'>) => {
     const nuevo = sellar({ ...datos, id: newId() } as T)
@@ -77,18 +62,19 @@ export function useColeccion<T extends { id: string }>(clave: string, iniciales:
     anotar([id])
   }, [anotar])
 
+  const darDeBaja = (x: Fila): Fila => sellarBorrado({ ...x, actualizadoEn: x.actualizadoEn || '' })
+
   const eliminar = useCallback((id: string) => {
-    setTodos(previos => previos.map(x => x.id === id ? sellarBorrado({ ...x, actualizadoEn: x.actualizadoEn || '' }) : x))
+    setTodos(previos => previos.map(x => x.id === id ? darDeBaja(x) : x))
     anotar([id])
   }, [anotar])
 
   const eliminarVarios = useCallback((ids: string[]) => {
     if (!ids.length) return
     const fuera = new Set(ids)
-    setTodos(previos => previos.map(x =>
-      fuera.has(x.id) ? sellarBorrado({ ...x, actualizadoEn: x.actualizadoEn || '' }) : x))
+    setTodos(previos => previos.map(x => fuera.has(x.id) ? darDeBaja(x) : x))
     anotar(ids)
   }, [anotar])
 
-  return { items, todos, pendientes, agregar, agregarVarios, actualizar, eliminar, eliminarVarios, setTodos, marcarSubidos }
+  return { items, todos, pendientes, agregar, agregarVarios, actualizar, eliminar, eliminarVarios }
 }

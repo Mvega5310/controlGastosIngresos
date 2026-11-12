@@ -63,3 +63,19 @@
 .aviso-campo{display:block;margin-top:7px;font-size:9px;color:#b4463c}
 .dark .aviso-campo{color:#e5938a}
 td .mini-btn{height:26px;min-width:26px;padding:0 6px}
+
+/* --- Cuenta y sincronizacion --------------------------------------------- */
+.estado-sync.listo{color:var(--green)}
+.estado-sync.error{color:#d35b50}
+.estado-sync.sincronizando{color:var(--green)}
+@media(prefers-reduced-motion:no-preference){
+  .girando{animation:girar 1.1s linear infinite}
+  @keyframes girar{to{transform:rotate(360deg)}}
+}
+.modal-estrecho{width:min(420px,100%)}
+.nota-cuenta{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:12px 13px;margin-top:15px}
+.nota-cuenta p{margin:0;font-size:10px;line-height:1.6;color:var(--muted)}
+.nota-cuenta p+p{margin-top:7px}
+.nota-cuenta b{color:var(--text)}
+.modal .type-switch{margin-bottom:4px}
+.modal-actions .btn-primary:disabled,.modal-actions .btn-secondary:disabled{opacity:.55;cursor:default}

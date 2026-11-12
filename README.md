@@ -64,6 +64,26 @@ fincontrol/
 - Tipografía: Inter / DM Sans
 - Bordes redondeados: 8–12 px
 
+## Sincronizar entre dispositivos (opcional)
+
+Sin configurar nada, FinControl funciona entero pero los datos se quedan en el
+navegador: no viajan de tu móvil a tu PC. Para que viajen:
+
+1. Crea un proyecto gratuito en https://supabase.com.
+2. Abre su **SQL Editor** y ejecuta el contenido de `supabase/esquema.sql`.
+3. En **Project Settings → API**, copia la *URL* y la clave *anon public*.
+4. Crea un archivo `.env` junto a `package.json` (toma `.env.example` como
+   plantilla) con esos dos valores.
+5. Vuelve a compilar. Aparecerá un icono de nube en la barra superior para
+   crear la cuenta o entrar.
+
+La clave *anon public* está pensada para vivir en el navegador: no da acceso a
+nada por sí sola, porque las políticas de la base de datos atan cada fila a su
+usuario. La clave *service_role* no debe usarse aquí.
+
+Mientras no configures esto, el icono de la barra indica que los datos están
+solo en este dispositivo, y la aplicación no pide ninguna cuenta.
+
 ## Importante: alcance de esta entrega
 Esta entrega es un **frontend MVP navegable con datos de demostración**, no una fintech lista para producción. Los datos de movimientos se guardan solo en el navegador actual. Cuentas, pagos, suscripciones, deudas, inversiones y vehículos muestran información ficticia de muestra; algunos botones de alta indican que sus formularios se implementarán en la siguiente fase.
 
