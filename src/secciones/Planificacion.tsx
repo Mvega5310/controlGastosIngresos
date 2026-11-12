@@ -56,7 +56,7 @@ function useEdicion<T extends { id: string }>() {
 
 const camposPresupuesto: Campo[] = [
   { nombre: 'categoria', etiqueta: 'Categoría', tipo: 'seleccion', opciones: categories },
-  { nombre: 'limite', etiqueta: 'Límite mensual en COP', tipo: 'numero', requerido: true, min: 1, ayuda: '0' }
+  { nombre: 'limite', etiqueta: 'Límite mensual en COP', tipo: 'dinero', requerido: true, min: 1, ayuda: '0' }
 ]
 
 export function Presupuestos({ movimientos, periodo }: { movimientos: Movement[]; periodo: Period }) {
@@ -115,7 +115,7 @@ export function Presupuestos({ movimientos, periodo }: { movimientos: Movement[]
 
 const camposSuscripcion: Campo[] = [
   { nombre: 'nombre', etiqueta: 'Nombre', tipo: 'texto', requerido: true, ayuda: 'Ej. Netflix' },
-  { nombre: 'monto', etiqueta: 'Valor en COP', tipo: 'numero', requerido: true, min: 1, ancho: 'medio' },
+  { nombre: 'monto', etiqueta: 'Valor en COP', tipo: 'dinero', requerido: true, min: 1, ancho: 'medio' },
   { nombre: 'diaCobro', etiqueta: 'Día de cobro', tipo: 'numero', requerido: true, min: 1, max: 31, ancho: 'medio' },
   { nombre: 'categoria', etiqueta: 'Categoría', tipo: 'seleccion', opciones: categories, ancho: 'medio' },
   { nombre: 'cuenta', etiqueta: 'Cuenta', tipo: 'seleccion', opciones: accountNames, ancho: 'medio' }
@@ -171,9 +171,9 @@ export function Suscripciones() {
 const camposDeuda: Campo[] = [
   { nombre: 'nombre', etiqueta: 'Nombre', tipo: 'texto', requerido: true, ayuda: 'Ej. Tarjeta de crédito' },
   { nombre: 'entidad', etiqueta: 'Entidad', tipo: 'texto', ayuda: 'Ej. Bancolombia' },
-  { nombre: 'montoTotal', etiqueta: 'Monto total', tipo: 'numero', requerido: true, min: 1, ancho: 'medio' },
-  { nombre: 'pagado', etiqueta: 'Ya pagado', tipo: 'numero', min: 0, ancho: 'medio' },
-  { nombre: 'cuotaMensual', etiqueta: 'Cuota mensual', tipo: 'numero', min: 0, ancho: 'medio' },
+  { nombre: 'montoTotal', etiqueta: 'Monto total', tipo: 'dinero', requerido: true, min: 1, ancho: 'medio' },
+  { nombre: 'pagado', etiqueta: 'Ya pagado', tipo: 'dinero', min: 0, ancho: 'medio' },
+  { nombre: 'cuotaMensual', etiqueta: 'Cuota mensual', tipo: 'dinero', min: 0, ancho: 'medio' },
   { nombre: 'diaPago', etiqueta: 'Día de pago', tipo: 'numero', min: 1, max: 31, ancho: 'medio' }
 ]
 
@@ -224,8 +224,8 @@ export function Deudas() {
 
 const camposMeta: Campo[] = [
   { nombre: 'nombre', etiqueta: 'Nombre de la meta', tipo: 'texto', requerido: true, ayuda: 'Ej. Fondo de emergencia' },
-  { nombre: 'objetivo', etiqueta: 'Objetivo en COP', tipo: 'numero', requerido: true, min: 1, ancho: 'medio' },
-  { nombre: 'ahorrado', etiqueta: 'Ya ahorrado', tipo: 'numero', min: 0, ancho: 'medio' },
+  { nombre: 'objetivo', etiqueta: 'Objetivo en COP', tipo: 'dinero', requerido: true, min: 1, ancho: 'medio' },
+  { nombre: 'ahorrado', etiqueta: 'Ya ahorrado', tipo: 'dinero', min: 0, ancho: 'medio' },
   { nombre: 'fechaLimite', etiqueta: 'Fecha límite', tipo: 'fecha' }
 ]
 

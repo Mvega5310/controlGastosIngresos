@@ -55,3 +55,11 @@
 @media(max-width:600px){
   .simple-row .status-pill{display:inline-flex}
 }
+
+/* Una transferencia se lista como una fila que nombra las dos cuentas. */
+.traslado{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.traslado i{font-style:normal;color:var(--green)}
+.movement-dot.transferencia{background:#8d73c7}
+.aviso-campo{display:block;margin-top:7px;font-size:9px;color:#b4463c}
+.dark .aviso-campo{color:#e5938a}
+td .mini-btn{height:26px;min-width:26px;padding:0 6px}

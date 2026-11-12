@@ -57,9 +57,60 @@ export const accountBalance = (account: Account, movements: Movement[]) => {
     if (m.account !== account.name) continue
     if (m.type === 'Ingreso') balance += m.amount
     else if (m.type === 'Gasto') balance -= m.amount
+    // Cada transferencia son dos apuntes: uno sale de una cuenta y el otro
+    // entra en la otra. Sumados dejan el patrimonio igual, que es justo lo
+    // que debe ocurrir al mover dinero entre cuentas propias.
+    else if (m.type === 'Transferencia') {
+      if (m.flujo === 'entra') balance += m.amount
+      else if (m.flujo === 'sale') balance -= m.amount
+    }
   }
   return balance
 }
+
+/** Datos de un alta, antes de convertirse en apuntes. */
+export type NuevoMovimiento = Omit<Movement, 'id' | 'transferId' | 'flujo' | 'contraparte'>
+  & { cuentaDestino?: string }
+
+/**
+ * Convierte un alta en los apuntes que hay que guardar.
+ *
+ * Un ingreso o un gasto son un apunte. Una transferencia son dos, atados por
+ * el mismo `transferId`: la salida de la cuenta de origen y la entrada en la
+ * de destino. Modelarlo así es lo que hace que el balance total no se mueva
+ * al transferir, y que cada cuenta refleje el traslado por separado.
+ */
+export const crearApuntes = (datos: NuevoMovimiento): Movement[] => {
+  const { cuentaDestino, ...base } = datos
+  if (base.type !== 'Transferencia') return [{ ...base, id: newId() }]
+  const destino = (cuentaDestino || '').trim()
+  // Sin destino, o hacia la misma cuenta, no hay traslado que registrar: se
+  // guarda un apunte sin efecto en vez de inventar un movimiento de dinero.
+  if (!destino || destino === base.account) return [{ ...base, id: newId() }]
+  const transferId = newId()
+  return [
+    { ...base, id: newId(), transferId, flujo: 'sale', contraparte: destino },
+    { ...base, id: newId(), transferId, flujo: 'entra', account: destino, contraparte: base.account }
+  ]
+}
+
+/**
+ * Quita un movimiento. Si forma parte de una transferencia, se van los dos
+ * apuntes: dejar uno suelto haría aparecer o desaparecer dinero.
+ */
+export const quitarMovimiento = (movements: Movement[], id: string): Movement[] => {
+  const objetivo = movements.find(m => m.id === id)
+  if (!objetivo) return movements
+  if (objetivo.transferId) return movements.filter(m => m.transferId !== objetivo.transferId)
+  return movements.filter(m => m.id !== id)
+}
+
+/**
+ * Los apuntes que se listan: de cada transferencia se muestra solo la salida,
+ * que ya nombra las dos cuentas. Los apuntes antiguos, sin `flujo`, siguen
+ * apareciendo.
+ */
+export const apuntesVisibles = (movements: Movement[]) => movements.filter(m => m.flujo !== 'entra')
 
 /** Balance total = suma de los saldos actuales de todas las cuentas. */
 export const totalBalance = (accounts: Account[], movements: Movement[]) =>

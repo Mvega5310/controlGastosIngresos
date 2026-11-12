@@ -1,10 +1,12 @@
 import { FormEvent, useEffect, useState } from 'react'
 import { X } from 'lucide-react'
+import { aCentavos, aPesos } from '../core/dinero'
 
 export type Campo = {
   nombre: string
   etiqueta: string
-  tipo: 'texto' | 'numero' | 'fecha' | 'seleccion'
+  /** 'dinero' se escribe y se muestra en pesos, pero se guarda en centavos. */
+  tipo: 'texto' | 'numero' | 'fecha' | 'seleccion' | 'dinero'
   opciones?: readonly string[]
   requerido?: boolean
   min?: number
@@ -43,7 +45,10 @@ export default function FormModal({ abierto, eyebrow, titulo, campos, valores, t
     if (!abierto) return
     if (valores) {
       const cargado: Record<string, string> = {}
-      for (const c of campos) cargado[c.nombre] = valores[c.nombre] == null ? '' : String(valores[c.nombre])
+      for (const c of campos) {
+        const v = valores[c.nombre]
+        cargado[c.nombre] = v == null ? '' : c.tipo === 'dinero' ? String(aPesos(Number(v))) : String(v)
+      }
       setDatos(cargado)
     } else {
       setDatos(vacio(campos))
@@ -64,7 +69,9 @@ export default function FormModal({ abierto, eyebrow, titulo, campos, valores, t
     const salida: Record<string, unknown> = {}
     for (const c of campos) {
       const bruto = (datos[c.nombre] ?? '').trim()
-      salida[c.nombre] = c.tipo === 'numero' ? Number(bruto || 0) : bruto
+      salida[c.nombre] = c.tipo === 'dinero' ? aCentavos(Number(bruto || 0))
+        : c.tipo === 'numero' ? Number(bruto || 0)
+        : bruto
     }
     onGuardar(salida)
     onCerrar()
@@ -80,7 +87,7 @@ export default function FormModal({ abierto, eyebrow, titulo, campos, valores, t
     }
     return <input
       id={`campo-${c.nombre}`}
-      type={c.tipo === 'numero' ? 'number' : c.tipo === 'fecha' ? 'date' : 'text'}
+      type={c.tipo === 'numero' || c.tipo === 'dinero' ? 'number' : c.tipo === 'fecha' ? 'date' : 'text'}
       required={c.requerido}
       min={c.min}
       max={c.max}

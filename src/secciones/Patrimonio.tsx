@@ -51,8 +51,8 @@ function useEdicion<T extends { id: string }>() {
 const camposInversion: Campo[] = [
   { nombre: 'nombre', etiqueta: 'Nombre', tipo: 'texto', requerido: true, ayuda: 'Ej. CDT Bancolombia' },
   { nombre: 'tipo', etiqueta: 'Tipo', tipo: 'seleccion', opciones: tiposInversion },
-  { nombre: 'invertido', etiqueta: 'Capital invertido', tipo: 'numero', requerido: true, min: 1, ancho: 'medio' },
-  { nombre: 'valorActual', etiqueta: 'Valor actual', tipo: 'numero', requerido: true, min: 0, ancho: 'medio' }
+  { nombre: 'invertido', etiqueta: 'Capital invertido', tipo: 'dinero', requerido: true, min: 1, ancho: 'medio' },
+  { nombre: 'valorActual', etiqueta: 'Valor actual', tipo: 'dinero', requerido: true, min: 0, ancho: 'medio' }
 ]
 
 export function Inversiones() {
