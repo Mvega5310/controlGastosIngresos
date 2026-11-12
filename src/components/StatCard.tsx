@@ -1,0 +1,3 @@
+import { ReactNode } from 'react'
+type Props={label:string;value:string;change?:string;icon:ReactNode;tone?:string;note?:string}
+export default function StatCard({label,value,change,icon,tone='green',note}:Props){return <article className="stat-card"><div className="stat-top"><span>{label}</span><span className={`stat-icon ${tone}`}>{icon}</span></div><strong className="stat-value">{value}</strong><div className="stat-foot">{change&&<span className="positive">{change}</span>}<span>{note||'vs. mes anterior'}</span></div></article>}
