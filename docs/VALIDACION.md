@@ -71,6 +71,14 @@ seguir.**
 
 Ordenados por gravedad. Todos reproducidos.
 
+> **Estado a 12 de noviembre de 2026.** Los defectos **3.1 a 3.5** (los cinco de
+> cálculo) están **corregidos** en el commit «Calcular de verdad las cifras del
+> panel», junto con 3.9, 3.10, 3.12 y 3.13. Los cálculos viven ahora en
+> `src/core/finance.ts`, un módulo puro. Siguen pendientes **3.6** (transferencias),
+> **3.7** (calendario), **3.8** (coma flotante), **3.11** (tema) y **3.14**
+> (tamaño del paquete). El texto de cada punto se conserva como registro de lo
+> que se encontró.
+
 ### Graves: los números que se muestran no son correctos
 
 **3.1. Las tarjetas "del mes" suman todo el histórico** — `src/App.tsx:18`
