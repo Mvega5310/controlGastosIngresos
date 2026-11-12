@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   sellar, sellarBorrado, estaBorrado, vivos, fusionar,
-  cambiosDesde, purgar, retroceder, Registro
+  purgar, retroceder, Registro
 } from './sincronizacion'
 
 type Fila = Registro & { nombre: string }
@@ -92,23 +92,6 @@ describe('fusionar', () => {
   it('sin nada que fusionar devuelve lo que había', () => {
     expect(fusionar([], [])).toEqual([])
     expect(fusionar([fila('a', 'A', T1)], [])).toHaveLength(1)
-  })
-})
-
-describe('cambiosDesde', () => {
-  it('solo lo escrito después del corte', () => {
-    const lista = [fila('a', 'A', T1), fila('b', 'B', T2), fila('c', 'C', T3)]
-    expect(cambiosDesde(lista, T1).map(r => r.id)).toEqual(['b', 'c'])
-  })
-
-  it('incluye los borrados, que también hay que enviar', () => {
-    const lista = [fila('a', 'A', T2, T2)]
-    expect(cambiosDesde(lista, T1)).toHaveLength(1)
-  })
-
-  it('sin corte previo manda todo', () => {
-    const lista = [fila('a', 'A', T1), fila('b', 'B', T2)]
-    expect(cambiosDesde(lista, '')).toHaveLength(2)
   })
 })
 

@@ -65,10 +65,6 @@ export const fusionar = <T extends Registro>(locales: T[], remotos: T[]): T[] =>
   return [...porId.values()]
 }
 
-/** Lo que hay que enviar al servidor: lo cambiado después de la última sincronización. */
-export const cambiosDesde = <T extends Registro>(registros: T[], desde: string) =>
-  registros.filter(r => marca(r) > desde)
-
 /**
  * Quita definitivamente las marcas de borrado ya viejas.
  *
