@@ -71,12 +71,12 @@ export const calcularPresupuestos = (
 
 export type MetaCalculada = Meta & { falta: number; progreso: number; dias: number }
 
-export const calcularMetas = (metas: Meta[]): MetaCalculada[] =>
+export const calcularMetas = (metas: Meta[], hoy = todayISO()): MetaCalculada[] =>
   metas.map(m => ({
     ...m,
     falta: Math.max(0, m.objetivo - m.ahorrado),
     progreso: porcentaje(m.ahorrado, m.objetivo),
-    dias: diasHasta(m.fechaLimite)
+    dias: diasHasta(m.fechaLimite, hoy)
   }))
 
 // --- Deudas -----------------------------------------------------------------
@@ -85,13 +85,13 @@ export type DeudaCalculada = Deuda & {
   pendiente: number; progreso: number; proximoPago: string; cuotasRestantes: number
 }
 
-export const calcularDeudas = (deudas: Deuda[]): DeudaCalculada[] =>
+export const calcularDeudas = (deudas: Deuda[], hoy = todayISO()): DeudaCalculada[] =>
   deudas.map(d => {
     const pendiente = Math.max(0, d.montoTotal - d.pagado)
     return {
       ...d, pendiente,
       progreso: porcentaje(d.pagado, d.montoTotal),
-      proximoPago: proximaFecha(d.diaPago),
+      proximoPago: proximaFecha(d.diaPago, hoy),
       cuotasRestantes: d.cuotaMensual > 0 ? Math.ceil(pendiente / d.cuotaMensual) : 0
     }
   })
@@ -103,10 +103,10 @@ export const cuotasDelMes = (deudas: Deuda[]) => deudas.reduce((s, d) => s + d.c
 
 export type SuscripcionCalculada = Suscripcion & { proximoCobro: string; dias: number }
 
-export const calcularSuscripciones = (subs: Suscripcion[]): SuscripcionCalculada[] =>
+export const calcularSuscripciones = (subs: Suscripcion[], hoy = todayISO()): SuscripcionCalculada[] =>
   subs.map(s => {
-    const proximoCobro = proximaFecha(s.diaCobro)
-    return { ...s, proximoCobro, dias: diasHasta(proximoCobro) }
+    const proximoCobro = proximaFecha(s.diaCobro, hoy)
+    return { ...s, proximoCobro, dias: diasHasta(proximoCobro, hoy) }
   }).sort((a, b) => a.proximoCobro.localeCompare(b.proximoCobro))
 
 export const gastoMensualSuscripciones = (subs: Suscripcion[]) =>
@@ -140,11 +140,11 @@ export type VehiculoCalculado = Vehiculo & {
   soatDias: number; soatEstado: Urgencia; tecnoDias: number; tecnoEstado: Urgencia
 }
 
-export const calcularVehiculos = (v: Vehiculo[]): VehiculoCalculado[] =>
+export const calcularVehiculos = (v: Vehiculo[], hoy = todayISO()): VehiculoCalculado[] =>
   v.map(x => ({
     ...x,
-    soatDias: diasHasta(x.soat), soatEstado: urgencia(x.soat),
-    tecnoDias: diasHasta(x.tecnomecanica), tecnoEstado: urgencia(x.tecnomecanica)
+    soatDias: diasHasta(x.soat, hoy), soatEstado: urgencia(x.soat, 30, hoy),
+    tecnoDias: diasHasta(x.tecnomecanica, hoy), tecnoEstado: urgencia(x.tecnomecanica, 30, hoy)
   }))
 
 // --- Reportes ---------------------------------------------------------------
