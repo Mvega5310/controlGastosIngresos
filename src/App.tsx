@@ -11,9 +11,10 @@ import { Period, Totals, periodOf, periodLabel, shiftPeriod, longDate, totalsFor
 const fmtDate=(d:string)=>new Date(d+'T12:00:00').toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'})
 function App(){
  const [period,setPeriod]=useState<Period>(()=>periodOf(new Date()))
- const [active,setActive]=useState('Inicio'),[dark,setDark]=useState(false),[sidebarOpen,setSidebarOpen]=useState(false),[modal,setModal]=useState(false),[query,setQuery]=useState(''),[filter,setFilter]=useState('Todos')
+ const [active,setActive]=useState('Inicio'),[dark,setDark]=useState(()=>{try{const v=localStorage.getItem('fc-theme');if(v)return v==='dark';return window.matchMedia('(prefers-color-scheme: dark)').matches}catch{return false}}),[sidebarOpen,setSidebarOpen]=useState(false),[modal,setModal]=useState(false),[query,setQuery]=useState(''),[filter,setFilter]=useState('Todos')
  const [movements,setMovements]=useState<Movement[]>(()=>{try{return JSON.parse(localStorage.getItem('fc-movements')||'null')||initialMovements}catch{return initialMovements}})
  useEffect(()=>{localStorage.setItem('fc-movements',JSON.stringify(movements))},[movements])
+ useEffect(()=>{try{localStorage.setItem('fc-theme',dark?'dark':'light')}catch{/* modo privado */}},[dark])
  const totals=useMemo(()=>totalsFor(movements,period),[movements,period])
  const previous=useMemo(()=>totalsFor(movements,shiftPeriod(period,-1)),[movements,period])
  const addMovement=(m:Omit<Movement,'id'>)=>setMovements(p=>[{...m,id:newId()},...p])
