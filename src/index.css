@@ -10,3 +10,48 @@
 @media(max-width:900px){.sidebar{transform:translateX(-100%);transition:transform .25s;width:260px}.sidebar.mobile-open{transform:translateX(0)}.sidebar-backdrop.show{display:block;position:fixed;inset:0;background:#10181070;z-index:19}.mobile-close{display:block}.main-area{margin-left:0}.mobile-menu{display:grid}.topbar{height:60px}.stats-grid{grid-template-columns:repeat(2,1fr)}.dashboard-grid,.lower-grid{grid-template-columns:1fr}.module-grid,.goal-grid{grid-template-columns:repeat(2,1fr)}.mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;height:62px;background:var(--panel);border-top:1px solid var(--line);z-index:15;justify-content:space-around;padding-bottom:env(safe-area-inset-bottom)}.mobile-nav button{border:0;background:transparent;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:48px}.mobile-nav button.selected{color:var(--green)}.mobile-nav small{font-size:8px}.mobile-nav button:nth-child(3){width:42px;height:42px;min-width:42px;align-self:center;background:var(--green);color:white;border-radius:13px}.content{padding-bottom:85px}.footer{padding-bottom:12px}}
 @media(max-width:600px){.content{padding:23px 14px 80px}.topbar{padding:0 14px}.top-actions{gap:5px}.search-button{display:none}.welcome-row{display:block}.welcome-row h1{font-size:20px;line-height:1.3}.welcome-actions{margin-top:17px}.welcome-actions .date-btn{flex:1}.welcome-actions .btn-primary{flex:1}.stats-grid{gap:9px}.stat-card{min-height:108px;padding:12px}.stat-value{font-size:16px}.stat-top{font-size:9px}.stat-icon{width:27px;height:27px}.stat-foot{font-size:8px}.panel{padding:14px}.chart{height:190px}.chart-legend{gap:9px}.chart-legend b{display:none}.panel-heading h2{font-size:12px}.lower-grid{gap:10px}.tip-banner{align-items:flex-start;padding:12px}.tip-banner button{font-size:0}.tip-banner button svg{width:18px;height:18px}.module-grid,.goal-grid{grid-template-columns:1fr}.calendar-layout{grid-template-columns:1fr}.calendar-day{height:47px;padding:7px}.toolbar{flex-wrap:wrap}.search-input{flex-basis:100%}.filter-select{flex:1}.toolbar .btn-secondary{flex:1}.toolbar .btn-primary{flex:1}.simple-row{gap:8px}.simple-row>strong{font-size:9px}.simple-row .status-pill{display:none}.welcome-actions .btn-primary{padding:0 8px;font-size:9px}.date-btn{padding:0 8px;font-size:9px}.footer{font-size:7px}.form-grid{grid-template-columns:1fr}.top-avatar{display:none}.setting-row{gap:10px}.setting-row>strong{font-size:9px;text-align:right}}
 @media print{.sidebar,.topbar,.welcome-actions,.mobile-nav,.footer,.tip-banner{display:none!important}.main-area{margin:0}.content{padding:0}.app{background:white}.panel,.stat-card{box-shadow:none}}
+
+/* --- Secciones de planificacion y patrimonio ------------------------------ */
+.seccion-head{margin-bottom:16px}
+.full-panel.sin-fondo{background:transparent;border:0;box-shadow:none;padding:0;min-height:0;margin-bottom:15px}
+.row-actions{display:flex;gap:6px;margin-left:auto;flex:none}
+.mini-btn{height:28px;min-width:28px;padding:0 8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:7px;font-size:9px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:5px}
+.mini-btn:hover{color:var(--text);border-color:#b7c9bb}
+.mini-btn.peligro:hover{color:#d35b50;border-color:#e0b0ab}
+.dark .mini-btn:hover{border-color:#44584a}
+.status-pill.warn{background:#fdf4de;color:#a97d16}
+.status-pill.bad{background:#fbeae8;color:#b4463c}
+.dark .status-pill.warn{background:#2c2616;color:#e0b64a}
+.dark .status-pill.bad{background:#36211e;color:#e5938a}
+.progress i.cerca{background:#e4b62a}
+.progress i.excedido{background:#d35b50}
+.budget-item>div:first-child b small{font-weight:400;color:var(--muted);margin-left:6px}
+.budget-foot{display:flex;align-items:center;gap:10px;margin-top:2px}
+.budget-foot small{font-size:9px;color:var(--muted)}
+.simple-row.inactiva{opacity:.55}
+.simple-row .status-pill{flex:none}
+.goal-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.goal-top .goal-symbol{margin-bottom:0}
+.doc-row{display:flex;align-items:center;gap:9px;padding:11px 0;border-top:1px solid var(--line);font-size:9px;color:var(--muted)}
+.doc-row b{font-size:10px;color:var(--text);margin-left:auto}
+.doc-row .status-pill{flex:none}
+.empty p{margin:0 0 13px}
+.empty .btn-secondary{display:inline-flex}
+.account-card .row-actions{margin-left:0}
+
+@media(max-width:600px){
+  .seccion-head{flex-direction:column;align-items:stretch;gap:12px}
+  .seccion-head .btn-primary{width:100%}
+  .simple-row{flex-wrap:wrap}
+  .simple-row>div:nth-child(2){flex:1 1 100%;order:-1}
+  .simple-row .row-actions{margin-left:auto}
+  .budget-foot{flex-wrap:wrap}
+  .doc-row{flex-wrap:wrap}
+  .doc-row b{margin-left:0}
+}
+
+/* La regla heredada ocultaba esta etiqueta en movil; en las secciones nuevas
+   lleva el dato util (proximo cobro, rendimiento), asi que se muestra. */
+@media(max-width:600px){
+  .simple-row .status-pill{display:inline-flex}
+}
