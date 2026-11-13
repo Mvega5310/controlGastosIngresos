@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import './index.css'
-import { migrar } from './data/migracion'
+import { migrar } from './datos/migracion'
 
 migrar()
 ReactDOM.createRoot(document.getElementById('root')!).render(

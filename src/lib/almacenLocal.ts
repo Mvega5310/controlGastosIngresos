@@ -6,7 +6,7 @@
  * estado a la raíz de la aplicación, la sincronización escribe aquí y avisa;
  * cada colección vuelve a leer lo suyo y la pantalla se actualiza.
  */
-import { CLAVES } from '../data/entidades'
+import { CLAVES } from '../datos/entidades'
 
 /** Todas las colecciones que viajan entre dispositivos. */
 export const COLECCIONES = {

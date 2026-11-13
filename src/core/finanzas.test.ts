@@ -14,8 +14,8 @@ import {
   monthGrid,
   todayISO,
   longDate
-} from './finance'
-import { Account, Movement } from '../data/mock'
+} from './finanzas'
+import { Account, Movement } from '../datos/catalogo'
 
 const mov = (p: Partial<Movement>): Movement => ({
   id: 'x',

@@ -7,7 +7,7 @@
  * sin sincronizar. Nada de esto es obligatorio para usarla.
  */
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
-import { Remoto, RespuestaRemota } from '../core/motorSync'
+import { Remoto, RespuestaRemota } from '../core/motorSincronizacion'
 import { Registro } from '../core/sincronizacion'
 
 const URL = import.meta.env.VITE_SUPABASE_URL as string | undefined

@@ -1,5 +1,5 @@
 import { Search, Filter, Plus, Trash2 } from 'lucide-react'
-import { Movement, money } from '../data/mock'
+import { Movement, money } from '../datos/catalogo'
 import { fmtDate } from '../lib/fechas'
 
 export function TablaMovimientos({

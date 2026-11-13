@@ -5,7 +5,7 @@
  * muestre como cifra debe salir de aquí, para que no vuelvan a aparecer
  * números escritos a mano en las vistas.
  */
-import { Account, Movement, money } from '../data/mock'
+import { Account, Movement, money } from '../datos/catalogo'
 
 /** Un mes concreto. `month` va de 1 a 12. */
 export type Period = { year: number; month: number }

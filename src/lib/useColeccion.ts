@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { newId } from '../core/finance'
+import { newId } from '../core/finanzas'
 import { Registro, sellar, sellarBorrado, vivos } from '../core/sincronizacion'
 import { alCambiarDatos, escribirLista, escribirPendientes, leerLista, leerPendientes } from './almacenLocal'
 

@@ -1,6 +1,6 @@
 import { FormEvent, useState } from 'react'
 import { X } from 'lucide-react'
-import { Movement, categories, accountNames } from '../data/mock'
+import { Movement, categories, accountNames } from '../datos/catalogo'
 import { aCentavos } from '../core/dinero'
 type Props = {
   open: boolean

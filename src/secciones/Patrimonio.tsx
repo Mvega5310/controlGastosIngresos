@@ -9,7 +9,7 @@ import {
   CarFront,
   ShieldCheck
 } from 'lucide-react'
-import { Movement, money } from '../data/mock'
+import { Movement, money } from '../datos/catalogo'
 import {
   CLAVES,
   Inversion,
@@ -17,7 +17,7 @@ import {
   inversionesIniciales,
   vehiculosIniciales,
   tiposInversion
-} from '../data/entidades'
+} from '../datos/entidades'
 import {
   calcularInversiones,
   calcularVehiculos,
@@ -25,7 +25,7 @@ import {
   gastoPorCategoria,
   Urgencia
 } from '../core/planificacion'
-import { Period, periodLabel, Totals } from '../core/finance'
+import { Period, periodLabel, Totals } from '../core/finanzas'
 import { useColeccion } from '../lib/useColeccion'
 import FormModal, { Campo } from '../components/FormModal'
 import StatCard from '../components/StatCard'

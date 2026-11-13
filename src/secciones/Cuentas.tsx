@@ -1,6 +1,6 @@
 import { ArrowRight, Plus } from 'lucide-react'
-import { Movement, money, accounts } from '../data/mock'
-import { accountBalance } from '../core/finance'
+import { Movement, money, accounts } from '../datos/catalogo'
+import { accountBalance } from '../core/finanzas'
 
 export function Cuentas({ movements }: { movements: Movement[] }) {
   return (

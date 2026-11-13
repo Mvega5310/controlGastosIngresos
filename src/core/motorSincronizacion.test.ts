@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { Remoto, sincronizarColeccion, sincronizarTodo } from './motorSync'
+import { Remoto, sincronizarColeccion, sincronizarTodo } from './motorSincronizacion'
 import { Registro } from './sincronizacion'
 
 type Fila = Registro & { nombre: string }

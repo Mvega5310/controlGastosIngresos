@@ -7,9 +7,9 @@ import {
   accountBalance,
   totalBalance,
   totalsFor
-} from './finance'
+} from './finanzas'
 import { aCentavos } from './dinero'
-import { Account, Movement } from '../data/mock'
+import { Account, Movement } from '../datos/catalogo'
 
 const cuentas: Account[] = [
   {

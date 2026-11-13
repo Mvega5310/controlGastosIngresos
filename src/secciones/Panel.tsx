@@ -2,7 +2,7 @@ import { Wallet, ArrowUpRight, ArrowDownRight, PiggyBank, ArrowRight, Plus, Spar
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
 import StatCard from '../components/StatCard'
 import { TablaMovimientos } from './Movimientos'
-import { Movement, money, accounts } from '../data/mock'
+import { Movement, money, accounts } from '../datos/catalogo'
 import {
   Period,
   Totals,
@@ -13,7 +13,7 @@ import {
   byDateDesc,
   change,
   periodLabel
-} from '../core/finance'
+} from '../core/finanzas'
 
 export function Panel({
   movements,

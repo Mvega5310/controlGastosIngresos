@@ -16,7 +16,7 @@ import {
   cuotasDelMes,
   gastoMensualSuscripciones
 } from './planificacion'
-import { Movement } from '../data/mock'
+import { Movement } from '../datos/catalogo'
 
 const HOY = '2026-11-12'
 const NOV = { year: 2026, month: 11 }

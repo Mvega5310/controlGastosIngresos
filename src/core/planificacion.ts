@@ -4,9 +4,9 @@
  * Módulo puro, como `finance.ts`: ninguna de estas cifras debe volver a estar
  * escrita a mano dentro de una vista.
  */
-import { Movement } from '../data/mock'
-import { Deuda, Inversion, Meta, Presupuesto, Suscripcion, Vehiculo } from '../data/entidades'
-import { Period, inPeriod, todayISO } from './finance'
+import { Movement } from '../datos/catalogo'
+import { Deuda, Inversion, Meta, Presupuesto, Suscripcion, Vehiculo } from '../datos/entidades'
+import { Period, inPeriod, todayISO } from './finanzas'
 
 /** Días completos entre hoy y una fecha AAAA-MM-DD. Negativo si ya pasó. */
 export const diasHasta = (fecha: string, hoy = todayISO()) => {

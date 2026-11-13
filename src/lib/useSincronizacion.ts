@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { sincronizarTodo } from '../core/motorSync'
+import { sincronizarTodo } from '../core/motorSincronizacion'
 import { Registro } from '../core/sincronizacion'
 import { clienteSupabase, haySincronizacion, remotoSupabase, salir } from '../datos/supabase'
 import {

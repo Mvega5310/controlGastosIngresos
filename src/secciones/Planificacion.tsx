@@ -10,7 +10,7 @@ import {
   ArrowUpRight,
   CalendarClock
 } from 'lucide-react'
-import { Movement, money, categories, accountNames } from '../data/mock'
+import { Movement, money, categories, accountNames } from '../datos/catalogo'
 import {
   CLAVES,
   Deuda,
@@ -21,7 +21,7 @@ import {
   metasIniciales,
   presupuestosIniciales,
   suscripcionesIniciales
-} from '../data/entidades'
+} from '../datos/entidades'
 import {
   calcularDeudas,
   calcularMetas,
@@ -33,7 +33,7 @@ import {
   porcentaje,
   diasHasta
 } from '../core/planificacion'
-import { Period, periodLabel } from '../core/finance'
+import { Period, periodLabel } from '../core/finanzas'
 import { useColeccion } from '../lib/useColeccion'
 import FormModal, { Campo } from '../components/FormModal'
 import StatCard from '../components/StatCard'

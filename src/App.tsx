@@ -20,7 +20,7 @@ import { useSincronizacion } from './lib/useSincronizacion'
 import { BotonCuenta, PanelCuenta } from './components/Cuenta'
 import { Presupuestos, Suscripciones, Deudas, Metas } from './secciones/Planificacion'
 import { Inversiones, Transporte, Reportes } from './secciones/Patrimonio'
-import { initialMovements, Movement } from './data/mock'
+import { initialMovements, Movement } from './datos/catalogo'
 import {
   Period,
   periodOf,
@@ -33,7 +33,7 @@ import {
   idsAEliminar,
   apuntesVisibles,
   NuevoMovimiento
-} from './core/finance'
+} from './core/finanzas'
 
 import { Panel } from './secciones/Panel'
 import { Movimientos } from './secciones/Movimientos'

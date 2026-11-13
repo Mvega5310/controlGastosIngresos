@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { Change } from '../core/finance'
+import { Change } from '../core/finanzas'
 type Props = { label: string; value: string; change?: Change; icon: ReactNode; tone?: string; note?: string }
 export default function StatCard({ label, value, change, icon, tone = 'green', note }: Props) {
   return (

@@ -1,5 +1,5 @@
-import { Movement, money } from '../data/mock'
-import { Period, periodLabel, shiftPeriod, monthGrid, todayISO, inPeriod } from '../core/finance'
+import { Movement, money } from '../datos/catalogo'
+import { Period, periodLabel, shiftPeriod, monthGrid, todayISO, inPeriod } from '../core/finanzas'
 
 export function Calendario({
   movements,
