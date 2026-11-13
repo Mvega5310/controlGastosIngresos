@@ -1,9 +1,20 @@
 import { describe, expect, it } from 'vitest'
 import {
-  diasHasta, proximaFecha, urgencia, porcentaje,
-  calcularPresupuestos, calcularMetas, calcularDeudas, calcularSuscripciones,
-  calcularInversiones, resumenInversiones, calcularVehiculos,
-  gastoPorCategoria, totalDeuda, cuotasDelMes, gastoMensualSuscripciones
+  diasHasta,
+  proximaFecha,
+  urgencia,
+  porcentaje,
+  calcularPresupuestos,
+  calcularMetas,
+  calcularDeudas,
+  calcularSuscripciones,
+  calcularInversiones,
+  resumenInversiones,
+  calcularVehiculos,
+  gastoPorCategoria,
+  totalDeuda,
+  cuotasDelMes,
+  gastoMensualSuscripciones
 } from './planificacion'
 import { Movement } from '../data/mock'
 
@@ -11,8 +22,14 @@ const HOY = '2026-11-12'
 const NOV = { year: 2026, month: 11 }
 
 const mov = (p: Partial<Movement>): Movement => ({
-  id: 'x', title: 't', category: 'Otros', account: 'Cuenta principal',
-  date: '2026-11-10', amount: 1000, type: 'Gasto', ...p
+  id: 'x',
+  title: 't',
+  category: 'Otros',
+  account: 'Cuenta principal',
+  date: '2026-11-10',
+  amount: 1000,
+  type: 'Gasto',
+  ...p
 })
 
 describe('fechas', () => {
@@ -83,7 +100,9 @@ describe('presupuestos', () => {
   it('un ingreso de la categoría no consume presupuesto', () => {
     const soloIngreso = calcularPresupuestos(
       [{ id: 'b', categoria: 'Trabajo', limite: 100 }],
-      [mov({ category: 'Trabajo', amount: 999999, type: 'Ingreso' })], NOV)
+      [mov({ category: 'Trabajo', amount: 999999, type: 'Ingreso' })],
+      NOV
+    )
     expect(soloIngreso[0].gastado).toBe(0)
   })
 
@@ -95,8 +114,11 @@ describe('presupuestos', () => {
   })
 
   it('avisa a partir del 80 %', () => {
-    const casi = calcularPresupuestos([{ id: 'b', categoria: 'X', limite: 100000 }],
-      [mov({ category: 'X', amount: 80000, type: 'Gasto' })], NOV)
+    const casi = calcularPresupuestos(
+      [{ id: 'b', categoria: 'X', limite: 100000 }],
+      [mov({ category: 'X', amount: 80000, type: 'Gasto' })],
+      NOV
+    )
     expect(casi[0].estado).toBe('cerca')
   })
 
@@ -108,7 +130,9 @@ describe('presupuestos', () => {
 })
 
 describe('metas', () => {
-  const metas = [{ id: 'm', nombre: 'Fondo', objetivo: 5000000, ahorrado: 3500000, fechaLimite: '2027-06-30' }]
+  const metas = [
+    { id: 'm', nombre: 'Fondo', objetivo: 5000000, ahorrado: 3500000, fechaLimite: '2027-06-30' }
+  ]
 
   it('calcula progreso, lo que falta y los días', () => {
     const [m] = calcularMetas(metas, HOY)
@@ -126,8 +150,24 @@ describe('metas', () => {
 
 describe('deudas', () => {
   const deudas = [
-    { id: 'd1', nombre: 'Tarjeta', entidad: 'Visa', montoTotal: 2400000, pagado: 0, cuotaMensual: 420000, diaPago: 18 },
-    { id: 'd2', nombre: 'Crédito', entidad: 'Banco', montoTotal: 2450000, pagado: 980000, cuotaMensual: 200000, diaPago: 5 }
+    {
+      id: 'd1',
+      nombre: 'Tarjeta',
+      entidad: 'Visa',
+      montoTotal: 2400000,
+      pagado: 0,
+      cuotaMensual: 420000,
+      diaPago: 18
+    },
+    {
+      id: 'd2',
+      nombre: 'Crédito',
+      entidad: 'Banco',
+      montoTotal: 2450000,
+      pagado: 980000,
+      cuotaMensual: 200000,
+      diaPago: 5
+    }
   ]
 
   it('calcula lo pendiente, el progreso y las cuotas que faltan', () => {
@@ -164,9 +204,33 @@ describe('deudas', () => {
 
 describe('suscripciones', () => {
   const subs = [
-    { id: 's1', nombre: 'Netflix', monto: 32900, diaCobro: 22, categoria: 'Entretenimiento', cuenta: 'Tarjeta crédito', activa: true },
-    { id: 's2', nombre: 'Internet', monto: 95000, diaCobro: 15, categoria: 'Vivienda', cuenta: 'Cuenta principal', activa: true },
-    { id: 's3', nombre: 'Pausada', monto: 50000, diaCobro: 3, categoria: 'Otros', cuenta: 'Efectivo', activa: false }
+    {
+      id: 's1',
+      nombre: 'Netflix',
+      monto: 32900,
+      diaCobro: 22,
+      categoria: 'Entretenimiento',
+      cuenta: 'Tarjeta crédito',
+      activa: true
+    },
+    {
+      id: 's2',
+      nombre: 'Internet',
+      monto: 95000,
+      diaCobro: 15,
+      categoria: 'Vivienda',
+      cuenta: 'Cuenta principal',
+      activa: true
+    },
+    {
+      id: 's3',
+      nombre: 'Pausada',
+      monto: 50000,
+      diaCobro: 3,
+      categoria: 'Otros',
+      cuenta: 'Efectivo',
+      activa: false
+    }
   ]
 
   it('ordena por el próximo cobro, no por el día del mes', () => {

@@ -38,7 +38,16 @@ const vacio = (campos: Campo[]): Record<string, string> => {
  * Antes cada botón "Agregar" abría un aviso; ahora todas usan este modal,
  * descrito por una lista de campos en vez de maquetado seis veces.
  */
-export default function FormModal({ abierto, eyebrow, titulo, campos, valores, textoGuardar, onGuardar, onCerrar }: Props) {
+export default function FormModal({
+  abierto,
+  eyebrow,
+  titulo,
+  campos,
+  valores,
+  textoGuardar,
+  onGuardar,
+  onCerrar
+}: Props) {
   const [datos, setDatos] = useState<Record<string, string>>(() => vacio(campos))
 
   useEffect(() => {
@@ -57,7 +66,9 @@ export default function FormModal({ abierto, eyebrow, titulo, campos, valores, t
 
   useEffect(() => {
     if (!abierto) return
-    const alPulsar = (e: KeyboardEvent) => { if (e.key === 'Escape') onCerrar() }
+    const alPulsar = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCerrar()
+    }
     window.addEventListener('keydown', alPulsar)
     return () => window.removeEventListener('keydown', alPulsar)
   }, [abierto, onCerrar])
@@ -69,9 +80,8 @@ export default function FormModal({ abierto, eyebrow, titulo, campos, valores, t
     const salida: Record<string, unknown> = {}
     for (const c of campos) {
       const bruto = (datos[c.nombre] ?? '').trim()
-      salida[c.nombre] = c.tipo === 'dinero' ? aCentavos(Number(bruto || 0))
-        : c.tipo === 'numero' ? Number(bruto || 0)
-        : bruto
+      salida[c.nombre] =
+        c.tipo === 'dinero' ? aCentavos(Number(bruto || 0)) : c.tipo === 'numero' ? Number(bruto || 0) : bruto
     }
     onGuardar(salida)
     onCerrar()
@@ -81,20 +91,30 @@ export default function FormModal({ abierto, eyebrow, titulo, campos, valores, t
 
   const control = (c: Campo) => {
     if (c.tipo === 'seleccion') {
-      return <select id={`campo-${c.nombre}`} value={datos[c.nombre] ?? ''} onChange={e => fijar(c.nombre, e.target.value)}>
-        {(c.opciones ?? []).map(o => <option key={o}>{o}</option>)}
-      </select>
+      return (
+        <select
+          id={`campo-${c.nombre}`}
+          value={datos[c.nombre] ?? ''}
+          onChange={e => fijar(c.nombre, e.target.value)}
+        >
+          {(c.opciones ?? []).map(o => (
+            <option key={o}>{o}</option>
+          ))}
+        </select>
+      )
     }
-    return <input
-      id={`campo-${c.nombre}`}
-      type={c.tipo === 'numero' || c.tipo === 'dinero' ? 'number' : c.tipo === 'fecha' ? 'date' : 'text'}
-      required={c.requerido}
-      min={c.min}
-      max={c.max}
-      value={datos[c.nombre] ?? ''}
-      onChange={e => fijar(c.nombre, e.target.value)}
-      placeholder={c.ayuda}
-    />
+    return (
+      <input
+        id={`campo-${c.nombre}`}
+        type={c.tipo === 'numero' || c.tipo === 'dinero' ? 'number' : c.tipo === 'fecha' ? 'date' : 'text'}
+        required={c.requerido}
+        min={c.min}
+        max={c.max}
+        value={datos[c.nombre] ?? ''}
+        onChange={e => fijar(c.nombre, e.target.value)}
+        placeholder={c.ayuda}
+      />
+    )
   }
 
   // Agrupa los campos 'medio' consecutivos de dos en dos.
@@ -105,28 +125,51 @@ export default function FormModal({ abierto, eyebrow, titulo, campos, valores, t
     else filas.push([c])
   }
 
-  return <div className="modal-overlay" onMouseDown={e => { if (e.target === e.currentTarget) onCerrar() }}>
-    <div className="modal" role="dialog" aria-modal="true" aria-label={titulo}>
-      <div className="modal-head">
-        <div><span className="eyebrow">{eyebrow}</span><h2>{titulo}</h2></div>
-        <button className="icon-button" onClick={onCerrar} aria-label="Cerrar"><X size={20} /></button>
-      </div>
-      <form onSubmit={enviar}>
-        {filas.map((fila, i) => fila.length === 2
-          ? <div className="form-grid" key={i}>
-              {fila.map(c => <div key={c.nombre}>
-                <label htmlFor={`campo-${c.nombre}`}>{c.etiqueta}</label>{control(c)}
-              </div>)}
-            </div>
-          : <div key={i}>
-              <label htmlFor={`campo-${fila[0].nombre}`}>{fila[0].etiqueta}</label>{control(fila[0])}
-            </div>
-        )}
-        <div className="modal-actions">
-          <button type="button" className="btn-secondary" onClick={onCerrar}>Cancelar</button>
-          <button className="btn-primary" type="submit">{textoGuardar || 'Guardar'}</button>
+  return (
+    <div
+      className="modal-overlay"
+      onMouseDown={e => {
+        if (e.target === e.currentTarget) onCerrar()
+      }}
+    >
+      <div className="modal" role="dialog" aria-modal="true" aria-label={titulo}>
+        <div className="modal-head">
+          <div>
+            <span className="eyebrow">{eyebrow}</span>
+            <h2>{titulo}</h2>
+          </div>
+          <button className="icon-button" onClick={onCerrar} aria-label="Cerrar">
+            <X size={20} />
+          </button>
         </div>
-      </form>
+        <form onSubmit={enviar}>
+          {filas.map((fila, i) =>
+            fila.length === 2 ? (
+              <div className="form-grid" key={i}>
+                {fila.map(c => (
+                  <div key={c.nombre}>
+                    <label htmlFor={`campo-${c.nombre}`}>{c.etiqueta}</label>
+                    {control(c)}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div key={i}>
+                <label htmlFor={`campo-${fila[0].nombre}`}>{fila[0].etiqueta}</label>
+                {control(fila[0])}
+              </div>
+            )
+          )}
+          <div className="modal-actions">
+            <button type="button" className="btn-secondary" onClick={onCerrar}>
+              Cancelar
+            </button>
+            <button className="btn-primary" type="submit">
+              {textoGuardar || 'Guardar'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
-  </div>
+  )
 }

@@ -4,8 +4,15 @@ import { sincronizarTodo } from '../core/motorSync'
 import { Registro } from '../core/sincronizacion'
 import { clienteSupabase, haySincronizacion, remotoSupabase, salir } from '../datos/supabase'
 import {
-  COLECCIONES, avisarCambioDatos, escribirCortes, escribirLista, escribirPendientes,
-  leerCortes, leerLista, leerPendientes, limpiarDatosSincronizados
+  COLECCIONES,
+  avisarCambioDatos,
+  escribirCortes,
+  escribirLista,
+  escribirPendientes,
+  leerCortes,
+  leerLista,
+  leerPendientes,
+  limpiarDatosSincronizados
 } from './almacenLocal'
 
 export type EstadoConexion = 'sin-configurar' | 'desconectado' | 'listo' | 'sincronizando' | 'error'
@@ -32,7 +39,8 @@ const CADA = 2 * 60 * 1000
 export function useSincronizacion(): Sincronizacion {
   const [sesion, setSesion] = useState<Session | null>(null)
   const [estado, setEstado] = useState<EstadoConexion>(
-    haySincronizacion() ? 'desconectado' : 'sin-configurar')
+    haySincronizacion() ? 'desconectado' : 'sin-configurar'
+  )
   const [ultima, setUltima] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const enCurso = useRef(false)
@@ -49,7 +57,10 @@ export function useSincronizacion(): Sincronizacion {
       setSesion(nueva)
       setEstado(nueva ? 'listo' : 'desconectado')
     })
-    return () => { vivo = false; data.subscription.unsubscribe() }
+    return () => {
+      vivo = false
+      data.subscription.unsubscribe()
+    }
   }, [])
 
   const sincronizar = useCallback(async () => {
@@ -99,8 +110,12 @@ export function useSincronizacion(): Sincronizacion {
   useEffect(() => {
     if (!sesion) return
     void sincronizar()
-    const intervalo = setInterval(() => { void sincronizar() }, CADA)
-    const alVolver = () => { if (document.visibilityState === 'visible') void sincronizar() }
+    const intervalo = setInterval(() => {
+      void sincronizar()
+    }, CADA)
+    const alVolver = () => {
+      if (document.visibilityState === 'visible') void sincronizar()
+    }
     document.addEventListener('visibilitychange', alVolver)
     window.addEventListener('online', alVolver)
     return () => {

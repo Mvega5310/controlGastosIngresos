@@ -52,7 +52,11 @@ export type ResultadoColeccion<T> = {
  * superada por otra más nueva, y subirlo revertiría el dato bueno.
  */
 export async function sincronizarColeccion<T extends Registro>(
-  remoto: Remoto, coleccion: string, locales: T[], corte: string, pendientes: string[]
+  remoto: Remoto,
+  coleccion: string,
+  locales: T[],
+  corte: string,
+  pendientes: string[]
 ): Promise<ResultadoColeccion<T>> {
   // El corte se toma antes de subir. Tomarlo después se saltaría lo que otro
   // dispositivo escribiera entre la bajada y la subida; así, como mucho, en la
@@ -107,12 +111,17 @@ export async function sincronizarTodo(
   const cortes = { ...estado.cortes }
   const pendientes = { ...estado.pendientes }
   const fallos: Record<string, string> = {}
-  let enviados = 0, recibidos = 0
+  let enviados = 0,
+    recibidos = 0
 
   for (const [nombre, locales] of Object.entries(colecciones)) {
     try {
       const r = await sincronizarColeccion(
-        remoto, nombre, locales, cortes[nombre] || '', pendientes[nombre] || []
+        remoto,
+        nombre,
+        locales,
+        cortes[nombre] || '',
+        pendientes[nombre] || []
       )
       porColeccion[nombre] = { registros: r.registros, enviados: r.enviados, recibidos: r.recibidos }
       cortes[nombre] = r.corte

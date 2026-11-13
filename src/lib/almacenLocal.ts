@@ -31,11 +31,17 @@ export function leerLista<T>(clave: string, porDefecto: T[]): T[] {
     if (!guardado) return porDefecto
     const leido = JSON.parse(guardado)
     return Array.isArray(leido) ? leido : porDefecto
-  } catch { return porDefecto }
+  } catch {
+    return porDefecto
+  }
 }
 
 export function escribirLista(clave: string, filas: unknown[]) {
-  try { localStorage.setItem(clave, JSON.stringify(filas)) } catch { /* modo privado */ }
+  try {
+    localStorage.setItem(clave, JSON.stringify(filas))
+  } catch {
+    /* modo privado */
+  }
 }
 
 const clavePendientes = (clave: string) => `${clave}:pendientes`
@@ -45,10 +51,18 @@ export const escribirPendientes = (clave: string, ids: string[]) => escribirList
 
 const claveCortes = 'fc-cortes'
 export const leerCortes = (): Record<string, string> => {
-  try { return JSON.parse(localStorage.getItem(claveCortes) || '{}') || {} } catch { return {} }
+  try {
+    return JSON.parse(localStorage.getItem(claveCortes) || '{}') || {}
+  } catch {
+    return {}
+  }
 }
 export const escribirCortes = (cortes: Record<string, string>) => {
-  try { localStorage.setItem(claveCortes, JSON.stringify(cortes)) } catch { /* modo privado */ }
+  try {
+    localStorage.setItem(claveCortes, JSON.stringify(cortes))
+  } catch {
+    /* modo privado */
+  }
 }
 
 /**
@@ -63,7 +77,9 @@ export function limpiarDatosSincronizados() {
       localStorage.removeItem(clavePendientes(clave))
     }
     localStorage.removeItem(claveCortes)
-  } catch { /* modo privado */ }
+  } catch {
+    /* modo privado */
+  }
 }
 
 // --- Aviso de cambios externos ---------------------------------------------
@@ -73,7 +89,9 @@ const oyentes = new Set<() => void>()
 /** Avisa cuando la sincronización ha reescrito el almacenamiento. */
 export function alCambiarDatos(fn: () => void) {
   oyentes.add(fn)
-  return () => { oyentes.delete(fn) }
+  return () => {
+    oyentes.delete(fn)
+  }
 }
 
 export function avisarCambioDatos() {

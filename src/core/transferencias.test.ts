@@ -1,24 +1,48 @@
 import { describe, expect, it } from 'vitest'
-import { crearApuntes, quitarMovimiento, idsAEliminar, apuntesVisibles, accountBalance, totalBalance, totalsFor } from './finance'
+import {
+  crearApuntes,
+  quitarMovimiento,
+  idsAEliminar,
+  apuntesVisibles,
+  accountBalance,
+  totalBalance,
+  totalsFor
+} from './finance'
 import { aCentavos } from './dinero'
 import { Account, Movement } from '../data/mock'
 
 const cuentas: Account[] = [
-  { name: 'Cuenta principal', bank: 'B', kind: 'Ahorros', color: 'yellow', openingBalance: aCentavos(1000000) },
+  {
+    name: 'Cuenta principal',
+    bank: 'B',
+    kind: 'Ahorros',
+    color: 'yellow',
+    openingBalance: aCentavos(1000000)
+  },
   { name: 'Ahorros', bank: 'N', kind: 'Ahorros', color: 'purple', openingBalance: aCentavos(500000) }
 ]
 
-const alta = (extra: Partial<Movement> & { cuentaDestino?: string } = {}) => crearApuntes({
-  title: 'Traslado', category: 'Otros', account: 'Cuenta principal',
-  date: '2026-11-12', amount: aCentavos(200000), type: 'Transferencia',
-  cuentaDestino: 'Ahorros', ...extra
-})
+const alta = (extra: Partial<Movement> & { cuentaDestino?: string } = {}) =>
+  crearApuntes({
+    title: 'Traslado',
+    category: 'Otros',
+    account: 'Cuenta principal',
+    date: '2026-11-12',
+    amount: aCentavos(200000),
+    type: 'Transferencia',
+    cuentaDestino: 'Ahorros',
+    ...extra
+  })
 
 describe('crearApuntes', () => {
   it('un ingreso o un gasto es un solo apunte', () => {
     const uno = crearApuntes({
-      title: 'Salario', category: 'Trabajo', account: 'Cuenta principal',
-      date: '2026-11-01', amount: aCentavos(4200000), type: 'Ingreso'
+      title: 'Salario',
+      category: 'Trabajo',
+      account: 'Cuenta principal',
+      date: '2026-11-01',
+      amount: aCentavos(4200000),
+      type: 'Ingreso'
     })
     expect(uno).toHaveLength(1)
     expect(uno[0].transferId).toBeUndefined()
@@ -65,8 +89,13 @@ describe('efecto sobre los saldos', () => {
 
   it('un apunte antiguo de transferencia, sin flujo, no altera ningún saldo', () => {
     const viejo: Movement = {
-      id: 'legado', title: 'Antiguo', category: 'Otros', account: 'Cuenta principal',
-      date: '2026-11-01', amount: aCentavos(999999), type: 'Transferencia'
+      id: 'legado',
+      title: 'Antiguo',
+      category: 'Otros',
+      account: 'Cuenta principal',
+      date: '2026-11-01',
+      amount: aCentavos(999999),
+      type: 'Transferencia'
     }
     expect(accountBalance(cuentas[0], [viejo])).toBe(cuentas[0].openingBalance)
   })
@@ -88,8 +117,12 @@ describe('quitarMovimiento', () => {
 
   it('borra solo el apunte pedido cuando no es una transferencia', () => {
     const gasto = crearApuntes({
-      title: 'Mercado', category: 'Alimentación', account: 'Cuenta principal',
-      date: '2026-11-03', amount: aCentavos(285000), type: 'Gasto'
+      title: 'Mercado',
+      category: 'Alimentación',
+      account: 'Cuenta principal',
+      date: '2026-11-03',
+      amount: aCentavos(285000),
+      type: 'Gasto'
     })
     const lista = [...gasto, ...alta()]
     const despues = quitarMovimiento(lista, gasto[0].id)
@@ -113,9 +146,33 @@ describe('apuntesVisibles', () => {
 
   it('no esconde ingresos, gastos ni apuntes antiguos sin flujo', () => {
     const otros: Movement[] = [
-      { id: 'a', title: 'I', category: 'Trabajo', account: 'Cuenta principal', date: '2026-11-01', amount: 1, type: 'Ingreso' },
-      { id: 'b', title: 'G', category: 'Otros', account: 'Cuenta principal', date: '2026-11-02', amount: 1, type: 'Gasto' },
-      { id: 'c', title: 'T', category: 'Otros', account: 'Cuenta principal', date: '2026-11-03', amount: 1, type: 'Transferencia' }
+      {
+        id: 'a',
+        title: 'I',
+        category: 'Trabajo',
+        account: 'Cuenta principal',
+        date: '2026-11-01',
+        amount: 1,
+        type: 'Ingreso'
+      },
+      {
+        id: 'b',
+        title: 'G',
+        category: 'Otros',
+        account: 'Cuenta principal',
+        date: '2026-11-02',
+        amount: 1,
+        type: 'Gasto'
+      },
+      {
+        id: 'c',
+        title: 'T',
+        category: 'Otros',
+        account: 'Cuenta principal',
+        date: '2026-11-03',
+        amount: 1,
+        type: 'Transferencia'
+      }
     ]
     expect(apuntesVisibles(otros)).toHaveLength(3)
   })
@@ -130,8 +187,12 @@ describe('idsAEliminar', () => {
 
   it('de un gasto devuelve solo el suyo', () => {
     const g = crearApuntes({
-      title: 'Mercado', category: 'Alimentación', account: 'Cuenta principal',
-      date: '2026-11-03', amount: aCentavos(285000), type: 'Gasto'
+      title: 'Mercado',
+      category: 'Alimentación',
+      account: 'Cuenta principal',
+      date: '2026-11-03',
+      amount: aCentavos(285000),
+      type: 'Gasto'
     })
     expect(idsAEliminar([...g, ...alta()], g[0].id)).toEqual([g[0].id])
   })

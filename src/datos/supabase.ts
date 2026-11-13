@@ -36,8 +36,12 @@ type Fila = {
 }
 
 const aRegistro = (fila: Fila): Registro =>
-  ({ ...(fila.datos as object), id: fila.id, actualizadoEn: fila.actualizado_en,
-     ...(fila.eliminado_en ? { eliminadoEn: fila.eliminado_en } : {}) } as Registro)
+  ({
+    ...(fila.datos as object),
+    id: fila.id,
+    actualizadoEn: fila.actualizado_en,
+    ...(fila.eliminado_en ? { eliminadoEn: fila.eliminado_en } : {})
+  }) as Registro
 
 const aFila = (usuarioId: string, coleccion: string, r: Registro): Fila => ({
   usuario_id: usuarioId,
@@ -89,12 +93,17 @@ const explicar = (mensaje: string): string => {
   const m = mensaje.toLowerCase()
   if (m.includes('invalid login')) return 'El correo o la contraseña no son correctos.'
   if (m.includes('email not confirmed')) return 'Falta confirmar el correo. Revisa tu bandeja de entrada.'
-  if (m.includes('already registered') || m.includes('already been registered')) return 'Ese correo ya tiene cuenta. Entra con tu contraseña.'
-  if (m.includes('password should be at least')) return 'La contraseña es demasiado corta: usa al menos 6 caracteres.'
-  if (m.includes('rate limit') || m.includes('too many')) return 'Demasiados intentos seguidos. Espera un momento.'
+  if (m.includes('already registered') || m.includes('already been registered'))
+    return 'Ese correo ya tiene cuenta. Entra con tu contraseña.'
+  if (m.includes('password should be at least'))
+    return 'La contraseña es demasiado corta: usa al menos 6 caracteres.'
+  if (m.includes('rate limit') || m.includes('too many'))
+    return 'Demasiados intentos seguidos. Espera un momento.'
   if (m.includes('failed to fetch') || m.includes('network')) return 'No hay conexión con el servidor.'
-  if (m.includes('is invalid') && m.includes('email')) return 'Ese correo no es válido. Usa una dirección real: el servidor rechaza los dominios de ejemplo y los desechables.'
-  if (m.includes('signups not allowed') || m.includes('signup is disabled')) return 'El registro de cuentas nuevas está cerrado en este proyecto.'
+  if (m.includes('is invalid') && m.includes('email'))
+    return 'Ese correo no es válido. Usa una dirección real: el servidor rechaza los dominios de ejemplo y los desechables.'
+  if (m.includes('signups not allowed') || m.includes('signup is disabled'))
+    return 'El registro de cuentas nuevas está cerrado en este proyecto.'
   if (m.includes('user not found')) return 'No hay ninguna cuenta con ese correo.'
   if (m.includes('weak password')) return 'La contraseña es demasiado débil. Mézclala con números o símbolos.'
   return mensaje
@@ -102,7 +111,10 @@ const explicar = (mensaje: string): string => {
 
 export async function entrar(correo: string, contrasena: string): Promise<ResultadoAcceso> {
   if (!clienteSupabase) return { ok: false, mensaje: 'La sincronización no está configurada.' }
-  const { error } = await clienteSupabase.auth.signInWithPassword({ email: correo.trim(), password: contrasena })
+  const { error } = await clienteSupabase.auth.signInWithPassword({
+    email: correo.trim(),
+    password: contrasena
+  })
   return error ? { ok: false, mensaje: explicar(error.message) } : { ok: true }
 }
 

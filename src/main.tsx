@@ -6,7 +6,9 @@ import { migrar } from './data/migracion'
 
 migrar()
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode><App /></React.StrictMode>
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
 )
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {

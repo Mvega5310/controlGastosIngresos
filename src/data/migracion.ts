@@ -28,7 +28,11 @@ const escalar = (clave: string, campos: string[], factor: number) => {
   const crudo = localStorage.getItem(clave)
   if (!crudo) return
   let filas: unknown
-  try { filas = JSON.parse(crudo) } catch { return }
+  try {
+    filas = JSON.parse(crudo)
+  } catch {
+    return
+  }
   if (!Array.isArray(filas)) return
   const migradas = filas.map(fila => {
     if (!fila || typeof fila !== 'object') return fila

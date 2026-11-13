@@ -4,8 +4,12 @@ import { Registro } from './sincronizacion'
 
 type Fila = Registro & { nombre: string }
 
-const fila = (id: string, nombre: string, actualizadoEn: string, eliminadoEn?: string): Fila =>
-  ({ id, nombre, actualizadoEn, ...(eliminadoEn ? { eliminadoEn } : {}) })
+const fila = (id: string, nombre: string, actualizadoEn: string, eliminadoEn?: string): Fila => ({
+  id,
+  nombre,
+  actualizadoEn,
+  ...(eliminadoEn ? { eliminadoEn } : {})
+})
 
 const ids = (rs: { id: string }[]) => rs.map(r => r.id).sort()
 
@@ -51,10 +55,15 @@ function servidorFalso(inicial: Record<string, Fila[]> = {}) {
   }
 
   return {
-    remoto, envios,
+    remoto,
+    envios,
     contenido: (c: string) => (datos[c] || []).map(x => x.fila),
-    romper: (m: string) => { averiado = m },
-    arreglar: () => { averiado = null }
+    romper: (m: string) => {
+      averiado = m
+    },
+    arreglar: () => {
+      averiado = null
+    }
   }
 }
 
@@ -191,10 +200,14 @@ describe('sincronizarTodo', () => {
 
   it('recorre todas las colecciones y suma lo subido', async () => {
     const s = servidorFalso()
-    const r = await sincronizarTodo(s.remoto, {
-      movimientos: [fila('a', 'A', 'T1')],
-      presupuestos: [fila('b', 'B', 'T1'), fila('c', 'C', 'T1')]
-    }, estado({}, { movimientos: ['a'], presupuestos: ['b', 'c'] }))
+    const r = await sincronizarTodo(
+      s.remoto,
+      {
+        movimientos: [fila('a', 'A', 'T1')],
+        presupuestos: [fila('b', 'B', 'T1'), fila('c', 'C', 'T1')]
+      },
+      estado({}, { movimientos: ['a'], presupuestos: ['b', 'c'] })
+    )
     expect(r.enviados).toBe(3)
     expect(Object.keys(r.porColeccion).sort()).toEqual(['movimientos', 'presupuestos'])
     expect(r.fallos).toEqual({})
@@ -203,8 +216,11 @@ describe('sincronizarTodo', () => {
   it('si una colección falla, las demás siguen', async () => {
     const s = servidorFalso()
     s.romper('sin conexión')
-    const r = await sincronizarTodo(s.remoto, { movimientos: [fila('a', 'A', 'T1')] },
-      estado({}, { movimientos: ['a'] }))
+    const r = await sincronizarTodo(
+      s.remoto,
+      { movimientos: [fila('a', 'A', 'T1')] },
+      estado({}, { movimientos: ['a'] })
+    )
     expect(r.fallos.movimientos).toBe('sin conexión')
     expect(r.porColeccion.movimientos.registros).toHaveLength(1)
   })
@@ -213,12 +229,19 @@ describe('sincronizarTodo', () => {
     const s = servidorFalso()
     s.romper('sin conexión')
     const locales = [fila('a', 'A', 'T1')]
-    const primera = await sincronizarTodo(s.remoto, { movimientos: locales }, estado({}, { movimientos: ['a'] }))
+    const primera = await sincronizarTodo(
+      s.remoto,
+      { movimientos: locales },
+      estado({}, { movimientos: ['a'] })
+    )
     expect(primera.pendientes.movimientos).toEqual(['a'])
 
     s.arreglar()
-    const segunda = await sincronizarTodo(s.remoto, { movimientos: locales },
-      estado(primera.cortes, primera.pendientes))
+    const segunda = await sincronizarTodo(
+      s.remoto,
+      { movimientos: locales },
+      estado(primera.cortes, primera.pendientes)
+    )
     expect(segunda.enviados).toBe(1)
     expect(segunda.pendientes.movimientos).toEqual([])
     expect(s.contenido('movimientos')).toHaveLength(1)
@@ -226,10 +249,14 @@ describe('sincronizarTodo', () => {
 
   it('respeta los pendientes de cada colección por separado', async () => {
     const s = servidorFalso()
-    const r = await sincronizarTodo(s.remoto, {
-      movimientos: [fila('a', 'A', 'T1')],
-      metas: [fila('b', 'B', 'T1')]
-    }, estado({}, { metas: ['b'] }))
+    const r = await sincronizarTodo(
+      s.remoto,
+      {
+        movimientos: [fila('a', 'A', 'T1')],
+        metas: [fila('b', 'B', 'T1')]
+      },
+      estado({}, { metas: ['b'] })
+    )
     expect(r.porColeccion.movimientos.enviados).toBe(0)
     expect(r.porColeccion.metas.enviados).toBe(1)
   })

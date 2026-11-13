@@ -36,7 +36,10 @@ describe('por qué enteros y no coma flotante', () => {
   it('cien sumas seguidas dan el total exacto', () => {
     let enteros = 0
     let flotantes = 0
-    for (let i = 0; i < 100; i++) { enteros += aCentavos(0.07); flotantes += 0.07 }
+    for (let i = 0; i < 100; i++) {
+      enteros += aCentavos(0.07)
+      flotantes += 0.07
+    }
     expect(enteros).toBe(700)
     expect(aPesos(enteros)).toBe(7)
     expect(flotantes).not.toBe(7)

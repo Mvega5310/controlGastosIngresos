@@ -23,13 +23,18 @@ export const shiftPeriod = (p: Period, months: number): Period => {
 
 /** 'Noviembre 2026' */
 export const periodLabel = (p: Period) => {
-  const text = new Date(p.year, p.month - 1, 1).toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })
+  const text = new Date(p.year, p.month - 1, 1).toLocaleDateString('es-CO', {
+    month: 'long',
+    year: 'numeric'
+  })
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
 /** 'Miércoles, 12 de noviembre de 2026', en mayúsculas para el encabezado. */
 export const longDate = (date: Date) =>
-  date.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()
+  date
+    .toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    .toUpperCase()
 
 export const inPeriod = (m: Movement, p: Period) => m.date.slice(0, 7) === periodKey(p)
 
@@ -41,7 +46,8 @@ export type Totals = { income: number; expense: number; net: number }
  * propias, no son ingreso ni gasto del patrimonio.
  */
 export const totalsFor = (movements: Movement[], p: Period): Totals => {
-  let income = 0, expense = 0
+  let income = 0,
+    expense = 0
   for (const m of movements) {
     if (!inPeriod(m, p)) continue
     if (m.type === 'Ingreso') income += m.amount
@@ -69,8 +75,9 @@ export const accountBalance = (account: Account, movements: Movement[]) => {
 }
 
 /** Datos de un alta, antes de convertirse en apuntes. */
-export type NuevoMovimiento = Omit<Movement, 'id' | 'transferId' | 'flujo' | 'contraparte'>
-  & { cuentaDestino?: string }
+export type NuevoMovimiento = Omit<Movement, 'id' | 'transferId' | 'flujo' | 'contraparte'> & {
+  cuentaDestino?: string
+}
 
 /**
  * Convierte un alta en los apuntes que hay que guardar.
@@ -166,9 +173,12 @@ export const dailySeries = (movements: Movement[], p: Period): DailyPoint[] => {
     if (m.type === 'Ingreso') income[day] += m.amount
     else if (m.type === 'Gasto') expense[day] += m.amount
   }
-  const label = new Date(p.year, p.month - 1, 1).toLocaleDateString('es-CO', { month: 'short' }).replace('.', '')
+  const label = new Date(p.year, p.month - 1, 1)
+    .toLocaleDateString('es-CO', { month: 'short' })
+    .replace('.', '')
   const points: DailyPoint[] = []
-  let accIncome = 0, accExpense = 0
+  let accIncome = 0,
+    accExpense = 0
   for (let day = 1; day <= daysInMonth; day++) {
     accIncome += income[day]
     accExpense += expense[day]

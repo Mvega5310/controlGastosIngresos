@@ -1,14 +1,31 @@
 import { describe, expect, it } from 'vitest'
 import {
-  periodOf, periodKey, shiftPeriod, periodLabel, inPeriod, totalsFor,
-  accountBalance, totalBalance, change, dailySeries, byDateDesc,
-  monthGrid, todayISO, longDate
+  periodOf,
+  periodKey,
+  shiftPeriod,
+  periodLabel,
+  inPeriod,
+  totalsFor,
+  accountBalance,
+  totalBalance,
+  change,
+  dailySeries,
+  byDateDesc,
+  monthGrid,
+  todayISO,
+  longDate
 } from './finance'
 import { Account, Movement } from '../data/mock'
 
 const mov = (p: Partial<Movement>): Movement => ({
-  id: 'x', title: 't', category: 'Otros', account: 'Cuenta principal',
-  date: '2026-11-10', amount: 1000, type: 'Gasto', ...p
+  id: 'x',
+  title: 't',
+  category: 'Otros',
+  account: 'Cuenta principal',
+  date: '2026-11-10',
+  amount: 1000,
+  type: 'Gasto',
+  ...p
 })
 
 const NOV = { year: 2026, month: 11 }
@@ -60,7 +77,10 @@ describe('totalsFor', () => {
 
   it('deja fuera las transferencias: no son ingreso ni gasto', () => {
     const conTransferencia = totalsFor(movs, NOV)
-    const sinTransferencia = totalsFor(movs.filter(m => m.type !== 'Transferencia'), NOV)
+    const sinTransferencia = totalsFor(
+      movs.filter(m => m.type !== 'Transferencia'),
+      NOV
+    )
     expect(conTransferencia).toEqual(sinTransferencia)
   })
 
@@ -90,12 +110,20 @@ describe('saldos', () => {
   })
 
   it('cuenta todo el historial, no solo un periodo', () => {
-    const viejo = mov({ id: '9', account: 'Cuenta principal', amount: 1000, type: 'Ingreso', date: '2020-01-01' })
+    const viejo = mov({
+      id: '9',
+      account: 'Cuenta principal',
+      amount: 1000,
+      type: 'Ingreso',
+      date: '2020-01-01'
+    })
     expect(accountBalance(cuentas[0], [...movs, viejo])).toBe(accountBalance(cuentas[0], movs) + 1000)
   })
 
   it('el balance total es exactamente la suma de los saldos', () => {
-    expect(totalBalance(cuentas, movs)).toBe(accountBalance(cuentas[0], movs) + accountBalance(cuentas[1], movs))
+    expect(totalBalance(cuentas, movs)).toBe(
+      accountBalance(cuentas[0], movs) + accountBalance(cuentas[1], movs)
+    )
   })
 
   it('un movimiento de una cuenta desconocida no altera ningún saldo', () => {
@@ -135,10 +163,13 @@ describe('change', () => {
 
 describe('dailySeries', () => {
   it('da una celda por día del mes y acumula sin bajar nunca', () => {
-    const serie = dailySeries([
-      mov({ id: '1', date: '2026-11-03', amount: 100, type: 'Ingreso' }),
-      mov({ id: '2', date: '2026-11-10', amount: 40, type: 'Gasto' })
-    ], NOV)
+    const serie = dailySeries(
+      [
+        mov({ id: '1', date: '2026-11-03', amount: 100, type: 'Ingreso' }),
+        mov({ id: '2', date: '2026-11-10', amount: 40, type: 'Gasto' })
+      ],
+      NOV
+    )
     expect(serie).toHaveLength(30)
     expect(serie[0]).toMatchObject({ income: 0, expense: 0 })
     expect(serie[2].income).toBe(100)

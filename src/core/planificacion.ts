@@ -21,7 +21,9 @@ export const diasHasta = (fecha: string, hoy = todayISO()) => {
  * Si el mes no tiene ese día (un cobro el 31 en febrero) se usa el último.
  */
 export const proximaFecha = (diaMes: number, hoy = todayISO()): string => {
-  const anio = +hoy.slice(0, 4), mes = +hoy.slice(5, 7), dia = +hoy.slice(8, 10)
+  const anio = +hoy.slice(0, 4),
+    mes = +hoy.slice(5, 7),
+    dia = +hoy.slice(8, 10)
   const construir = (y: number, m: number) => {
     const ultimo = new Date(y, m, 0).getDate()
     const d = Math.min(Math.max(1, Math.round(diaMes) || 1), ultimo)
@@ -47,7 +49,10 @@ export const porcentaje = (parte: number, total: number) =>
 // --- Presupuestos -----------------------------------------------------------
 
 export type PresupuestoCalculado = Presupuesto & {
-  gastado: number; restante: number; progreso: number; estado: 'ok' | 'cerca' | 'excedido'
+  gastado: number
+  restante: number
+  progreso: number
+  estado: 'ok' | 'cerca' | 'excedido'
 }
 
 /**
@@ -55,14 +60,22 @@ export type PresupuestoCalculado = Presupuesto & {
  * Esta es la cifra que antes estaba escrita a mano junto a cada barra.
  */
 export const calcularPresupuestos = (
-  presupuestos: Presupuesto[], movimientos: Movement[], periodo: Period
+  presupuestos: Presupuesto[],
+  movimientos: Movement[],
+  periodo: Period
 ): PresupuestoCalculado[] =>
   presupuestos.map(p => {
-    const gastado = movimientos.reduce((suma, m) =>
-      m.type === 'Gasto' && m.category === p.categoria && inPeriod(m, periodo) ? suma + m.amount : suma, 0)
+    const gastado = movimientos.reduce(
+      (suma, m) =>
+        m.type === 'Gasto' && m.category === p.categoria && inPeriod(m, periodo) ? suma + m.amount : suma,
+      0
+    )
     const progreso = porcentaje(gastado, p.limite)
     return {
-      ...p, gastado, restante: p.limite - gastado, progreso,
+      ...p,
+      gastado,
+      restante: p.limite - gastado,
+      progreso,
       estado: progreso > 100 ? 'excedido' : progreso >= 80 ? 'cerca' : 'ok'
     }
   })
@@ -82,14 +95,18 @@ export const calcularMetas = (metas: Meta[], hoy = todayISO()): MetaCalculada[] 
 // --- Deudas -----------------------------------------------------------------
 
 export type DeudaCalculada = Deuda & {
-  pendiente: number; progreso: number; proximoPago: string; cuotasRestantes: number
+  pendiente: number
+  progreso: number
+  proximoPago: string
+  cuotasRestantes: number
 }
 
 export const calcularDeudas = (deudas: Deuda[], hoy = todayISO()): DeudaCalculada[] =>
   deudas.map(d => {
     const pendiente = Math.max(0, d.montoTotal - d.pagado)
     return {
-      ...d, pendiente,
+      ...d,
+      pendiente,
       progreso: porcentaje(d.pagado, d.montoTotal),
       proximoPago: proximaFecha(d.diaPago, hoy),
       cuotasRestantes: d.cuotaMensual > 0 ? Math.ceil(pendiente / d.cuotaMensual) : 0
@@ -104,13 +121,15 @@ export const cuotasDelMes = (deudas: Deuda[]) => deudas.reduce((s, d) => s + d.c
 export type SuscripcionCalculada = Suscripcion & { proximoCobro: string; dias: number }
 
 export const calcularSuscripciones = (subs: Suscripcion[], hoy = todayISO()): SuscripcionCalculada[] =>
-  subs.map(s => {
-    const proximoCobro = proximaFecha(s.diaCobro, hoy)
-    return { ...s, proximoCobro, dias: diasHasta(proximoCobro, hoy) }
-  }).sort((a, b) => a.proximoCobro.localeCompare(b.proximoCobro))
+  subs
+    .map(s => {
+      const proximoCobro = proximaFecha(s.diaCobro, hoy)
+      return { ...s, proximoCobro, dias: diasHasta(proximoCobro, hoy) }
+    })
+    .sort((a, b) => a.proximoCobro.localeCompare(b.proximoCobro))
 
 export const gastoMensualSuscripciones = (subs: Suscripcion[]) =>
-  subs.reduce((s, x) => x.activa ? s + x.monto : s, 0)
+  subs.reduce((s, x) => (x.activa ? s + x.monto : s), 0)
 
 // --- Inversiones ------------------------------------------------------------
 
@@ -120,7 +139,8 @@ export const calcularInversiones = (inv: Inversion[]): InversionCalculada[] =>
   inv.map(i => {
     const rendimiento = i.valorActual - i.invertido
     return {
-      ...i, rendimiento,
+      ...i,
+      rendimiento,
       porcentajeRendimiento: i.invertido > 0 ? Math.round((rendimiento / i.invertido) * 1000) / 10 : 0
     }
   })
@@ -129,7 +149,9 @@ export const resumenInversiones = (inv: InversionCalculada[]) => {
   const invertido = inv.reduce((s, i) => s + i.invertido, 0)
   const valor = inv.reduce((s, i) => s + i.valorActual, 0)
   return {
-    invertido, valor, rendimiento: valor - invertido,
+    invertido,
+    valor,
+    rendimiento: valor - invertido,
     porcentaje: invertido > 0 ? Math.round(((valor - invertido) / invertido) * 1000) / 10 : 0
   }
 }
@@ -137,14 +159,19 @@ export const resumenInversiones = (inv: InversionCalculada[]) => {
 // --- Vehículos --------------------------------------------------------------
 
 export type VehiculoCalculado = Vehiculo & {
-  soatDias: number; soatEstado: Urgencia; tecnoDias: number; tecnoEstado: Urgencia
+  soatDias: number
+  soatEstado: Urgencia
+  tecnoDias: number
+  tecnoEstado: Urgencia
 }
 
 export const calcularVehiculos = (v: Vehiculo[], hoy = todayISO()): VehiculoCalculado[] =>
   v.map(x => ({
     ...x,
-    soatDias: diasHasta(x.soat, hoy), soatEstado: urgencia(x.soat, 30, hoy),
-    tecnoDias: diasHasta(x.tecnomecanica, hoy), tecnoEstado: urgencia(x.tecnomecanica, 30, hoy)
+    soatDias: diasHasta(x.soat, hoy),
+    soatEstado: urgencia(x.soat, 30, hoy),
+    tecnoDias: diasHasta(x.tecnomecanica, hoy),
+    tecnoEstado: urgencia(x.tecnomecanica, 30, hoy)
   }))
 
 // --- Reportes ---------------------------------------------------------------

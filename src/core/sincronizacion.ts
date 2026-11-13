@@ -29,12 +29,17 @@ export type Registro = {
 export const ahora = () => new Date().toISOString()
 
 /** Pone o renueva la marca de tiempo de un registro. */
-export const sellar = <T extends { id: string }>(registro: T, momento = ahora()): T & Registro =>
-  ({ ...registro, actualizadoEn: momento })
+export const sellar = <T extends { id: string }>(registro: T, momento = ahora()): T & Registro => ({
+  ...registro,
+  actualizadoEn: momento
+})
 
 /** Marca un registro como borrado sin quitarlo todavía. */
-export const sellarBorrado = <T extends Registro>(registro: T, momento = ahora()): T =>
-  ({ ...registro, actualizadoEn: momento, eliminadoEn: momento })
+export const sellarBorrado = <T extends Registro>(registro: T, momento = ahora()): T => ({
+  ...registro,
+  actualizadoEn: momento,
+  eliminadoEn: momento
+})
 
 export const estaBorrado = (r: Partial<Registro>) => Boolean(r.eliminadoEn)
 

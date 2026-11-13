@@ -16,22 +16,22 @@ const PORT = Number(process.env.PORT) || 3000
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
-  '.js':   'text/javascript; charset=utf-8',
-  '.css':  'text/css; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
-  '.svg':  'image/svg+xml',
-  '.png':  'image/png',
-  '.jpg':  'image/jpeg',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
   '.webp': 'image/webp',
-  '.ico':  'image/x-icon',
-  '.woff2':'font/woff2',
+  '.ico': 'image/x-icon',
+  '.woff2': 'font/woff2',
   '.woff': 'font/woff',
-  '.txt':  'text/plain; charset=utf-8',
+  '.txt': 'text/plain; charset=utf-8',
   '.webmanifest': 'application/manifest+json'
 }
 
 /** Resuelve la ruta pedida dentro de dist, sin permitir salir de ella. */
-const resolve = (urlPath) => {
+const resolve = urlPath => {
   const clean = normalize(decodeURIComponent(urlPath.split('?')[0])).replace(/^(\.\.[/\\])+/, '')
   const full = join(ROOT, clean)
   return full.startsWith(ROOT) ? full : null
@@ -41,9 +41,8 @@ const serve = (res, file, status = 200) => {
   const ext = extname(file).toLowerCase()
   // Vite pone un hash en el nombre de cada recurso, así que pueden cachearse
   // para siempre. El index.html no, o el navegador nunca vería una versión nueva.
-  const cache = ext === '.html' || file.endsWith('.webmanifest')
-    ? 'no-cache'
-    : 'public, max-age=31536000, immutable'
+  const cache =
+    ext === '.html' || file.endsWith('.webmanifest') ? 'no-cache' : 'public, max-age=31536000, immutable'
   res.writeHead(status, {
     'Content-Type': TYPES[ext] || 'application/octet-stream',
     'Cache-Control': cache,
@@ -60,16 +59,27 @@ const server = createServer(async (req, res) => {
   }
   const index = join(ROOT, 'index.html')
   const target = resolve(req.url || '/')
-  if (!target) { serve(res, index, 200); return }
+  if (!target) {
+    serve(res, index, 200)
+    return
+  }
   try {
     const info = await stat(target)
-    if (info.isFile()) { serve(res, target, 200); return }
+    if (info.isFile()) {
+      serve(res, target, 200)
+      return
+    }
     if (info.isDirectory()) {
       const inner = join(target, 'index.html')
       const innerInfo = await stat(inner).catch(() => null)
-      if (innerInfo?.isFile()) { serve(res, inner, 200); return }
+      if (innerInfo?.isFile()) {
+        serve(res, inner, 200)
+        return
+      }
     }
-  } catch { /* no existe: cae al index */ }
+  } catch {
+    /* no existe: cae al index */
+  }
   // Aplicación de una sola página: cualquier ruta desconocida la resuelve el cliente.
   serve(res, index, 200)
 })

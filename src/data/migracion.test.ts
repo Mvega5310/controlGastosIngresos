@@ -6,9 +6,15 @@ const almacen = (() => {
   let datos: Record<string, string> = {}
   return {
     getItem: (k: string) => (k in datos ? datos[k] : null),
-    setItem: (k: string, v: string) => { datos[k] = String(v) },
-    removeItem: (k: string) => { delete datos[k] },
-    clear: () => { datos = {} },
+    setItem: (k: string, v: string) => {
+      datos[k] = String(v)
+    },
+    removeItem: (k: string) => {
+      delete datos[k]
+    },
+    clear: () => {
+      datos = {}
+    },
     todo: () => datos
   }
 })()
@@ -22,27 +28,32 @@ const leer = (clave: string) => JSON.parse(almacen.getItem(clave) || '[]')
 
 describe('de pesos a centavos', () => {
   it('multiplica por cien los importes guardados en la versión anterior', () => {
-    almacen.setItem('fc-movements', JSON.stringify([
-      { id: '1', title: 'Mercado', amount: 285000, type: 'Gasto' },
-      { id: '2', title: 'Salario', amount: 4200000, type: 'Ingreso' }
-    ]))
+    almacen.setItem(
+      'fc-movements',
+      JSON.stringify([
+        { id: '1', title: 'Mercado', amount: 285000, type: 'Gasto' },
+        { id: '2', title: 'Salario', amount: 4200000, type: 'Ingreso' }
+      ])
+    )
     migrar()
     expect(leer('fc-movements').map((m: { amount: number }) => m.amount)).toEqual([28500000, 420000000])
   })
 
   it('migra todos los campos de dinero de cada colección', () => {
-    almacen.setItem('fc-deudas', JSON.stringify([
-      { id: 'd', montoTotal: 2400000, pagado: 980000, cuotaMensual: 420000, diaPago: 18 }
-    ]))
+    almacen.setItem(
+      'fc-deudas',
+      JSON.stringify([{ id: 'd', montoTotal: 2400000, pagado: 980000, cuotaMensual: 420000, diaPago: 18 }])
+    )
     migrar()
     const [deuda] = leer('fc-deudas')
     expect(deuda).toMatchObject({ montoTotal: 240000000, pagado: 98000000, cuotaMensual: 42000000 })
   })
 
   it('no toca los campos que no son dinero', () => {
-    almacen.setItem('fc-suscripciones', JSON.stringify([
-      { id: 's', nombre: 'Netflix', monto: 32900, diaCobro: 22, activa: true }
-    ]))
+    almacen.setItem(
+      'fc-suscripciones',
+      JSON.stringify([{ id: 's', nombre: 'Netflix', monto: 32900, diaCobro: 22, activa: true }])
+    )
     migrar()
     const [sub] = leer('fc-suscripciones')
     expect(sub.monto).toBe(3290000)
@@ -97,8 +108,12 @@ describe('casos raros', () => {
 
   it('sin almacenamiento disponible no lanza', () => {
     ;(globalThis as unknown as { localStorage: unknown }).localStorage = {
-      getItem() { throw new Error('bloqueado') },
-      setItem() { throw new Error('bloqueado') }
+      getItem() {
+        throw new Error('bloqueado')
+      },
+      setItem() {
+        throw new Error('bloqueado')
+      }
     }
     expect(() => migrar()).not.toThrow()
   })

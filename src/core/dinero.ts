@@ -21,7 +21,9 @@ export const aCentavos = (pesos: number) => Math.round((Number(pesos) || 0) * CE
 export const aPesos = (centavos: number) => (Number(centavos) || 0) / CENTAVOS
 
 const formato = new Intl.NumberFormat('es-CO', {
-  style: 'currency', currency: 'COP', maximumFractionDigits: 0
+  style: 'currency',
+  currency: 'COP',
+  maximumFractionDigits: 0
 })
 
 /** Da formato a un importe en centavos: money(28500000) -> "$ 285.000". */

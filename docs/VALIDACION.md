@@ -30,12 +30,12 @@ Recharts y Lucide". Tailwind está instalado y configurado, pero **no se usa**:
   propias (`.stat-card`, `.panel`, `.nav-item`…).
 - El color `brand` definido en `tailwind.config.js` no se referencia en ningún
   sitio.
-- Lo único que aporta Tailwind es el *reset* (`@tailwind base`), unos 5 KB.
+- Lo único que aporta Tailwind es el _reset_ (`@tailwind base`), unos 5 KB.
 
 El sistema de diseño real son **19 KB de CSS escrito a mano** en
 `src/index.css`, con variables de color, tres puntos de corte responsive y un
 bloque de impresión. Es un buen CSS, pero conviene llamarlo por su nombre:
-quitar Tailwind exigiría reponer el *reset*, y mantenerlo como está induce a
+quitar Tailwind exigiría reponer el _reset_, y mantenerlo como está induce a
 error a quien entre al proyecto.
 
 ---
@@ -56,7 +56,7 @@ Mi recomendación es **no migrar**, y en su lugar:
    el navegador, con icono propio, pantalla completa y funcionamiento sin
    conexión. Cubre "móvil y PC" sin tocar una línea de la interfaz.
 2. Si más adelante hacen falta las tiendas de aplicaciones o funciones nativas
-   (biométrico, notificaciones *push* en iOS, leer SMS bancarios), envolver esta
+   (biométrico, notificaciones _push_ en iOS, leer SMS bancarios), envolver esta
    misma web con **Capacitor**, que reutiliza el 100 % del código.
 
 Expo solo compensaría si la app nativa en tiendas fuese un requisito
@@ -84,10 +84,13 @@ Ordenados por gravedad. Todos reproducidos.
 **3.1. Las tarjetas "del mes" suman todo el histórico** — `src/App.tsx:18`
 
 ```ts
-const totals = useMemo(() => ({
-  income:  movements.filter(m => m.type === 'Ingreso').reduce((a,m) => a + m.amount, 0),
-  expense: movements.filter(m => m.type === 'Gasto').reduce((a,m) => a + m.amount, 0)
-}), [movements])
+const totals = useMemo(
+  () => ({
+    income: movements.filter(m => m.type === 'Ingreso').reduce((a, m) => a + m.amount, 0),
+    expense: movements.filter(m => m.type === 'Gasto').reduce((a, m) => a + m.amount, 0)
+  }),
+  [movements]
+)
 ```
 
 No hay ningún filtro por fecha en toda la aplicación (`getMonth`, `getFullYear`
@@ -111,7 +114,9 @@ explicable y las dos cifras se contradicen en la misma vista.
 **3.3. Una caída se pinta en verde** — `src/components/StatCard.tsx`
 
 ```tsx
-{change && <span className="positive">{change}</span>}
+{
+  change && <span className="positive">{change}</span>
+}
 ```
 
 La clase es siempre `positive`. En la captura de inicio, "Gastos del mes

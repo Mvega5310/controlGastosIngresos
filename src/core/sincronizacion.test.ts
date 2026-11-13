@@ -1,13 +1,23 @@
 import { describe, expect, it } from 'vitest'
 import {
-  sellar, sellarBorrado, estaBorrado, vivos, fusionar,
-  purgar, retroceder, Registro
+  sellar,
+  sellarBorrado,
+  estaBorrado,
+  vivos,
+  fusionar,
+  purgar,
+  retroceder,
+  Registro
 } from './sincronizacion'
 
 type Fila = Registro & { nombre: string }
 
-const fila = (id: string, nombre: string, actualizadoEn: string, eliminadoEn?: string): Fila =>
-  ({ id, nombre, actualizadoEn, ...(eliminadoEn ? { eliminadoEn } : {}) })
+const fila = (id: string, nombre: string, actualizadoEn: string, eliminadoEn?: string): Fila => ({
+  id,
+  nombre,
+  actualizadoEn,
+  ...(eliminadoEn ? { eliminadoEn } : {})
+})
 
 const T1 = '2026-11-12T10:00:00.000Z'
 const T2 = '2026-11-12T11:00:00.000Z'
