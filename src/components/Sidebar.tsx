@@ -1,5 +1,5 @@
-import { LayoutDashboard, ArrowLeftRight, Wallet, CalendarDays, RefreshCw, CreditCard, Target, ChartNoAxesCombined, TrendingUp, CarFront, ChartPie, Settings, X } from 'lucide-react'
-const icons:Record<string,any> = {LayoutDashboard,ArrowLeftRight,Wallet,CalendarDays,RefreshCw,CreditCard,Target,ChartNoAxesCombined,TrendingUp,CarFront,ChartPie,Settings}
+import { LucideIcon, LayoutDashboard, ArrowLeftRight, Wallet, CalendarDays, RefreshCw, CreditCard, Target, ChartNoAxesCombined, TrendingUp, CarFront, ChartPie, Settings, X } from 'lucide-react'
+const icons:Record<string,LucideIcon> = {LayoutDashboard,ArrowLeftRight,Wallet,CalendarDays,RefreshCw,CreditCard,Target,ChartNoAxesCombined,TrendingUp,CarFront,ChartPie,Settings}
 const groups = [
  {label:'GENERAL',items:[['Inicio','LayoutDashboard'],['Movimientos','ArrowLeftRight'],['Cuentas','Wallet'],['Calendario','CalendarDays']]},
  {label:'PLANIFICACIÓN',items:[['Suscripciones','RefreshCw'],['Deudas','CreditCard'],['Metas de ahorro','Target'],['Presupuestos','ChartNoAxesCombined']]},

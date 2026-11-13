@@ -16,6 +16,11 @@ import {
  * Los registros de ejemplo no se sellan a propósito: sin marca cuentan como lo
  * más antiguo posible, así que cualquier edición real les gana.
  */
+/** Marca un registro como dado de baja. Puro, y fuera del hook para que las
+ *  funciones que lo usan no cambien en cada render. */
+const darDeBaja = <T extends { id: string } & Partial<Registro>>(x: T): T =>
+  sellarBorrado({ ...x, actualizadoEn: x.actualizadoEn || '' })
+
 export function useColeccion<T extends { id: string }>(clave: string, iniciales: T[]) {
   type Fila = T & Partial<Registro>
 
@@ -32,9 +37,14 @@ export function useColeccion<T extends { id: string }>(clave: string, iniciales:
 
   useEffect(() => { escribirPendientes(clave, pendientes) }, [clave, pendientes])
 
+  // Las semillas no cambian durante la vida del componente, pero el efecto no
+  // debe volver a suscribirse si llegara otra referencia del mismo array.
+  const semillas = useRef(iniciales)
+  semillas.current = iniciales
+
   /** Cuando la sincronización reescribe el almacenamiento, se vuelve a leer. */
   useEffect(() => alCambiarDatos(() => {
-    setTodos(leerLista<Fila>(clave, iniciales as Fila[]))
+    setTodos(leerLista<Fila>(clave, semillas.current as Fila[]))
     setPendientes(leerPendientes(clave))
   }), [clave])
 
@@ -61,8 +71,6 @@ export function useColeccion<T extends { id: string }>(clave: string, iniciales:
     setTodos(previos => previos.map(x => x.id === id ? sellar({ ...x, ...cambios }) : x))
     anotar([id])
   }, [anotar])
-
-  const darDeBaja = (x: Fila): Fila => sellarBorrado({ ...x, actualizadoEn: x.actualizadoEn || '' })
 
   const eliminar = useCallback((id: string) => {
     setTodos(previos => previos.map(x => x.id === id ? darDeBaja(x) : x))

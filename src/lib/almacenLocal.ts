@@ -7,7 +7,6 @@
  * cada colección vuelve a leer lo suyo y la pantalla se actualiza.
  */
 import { CLAVES } from '../data/entidades'
-import { Registro } from '../core/sincronizacion'
 
 /** Todas las colecciones que viajan entre dispositivos. */
 export const COLECCIONES = {

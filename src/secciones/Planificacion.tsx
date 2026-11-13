@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Pencil, Trash2, RefreshCw, CreditCard, Target, TrendingUp, Wallet, ArrowUpRight, CalendarClock } from 'lucide-react'
+import { Plus, Pencil, Trash2, RefreshCw, CreditCard, Target, Wallet, ArrowUpRight, CalendarClock } from 'lucide-react'
 import { Movement, money, categories, accountNames } from '../data/mock'
 import {
   CLAVES, Deuda, Meta, Presupuesto, Suscripcion,
