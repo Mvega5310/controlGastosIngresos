@@ -1,74 +1,93 @@
-# FinControl — Frontend MVP
+# FinControl
 
-Interfaz web responsive para organizar finanzas personales. Construida con React, TypeScript, Vite, Tailwind CSS, Recharts y Lucide.
+Aplicación de finanzas personales: registra ingresos y gastos, y muestra con
+claridad cómo se mueve el dinero. Funciona en el navegador del móvil y del PC
+con el mismo código, se instala como aplicación y sigue funcionando sin
+conexión.
 
-## Requisitos
+**En producción:** https://fincontrol-web-production.up.railway.app
 
-- Node.js 20.19+ o 22.12+
-- npm
-- Visual Studio Code
+## Qué hace
 
-## Instalación
+- **Movimientos** — ingresos, gastos y transferencias, con búsqueda y filtros.
+  Una transferencia genera dos apuntes atados, de modo que el balance total no
+  varía al mover dinero entre cuentas propias, pero cada cuenta sí lo refleja.
+- **Panel** — balance, ingresos y gastos del periodo, variación frente al mes
+  anterior, gráfica de flujo acumulado, saldos por cuenta y últimos movimientos.
+- **Cuentas** — saldo actual de cada una, calculado desde su saldo de partida
+  más todo lo registrado en ella.
+- **Calendario** — el mes que estés viendo, con un punto en los días que tienen
+  movimientos.
+- **Presupuestos** — límite por categoría frente al gasto real de ese periodo,
+  con aviso al 80 % y al excederse.
+- **Suscripciones** — próximo cobro (teniendo en cuenta los meses cortos), gasto
+  mensual y anual; se pueden pausar.
+- **Deudas** — pendiente, porcentaje pagado, cuotas que faltan y próximo
+  vencimiento.
+- **Metas de ahorro** — progreso, cuánto falta y días hasta la fecha límite.
+- **Inversiones** — rendimiento en dinero y en porcentaje, por activo y del
+  conjunto.
+- **Transporte** — días hasta el SOAT y la tecnomecánica, con aviso de lo
+  vencido y lo que vence pronto.
+- **Reportes** — desglose del gasto del periodo por categoría.
+- Tema claro y oscuro, que respeta la preferencia del sistema y se recuerda.
 
-1. Descomprime `fincontrol-vscode.zip`.
-2. Abre la carpeta `fincontrol` en Visual Studio Code.
-3. Abre Terminal → New Terminal.
-4. Ejecuta:
+## Cómo está construido
+
+React 18, TypeScript y Vite. Recharts para la gráfica y Lucide para los iconos.
+
+El estilo es CSS propio con variables de color: Tailwind está instalado pero
+solo aporta su _reset_, no se usa ninguna de sus clases de utilidad.
+
+```text
+src/
+├── core/        cálculo puro: sin DOM, sin almacenamiento, todo bajo pruebas
+│   ├── dinero.ts               importes en enteros y su formato
+│   ├── finanzas.ts             periodos, totales, saldos, variaciones
+│   ├── planificacion.ts        presupuestos, deudas, metas, vigencias
+│   ├── sincronizacion.ts       marcas de tiempo y fusión de versiones
+│   └── motorSincronizacion.ts  una vuelta de sincronización
+├── datos/       catálogo, entidades, migración y Supabase
+├── lib/         hooks y utilidades (almacenamiento, colecciones, fechas)
+├── components/  piezas de interfaz reutilizables
+├── secciones/   las vistas
+└── App.tsx      el armazón: estado compartido y qué sección se muestra
+```
+
+Dos reglas que sostienen el resto:
+
+**Ninguna cifra se escribe a mano en una vista.** Todo cálculo vive en `core/`,
+en módulos puros con pruebas. Si un número aparece en pantalla, salió de ahí.
+
+**El dinero se guarda en enteros, nunca en coma flotante.** Los importes están
+en centavos; la interfaz habla en pesos y la conversión ocurre solo al leer un
+formulario y al dar formato.
+
+## Ponerlo en marcha
+
+Necesitas Node.js 20.19 o superior.
 
 ```bash
 npm install
+```
+
+```bash
 npm run dev
 ```
 
-5. Abre la dirección local que muestre Vite (normalmente http://localhost:5173).
+Abre la dirección que muestre Vite, normalmente http://localhost:5173.
 
-## Compilar
+### Comandos
 
-```bash
-npm run build
-npm run preview
-```
-
-## Qué incluye
-
-- Dashboard con indicadores, flujo de efectivo, cuentas, movimientos recientes y próximos pagos.
-- Movimientos con búsqueda, filtros y creación mediante modal.
-- Cuentas, calendario, suscripciones, deudas, metas, presupuestos, inversiones, transporte, reportes y ajustes.
-- Tema claro/oscuro.
-- Diseño responsive: menú lateral en escritorio y navegación inferior en móvil.
-- Movimientos guardados en `localStorage` del navegador.
-
-## Estructura
-
-```text
-fincontrol/
-├── index.html
-├── package.json
-├── vite.config.ts
-├── tsconfig.json
-├── tailwind.config.js
-├── postcss.config.js
-├── README.md
-└── src/
-    ├── main.tsx
-    ├── App.tsx
-    ├── index.css
-    ├── components/
-    │   ├── Sidebar.tsx
-    │   ├── StatCard.tsx
-    │   └── Modal.tsx
-    └── data/
-        └── mock.ts
-```
-
-## Identidad visual
-
-- Verde principal: `#1E6B3A`
-- Verde secundario: `#4CB873`
-- Amarillo: `#F2C230`
-- Fondo claro: `#F7F8F6`
-- Tipografía: Inter / DM Sans
-- Bordes redondeados: 8–12 px
+| Comando             | Qué hace                                        |
+| ------------------- | ----------------------------------------------- |
+| `npm run dev`       | Servidor de desarrollo con recarga en caliente  |
+| `npm test`          | Las pruebas (126)                               |
+| `npm run lint`      | ESLint                                          |
+| `npm run format`    | Prettier sobre todo el proyecto                 |
+| `npm run build`     | Compila a `dist/`                               |
+| `npm start`         | Sirve `dist/` en producción                     |
+| `npm run verificar` | Formato, lint, pruebas y compilación de una vez |
 
 ## Sincronizar entre dispositivos (opcional)
 
@@ -77,31 +96,48 @@ navegador: no viajan de tu móvil a tu PC. Para que viajen:
 
 1. Crea un proyecto gratuito en https://supabase.com.
 2. Abre su **SQL Editor** y ejecuta el contenido de `supabase/esquema.sql`.
-3. En **Project Settings → API**, copia la _URL_ y la clave _anon public_.
+3. En **Project Settings → API**, copia la _URL_ y la clave _publishable_.
 4. Crea un archivo `.env` junto a `package.json` (toma `.env.example` como
    plantilla) con esos dos valores.
 5. Vuelve a compilar. Aparecerá un icono de nube en la barra superior para
    crear la cuenta o entrar.
 
-La clave _anon public_ está pensada para vivir en el navegador: no da acceso a
-nada por sí sola, porque las políticas de la base de datos atan cada fila a su
+La clave pública está pensada para vivir en el navegador: no da acceso a nada
+por sí sola, porque las políticas de la base de datos atan cada fila a su
 usuario. La clave _service_role_ no debe usarse aquí.
 
-Mientras no configures esto, el icono de la barra indica que los datos están
-solo en este dispositivo, y la aplicación no pide ninguna cuenta.
+Cuando no hay credenciales configuradas, el paquete de Supabase ni siquiera
+entra en la compilación.
 
-## Importante: alcance de esta entrega
+### Cómo se resuelven los conflictos
 
-Esta entrega es un **frontend MVP navegable con datos de demostración**, no una fintech lista para producción. Los datos de movimientos se guardan solo en el navegador actual. Cuentas, pagos, suscripciones, deudas, inversiones y vehículos muestran información ficticia de muestra; algunos botones de alta indican que sus formularios se implementarán en la siguiente fase.
+Gana la última escritura, comparando la marca de tiempo de cada registro. Es
+suficiente para un uso personal, donde la misma persona edita desde su móvil y
+su PC; no valdría para edición concurrente entre varias personas.
 
-Aún no incluye backend Node/Fastify, PostgreSQL/Drizzle, autenticación real, autorización, cifrado, sincronización entre dispositivos, conexión bancaria, notificaciones, pagos automáticos ni despliegue. No ingreses información bancaria real.
+Un borrado no desaparece sin más: deja rastro, para que el otro dispositivo se
+entere en vez de volver a subirlo como si fuera nuevo.
 
-## Siguiente fase técnica recomendada
+Hay dos relojes con papeles distintos. El del dispositivo decide qué versión
+gana; el del servidor dice qué cambió allí. Lo que falta por subir no se deduce
+de ninguno de los dos, sino de una lista de pendientes.
 
-1. Definir API y esquema PostgreSQL/Drizzle.
-2. Implementar registro, login, recuperación de contraseña y onboarding.
-3. Persistir usuarios, cuentas, categorías y movimientos en backend.
-4. Modelar transferencias como dos movimientos relacionados y excluirlas de ingresos/gastos.
-5. Congelar la tasa de cambio utilizada en cada movimiento multimoneda.
-6. Añadir calendario, suscripciones, recordatorios y pagos idempotentes.
-7. Pruebas, auditoría, backups, seguridad y despliegue.
+## Qué no hace todavía
+
+- **Una sola moneda.** Todo está en pesos colombianos. El modelo ya guarda los
+  importes en enteros, que es el requisito previo, pero falta la moneda por
+  movimiento y congelar la tasa de cambio de cada uno.
+- **Sin conexión bancaria.** Los movimientos se registran a mano.
+- **Inversiones y vehículos se actualizan a mano.** No consulta cotizaciones ni
+  organismos de tránsito.
+- **Sin notificaciones ni recordatorios.** El calendario y las suscripciones
+  muestran los vencimientos, pero no avisan.
+- **Sin recuperación de contraseña probada.** Supabase la ofrece; aquí no se ha
+  conectado ni verificado.
+
+## Documentación
+
+- `docs/VALIDACION.md` — la auditoría inicial del proyecto, con los 14 defectos
+  que se encontraron y en qué quedó cada uno.
+- `supabase/esquema.sql` — el esquema, comentado, incluidas las políticas que
+  aíslan los datos de cada usuario.

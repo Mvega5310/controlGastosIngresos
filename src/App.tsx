@@ -182,7 +182,7 @@ function App() {
           ) : active === 'Reportes' ? (
             <Reportes movimientos={movements} totales={totals} periodo={period} />
           ) : (
-            <Ajustes dark={dark} setDark={setDark} />
+            <Ajustes dark={dark} setDark={setDark} sync={sync} onAbrirCuenta={() => setPanelCuenta(true)} />
           )}
           <footer className="footer">
             <span>© 2026 FinControl. Tus finanzas, bajo control.</span>

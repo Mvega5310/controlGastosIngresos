@@ -1,0 +1,39 @@
+name: Verificar
+
+# Cada empujón y cada propuesta de cambio pasan por lo mismo que se ejecuta
+# en local con `npm run verificar`: formato, lint, pruebas y compilación.
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Formato
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Pruebas
+        run: npm test
+
+      - name: Compilar
+        run: npm run build
+
+      - name: Auditoría de seguridad
+        # Informativa: no tumba la compilación por un aviso en una
+        # dependencia de desarrollo, pero queda registrado en el historial.
+        run: npm audit --audit-level=high || true
