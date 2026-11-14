@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Bell, TriangleAlert, Clock3, Target, CheckCheck } from 'lucide-react'
 import { Aviso } from '../core/avisos'
 
@@ -64,6 +65,16 @@ export function PanelAvisos({
   onCerrar: () => void
   onIr: (seccion: string) => void
 }) {
+  // Escape cierra el panel, como cualquier menú flotante.
+  useEffect(() => {
+    if (!abierto) return
+    const alPulsar = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCerrar()
+    }
+    document.addEventListener('keydown', alPulsar)
+    return () => document.removeEventListener('keydown', alPulsar)
+  }, [abierto, onCerrar])
+
   if (!abierto) return null
 
   return (

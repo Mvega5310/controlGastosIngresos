@@ -7,12 +7,25 @@
  */
 import { createServer } from 'node:http'
 import { createReadStream } from 'node:fs'
-import { stat } from 'node:fs/promises'
+import { readFile, stat } from 'node:fs/promises'
 import { join, normalize, extname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), 'dist')
 const PORT = Number(process.env.PORT) || 3000
+
+/**
+ * Entorno de pruebas.
+ *
+ * Con `ENTORNO=staging` el servidor se declara a sí mismo como una copia de
+ * pruebas: no se deja indexar y se instala con otro nombre. Sin esa variable —
+ * es decir, en producción — no cambia nada.
+ *
+ * Existe porque una aplicación de pruebas y la de producción serían idénticas en
+ * la pantalla de inicio de un teléfono, con el mismo nombre y el mismo icono, y
+ * así se acaba registrando gastos de verdad en la copia de pruebas.
+ */
+const ES_PRUEBAS = process.env.ENTORNO === 'staging'
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -47,9 +60,40 @@ const serve = (res, file, status = 200) => {
     'Content-Type': TYPES[ext] || 'application/octet-stream',
     'Cache-Control': cache,
     'X-Content-Type-Options': 'nosniff',
-    'Referrer-Policy': 'same-origin'
+    'Referrer-Policy': 'same-origin',
+    ...(ES_PRUEBAS ? { 'X-Robots-Tag': 'noindex, nofollow' } : {})
   })
   createReadStream(file).pipe(res)
+}
+
+/** Respuestas propias del entorno de pruebas. Devuelve true si atendió la petición. */
+const atenderPruebas = async (req, res) => {
+  if (!ES_PRUEBAS) return false
+  const ruta = (req.url || '/').split('?')[0]
+
+  if (ruta === '/robots.txt') {
+    res.writeHead(200, { 'Content-Type': TYPES['.txt'], 'X-Robots-Tag': 'noindex, nofollow' })
+    res.end(req.method === 'HEAD' ? undefined : 'User-agent: *\nDisallow: /\n')
+    return true
+  }
+
+  if (ruta === '/manifest.webmanifest') {
+    try {
+      const manifiesto = JSON.parse(await readFile(join(ROOT, 'manifest.webmanifest'), 'utf8'))
+      manifiesto.name = 'FinControl · pruebas'
+      manifiesto.short_name = 'FC pruebas'
+      res.writeHead(200, {
+        'Content-Type': TYPES['.webmanifest'],
+        'Cache-Control': 'no-cache',
+        'X-Robots-Tag': 'noindex, nofollow'
+      })
+      res.end(req.method === 'HEAD' ? undefined : JSON.stringify(manifiesto))
+      return true
+    } catch {
+      return false // si algo falla, cae al archivo tal cual
+    }
+  }
+  return false
 }
 
 const server = createServer(async (req, res) => {
@@ -57,6 +101,7 @@ const server = createServer(async (req, res) => {
     res.writeHead(405, { Allow: 'GET, HEAD' }).end('Método no permitido')
     return
   }
+  if (await atenderPruebas(req, res)) return
   const index = join(ROOT, 'index.html')
   const target = resolve(req.url || '/')
   if (!target) {

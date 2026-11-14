@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   LucideIcon,
   Menu,
@@ -42,6 +42,18 @@ import { Cuentas } from './secciones/Cuentas'
 import { Calendario } from './secciones/Calendario'
 import { Ajustes } from './secciones/Ajustes'
 
+/**
+ * Qué controles globales tiene sentido enseñar en cada sección.
+ *
+ * El selector de mes y «Nuevo movimiento» se pintaban siempre, en todas las
+ * secciones, aunque ni Cuentas ni Suscripciones ni Ajustes dependan de un mes ni
+ * de un movimiento. En un móvil de 320 px ocupaban, además, el sitio que no hay.
+ * El calendario lleva sus propias flechas contra el mismo periodo, así que no
+ * repite el selector.
+ */
+const CON_PERIODO = ['Inicio', 'Reportes', 'Presupuestos']
+const CON_NUEVO_MOVIMIENTO = ['Inicio', 'Movimientos']
+
 function App() {
   const sync = useSincronizacion()
   // Si venimos de un enlace de correo que falló, se abre el panel: si no, la
@@ -82,6 +94,35 @@ function App() {
     [modal, setModal] = useState(false),
     [query, setQuery] = useState(''),
     [filter, setFilter] = useState('Todos')
+  // Al cerrar el menú el foco vuelve al botón que lo abrió: si no, quien navega
+  // con teclado se queda sobre un elemento que acaba de desaparecer.
+  const botonMenu = useRef<HTMLButtonElement>(null)
+  const cerrarMenu = useCallback(() => {
+    setSidebarOpen(false)
+    botonMenu.current?.focus()
+  }, [])
+  useEffect(() => {
+    if (!sidebarOpen) return
+    const alPulsar = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') cerrarMenu()
+    }
+    window.addEventListener('keydown', alPulsar)
+    // El fondo no se desplaza mientras el menú está abierto.
+    const previo = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    // Si la ventana crece hasta el escritorio, la barra pasa a ser fija: el
+    // menú abierto ya no tiene sentido y el bloqueo del fondo se quedaría puesto.
+    const escritorio = window.matchMedia('(min-width: 901px)')
+    const alCambiar = () => {
+      if (escritorio.matches) setSidebarOpen(false)
+    }
+    escritorio.addEventListener('change', alCambiar)
+    return () => {
+      window.removeEventListener('keydown', alPulsar)
+      document.body.style.overflow = previo
+      escritorio.removeEventListener('change', alCambiar)
+    }
+  }, [sidebarOpen, cerrarMenu])
   const datos = useDatos()
   const movs = datos.movimientos
   const movements = movs.items
@@ -92,6 +133,7 @@ function App() {
     } catch {
       /* modo privado */
     }
+    document.documentElement.classList.toggle('tema-oscuro', dark)
   }, [dark])
   const totals = useMemo(() => totalsFor(movements, period), [movements, period])
   const previous = useMemo(() => totalsFor(movements, shiftPeriod(period, -1)), [movements, period])
@@ -160,26 +202,45 @@ function App() {
         active={active}
         onNavigate={go}
         open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
+        onClose={cerrarMenu}
         correo={sync.correo}
         seccionesConAviso={[...new Set(avisos.map(a => a.seccion))]}
       />
       <main className="main-area">
         <header className="topbar">
           <div className="top-left">
-            <button className="icon-button mobile-menu" onClick={() => setSidebarOpen(true)}>
+            <button
+              ref={botonMenu}
+              className="icon-button mobile-menu"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Abrir el menú"
+              aria-expanded={sidebarOpen}
+              aria-controls="menu-lateral"
+            >
               <Menu />
             </button>
             <div className="breadcrumb">
-              Mi espacio <span>/</span> <b>{active}</b>
+              <span className="breadcrumb-raiz">
+                Mi espacio <span>/</span>{' '}
+              </span>
+              <b>{active}</b>
             </div>
           </div>
           <div className="top-actions">
-            <button className="icon-button search-button" onClick={() => go('Movimientos')}>
+            <button
+              className="icon-button search-button"
+              onClick={() => go('Movimientos')}
+              aria-label="Buscar movimientos"
+            >
               <Search size={19} />
             </button>
             <BotonCuenta sync={sync} onAbrir={() => setPanelCuenta(true)} />
-            <button className="icon-button" onClick={() => setDark(!dark)} title="Cambiar tema">
+            <button
+              className="icon-button"
+              onClick={() => setDark(!dark)}
+              title="Cambiar tema"
+              aria-label={dark ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
+            >
               {dark ? <Sun size={19} /> : <Moon size={19} />}
             </button>
             <BotonAvisos
@@ -238,30 +299,36 @@ function App() {
                   : `Gestiona y consulta tu información de ${active.toLowerCase()}.`}
               </p>
             </div>
-            <div className="welcome-actions">
-              <div className="period-picker">
-                <button
-                  className="btn-secondary"
-                  onClick={() => setPeriod(p => shiftPeriod(p, -1))}
-                  aria-label="Mes anterior"
-                >
-                  ‹
-                </button>
-                <span className="period-current">
-                  <CalendarDays size={16} /> {periodLabel(period)}
-                </span>
-                <button
-                  className="btn-secondary"
-                  onClick={() => setPeriod(p => shiftPeriod(p, 1))}
-                  aria-label="Mes siguiente"
-                >
-                  ›
-                </button>
+            {(CON_PERIODO.includes(active) || CON_NUEVO_MOVIMIENTO.includes(active)) && (
+              <div className={`welcome-actions ${CON_PERIODO.includes(active) ? '' : 'solo-nuevo'}`}>
+                {CON_PERIODO.includes(active) && (
+                  <div className="period-picker">
+                    <button
+                      className="btn-secondary"
+                      onClick={() => setPeriod(p => shiftPeriod(p, -1))}
+                      aria-label="Mes anterior"
+                    >
+                      ‹
+                    </button>
+                    <span className="period-current">
+                      <CalendarDays size={16} /> {periodLabel(period)}
+                    </span>
+                    <button
+                      className="btn-secondary"
+                      onClick={() => setPeriod(p => shiftPeriod(p, 1))}
+                      aria-label="Mes siguiente"
+                    >
+                      ›
+                    </button>
+                  </div>
+                )}
+                {CON_NUEVO_MOVIMIENTO.includes(active) && (
+                  <button className="btn-primary boton-nuevo" onClick={() => setModal(true)}>
+                    <Plus size={17} /> Nuevo movimiento
+                  </button>
+                )}
               </div>
-              <button className="btn-primary" onClick={() => setModal(true)}>
-                <Plus size={17} /> Nuevo movimiento
-              </button>
-            </div>
+            )}
           </div>
           {active === 'Inicio' ? (
             <Panel
@@ -317,7 +384,7 @@ function App() {
           </footer>
         </div>
       </main>
-      <nav className="mobile-nav">
+      <nav className="mobile-nav" aria-label="Navegación principal">
         {(
           [
             ['Inicio', LayoutDashboard],
@@ -328,11 +395,13 @@ function App() {
           ] as [string, LucideIcon][]
         ).map(([n, I]) => (
           <button
-            className={active === n ? 'selected' : ''}
+            className={(n === 'Más' ? active === 'Ajustes' : active === n) ? 'selected' : ''}
             onClick={() => (n === '+' ? setModal(true) : n === 'Más' ? go('Ajustes') : go(n))}
             key={n}
+            aria-label={n === '+' ? 'Nuevo movimiento' : n === 'Más' ? 'Más: ajustes y cuenta' : n}
+            aria-current={(n === 'Más' ? active === 'Ajustes' : active === n) ? 'page' : undefined}
           >
-            {<I size={20} />}
+            {<I size={22} />}
             <small>{n === '+' ? '' : n}</small>
           </button>
         ))}

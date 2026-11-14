@@ -10,7 +10,7 @@
  *   nombre dado siempre contiene lo mismo y se puede servir desde la caché.
  * - Otros dominios (tipografías de Google): no se tocan, los gestiona el navegador.
  */
-const CACHE = 'fincontrol-v2'
+const CACHE = 'fincontrol-v3'
 const SHELL = ['/', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png']
 
 self.addEventListener('install', event => {

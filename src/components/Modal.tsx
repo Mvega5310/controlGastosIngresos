@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from 'react'
 import { X, Wallet } from 'lucide-react'
 import { Account, Movement, categories } from '../datos/catalogo'
 import { aCentavos } from '../core/dinero'
+import { useDialogo } from '../lib/useDialogo'
 type Props = {
   open: boolean
   onClose: () => void
@@ -40,6 +41,8 @@ export default function Modal({ open, onClose, onSave, cuentas }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- accountNames se sigue por clavesCuentas
   }, [open, clavesCuentas])
 
+  const ref = useDialogo(open, onClose)
+
   if (!open) return null
   const submit = (e: FormEvent) => {
     e.preventDefault()
@@ -62,13 +65,13 @@ export default function Modal({ open, onClose, onSave, cuentas }: Props) {
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <div className="modal">
+      <div ref={ref} className="modal" role="dialog" aria-modal="true" aria-label="Nuevo movimiento">
         <div className="modal-head">
           <div>
             <span className="eyebrow">REGISTRO FINANCIERO</span>
             <h2>Nuevo movimiento</h2>
           </div>
-          <button className="icon-button" onClick={onClose}>
+          <button type="button" className="icon-button" onClick={onClose} aria-label="Cerrar">
             <X size={20} />
           </button>
         </div>
@@ -86,12 +89,13 @@ export default function Modal({ open, onClose, onSave, cuentas }: Props) {
           </div>
         ) : (
           <form onSubmit={submit}>
-            <label>Tipo de movimiento</label>
-            <div className="type-switch">
+            <label id="mov-tipo-etiqueta">Tipo de movimiento</label>
+            <div className="type-switch" role="group" aria-labelledby="mov-tipo-etiqueta">
               {(['Gasto', 'Ingreso', 'Transferencia'] as const).map(t => (
                 <button
                   type="button"
                   className={type === t ? 'selected' : ''}
+                  aria-pressed={type === t}
                   onClick={() => setType(t)}
                   key={t}
                 >
@@ -99,34 +103,37 @@ export default function Modal({ open, onClose, onSave, cuentas }: Props) {
                 </button>
               ))}
             </div>
-            <label>Descripción</label>
+            <label htmlFor="mov-titulo">Descripción</label>
             <input
+              id="mov-titulo"
               required
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="Ej. Compra de mercado"
             />
-            <label>Valor en COP</label>
+            <label htmlFor="mov-valor">Valor en COP</label>
             <input
+              id="mov-valor"
               required
               type="number"
               min="1"
+              inputMode="numeric"
               value={amount}
               onChange={e => setAmount(e.target.value)}
               placeholder="0"
             />
             <div className="form-grid">
               <div>
-                <label>Categoría</label>
-                <select value={category} onChange={e => setCategory(e.target.value)}>
+                <label htmlFor="mov-categoria">Categoría</label>
+                <select id="mov-categoria" value={category} onChange={e => setCategory(e.target.value)}>
                   {categories.map(x => (
                     <option key={x}>{x}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label>{type === 'Transferencia' ? 'Cuenta de origen' : 'Cuenta'}</label>
-                <select value={account} onChange={e => setAccount(e.target.value)}>
+                <label htmlFor="mov-cuenta">{type === 'Transferencia' ? 'Cuenta de origen' : 'Cuenta'}</label>
+                <select id="mov-cuenta" value={account} onChange={e => setAccount(e.target.value)}>
                   {accountNames.map(x => (
                     <option key={x}>{x}</option>
                   ))}
@@ -135,8 +142,12 @@ export default function Modal({ open, onClose, onSave, cuentas }: Props) {
             </div>
             {type === 'Transferencia' && (
               <>
-                <label>Cuenta de destino</label>
-                <select value={cuentaDestino} onChange={e => setCuentaDestino(e.target.value)}>
+                <label htmlFor="mov-destino">Cuenta de destino</label>
+                <select
+                  id="mov-destino"
+                  value={cuentaDestino}
+                  onChange={e => setCuentaDestino(e.target.value)}
+                >
                   {accountNames.map(x => (
                     <option key={x}>{x}</option>
                   ))}
@@ -148,8 +159,8 @@ export default function Modal({ open, onClose, onSave, cuentas }: Props) {
                 )}
               </>
             )}
-            <label>Fecha</label>
-            <input type="date" value={date} onChange={e => setDate(e.target.value)} />
+            <label htmlFor="mov-fecha">Fecha</label>
+            <input id="mov-fecha" type="date" value={date} onChange={e => setDate(e.target.value)} />
             <div className="modal-actions">
               <button type="button" className="btn-secondary" onClick={onClose}>
                 Cancelar

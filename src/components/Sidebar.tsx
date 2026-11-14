@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import {
   LucideIcon,
   LayoutDashboard,
@@ -70,6 +71,12 @@ type Props = {
 }
 
 export default function Sidebar({ active, onNavigate, open, onClose, correo, seccionesConAviso }: Props) {
+  const cierre = useRef<HTMLButtonElement>(null)
+  // Al abrirse, el foco pasa al menú; el botón de cierre es el primer elemento
+  // y es donde cae quien llega con teclado.
+  useEffect(() => {
+    if (open) cierre.current?.focus()
+  }, [open])
   const irA = (s: string) => {
     onNavigate(s)
     onClose()
@@ -79,15 +86,15 @@ export default function Sidebar({ active, onNavigate, open, onClose, correo, sec
   return (
     <>
       <div className={`sidebar-backdrop ${open ? 'show' : ''}`} onClick={onClose} />
-      <aside className={`sidebar ${open ? 'mobile-open' : ''}`}>
+      <aside id="menu-lateral" className={`sidebar ${open ? 'mobile-open' : ''}`} aria-label="Menú principal">
         <div className="brand">
           <div className="brand-mark">F</div>
           <div>
             <strong>FinControl</strong>
             <small>FINANZAS EN ORDEN</small>
           </div>
-          <button className="mobile-close" onClick={onClose}>
-            <X size={19} />
+          <button ref={cierre} className="mobile-close" onClick={onClose} aria-label="Cerrar el menú">
+            <X size={20} />
           </button>
         </div>
         <button className="workspace" onClick={() => irA('Ajustes')} title="Cuenta y preferencias">
@@ -108,6 +115,7 @@ export default function Sidebar({ active, onNavigate, open, onClose, correo, sec
                     key={name}
                     className={`nav-item ${active === name ? 'active' : ''}`}
                     onClick={() => irA(name)}
+                    aria-current={active === name ? 'page' : undefined}
                   >
                     <Icon size={18} />
                     <span>{name}</span>

@@ -13,7 +13,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "verificar": "npm run format:check && npm run lint && npm run test && npm run build"
+    "verificar": "npm run format:check && npm run lint && npm run test && npm run build",
+    "revision:responsive": "node scripts/revision-responsive.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.58.0",

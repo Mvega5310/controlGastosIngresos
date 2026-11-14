@@ -29,7 +29,7 @@ export function Calendario({
             <h2>{periodLabel(period)}</h2>
             <p>Los dias con un punto tienen movimientos registrados</p>
           </div>
-          <div>
+          <div className="calendar-nav">
             <button
               className="btn-secondary"
               onClick={() => setPeriod(p => shiftPeriod(p, -1))}
@@ -59,9 +59,18 @@ export function Calendario({
                 key={c.date}
                 className={`calendar-day ${c.date === hoy ? 'today' : ''} ${c.inMonth ? '' : 'muted'}`}
                 title={hay ? `${hay.length} movimiento${hay.length > 1 ? 's' : ''}` : undefined}
+                aria-current={c.date === hoy ? 'date' : undefined}
               >
                 <span>{c.day}</span>
-                {hay && <i />}
+                {hay && (
+                  <>
+                    <i aria-hidden="true" />
+                    {/* El punto no lo lee nadie que no lo vea: se dice con texto. */}
+                    <span className="solo-lectores">
+                      , {hay.length} movimiento{hay.length > 1 ? 's' : ''}
+                    </span>
+                  </>
+                )}
               </div>
             )
           })}
