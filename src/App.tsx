@@ -133,6 +133,7 @@ function App() {
     } catch {
       /* modo privado */
     }
+    document.documentElement.classList.toggle('tema-oscuro', dark)
   }, [dark])
   const totals = useMemo(() => totalsFor(movements, period), [movements, period])
   const previous = useMemo(() => totalsFor(movements, shiftPeriod(period, -1)), [movements, period])

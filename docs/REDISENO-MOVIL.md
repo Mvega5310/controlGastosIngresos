@@ -135,16 +135,16 @@ Tamaños: 320×640, 360×800, 390×844, 430×932, 768×1024, 1366×768, 1440×90
 
 ## 9. Registro de continuidad
 
-| Campo          | Valor                                                                                               |
-| -------------- | --------------------------------------------------------------------------------------------------- |
-| Fase actual    | 5 — regresión y cierre, hecha. **Rediseño completo.**                                               |
-| Rama           | `feat/redisenio-movil` (sin subir; ver nota abajo)                                                  |
-| Pruebas        | 208 unitarias en verde; `npm run verificar` limpio                                                  |
-| Matriz         | 7 tamaños × 12 secciones × 2 temas: **0 desbordes** (línea base: 12/12 a 320 px)                    |
-| Contraste      | tema oscuro 0 fallos AA; claro solo el relleno de días de otro mes (3,07:1, texto inactivo)         |
-| Reglas 1–3 y 5 | `src/core`, `src/datos`, sincronización y Supabase: **0 archivos modificados** (`git diff 1de3287`) |
-| Dependencias   | ninguna nueva                                                                                       |
-| Próximo paso   | Aprobación para subir la rama y desplegar                                                           |
+| Campo          | Valor                                                                                                                                                       |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fase actual    | 5 — regresión y cierre, hecha. **Rediseño completo.**                                                                                                       |
+| Rama           | `feat/redisenio-movil` (sin subir; ver nota abajo)                                                                                                          |
+| Pruebas        | 208 unitarias en verde; `npm run verificar` limpio                                                                                                          |
+| Matriz         | 7 tamaños × 12 secciones × 2 temas: **0 desbordes** (línea base: 12/12 a 320 px)                                                                            |
+| Contraste      | **0 fallos AA** en claro y oscuro a 320, 390, 768, 1366 y 1440 px. Los días de otro mes del calendario y la «/» de la miga de pan pasaron de 3,07:1 a 5,0:1 |
+| Reglas 1–3 y 5 | `src/core`, `src/datos`, sincronización y Supabase: **0 archivos modificados** (`git diff 1de3287`)                                                         |
+| Dependencias   | ninguna nueva                                                                                                                                               |
+| Próximo paso   | Prueba en dispositivos reales (`docs/PRUEBA-EN-DISPOSITIVOS.md`); después, aprobación para subir y desplegar                                                |
 
 ### Decisiones
 
@@ -226,6 +226,11 @@ Tamaños: 320×640, 360×800, 390×844, 430×932, 768×1024, 1366×768, 1440×90
   nace `--verde-texto` (`#1e6b3a` en claro, `#7bd89a` en oscuro); `--green`
   sigue siendo el de los fondos. Quedan fuera los que van sobre un fondo fijo
   claro (`.avatar`, `.top-avatar`).
+  Revisión posterior: los días de otro mes del calendario y la «/» de la miga de
+  pan son texto, así que también pasan a `--muted` (5,0:1). Y el texto
+  secundario de la tarjeta del balance, que el auditor no mide por tener
+  degradado, se calculó a mano: al 86 % de blanco daba 4,09:1 en el extremo
+  claro, así que pasa a blanco pleno (4,92:1).
 - **Un error mío de la fase 1.** Envolver «Mi espacio» en un `<span>` hizo que la
   regla de la barra separadora lo pintara casi invisible. Detectado al ver la
   captura del tablet; el auditor no lo vio porque se corrió solo a 390 px, donde
@@ -257,9 +262,14 @@ Tamaños: 320×640, 360×800, 390×844, 430×932, 768×1024, 1366×768, 1440×90
 guía pide no desplegar sin aprobación. Por eso el trabajo está en
 `feat/redisenio-movil` y **no se ha subido**.
 
-**Pendiente tras el rediseño:** verificar en un teléfono real (iOS Safari y
-Chrome Android), que es lo único que un navegador simulado no sustituye, sobre
-todo el comportamiento de las áreas seguras con la app instalada y el teclado
-en pantalla.
+**Pendiente tras el rediseño:** la prueba en iOS Safari y Chrome Android
+reales, con la app instalada y el teclado en pantalla, que un navegador
+simulado no sustituye. El protocolo, con el resultado esperado de cada paso y el
+arreglo preparado para cada fallo probable, está en
+`docs/PRUEBA-EN-DISPOSITIVOS.md`. Mientras tanto se corrigió lo que sí se podía
+razonar sin teléfono: el tema oscuro solo pintaba el fondo de la aplicación y no
+el de la página, así que el rebote de iOS y la franja de las áreas seguras
+enseñaban una banda clara. `html` y `body` ahora siguen el tema, y la clase se
+pone antes de que arranque React para que no haya destello.
 
 > Este documento es un plan. Revisar siempre el código actual antes de editar.

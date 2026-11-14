@@ -36,6 +36,19 @@ body {
   min-width: 320px;
   background: var(--bg);
 }
+/* El tema oscuro pinta también la página, no solo la aplicación. Además,
+   color-scheme hace que lo que dibuja el navegador (barras de desplazamiento,
+   menús de los desplegables, autocompletado) también sea oscuro. */
+html {
+  color-scheme: light;
+}
+html.tema-oscuro {
+  color-scheme: dark;
+  background: #111914;
+}
+html.tema-oscuro body {
+  background: #111914;
+}
 button,
 input,
 select {
@@ -278,7 +291,7 @@ nav section {
 }
 .breadcrumb span {
   padding: 0 9px;
-  color: #8a968e;
+  color: var(--muted);
 }
 /* El texto «Mi espacio» va dentro de un span propio: sin esto, la regla de la
    barra separadora de arriba lo alcanzaba y lo pintaba casi invisible. */
@@ -938,7 +951,7 @@ td b {
   font-size: 10px;
 }
 .calendar-day.muted {
-  color: #8a968e;
+  color: var(--muted);
 }
 .calendar-day.today > span:first-of-type {
   background: var(--green);
@@ -2664,7 +2677,8 @@ button.enlace:disabled {
   }
   .panel-flujo .stats-grid .stat-card:first-child .stat-top,
   .panel-flujo .stats-grid .stat-card:first-child .stat-foot {
-    color: rgba(255, 255, 255, 0.86);
+    /* Blanco pleno: al 86 % daba 4,09:1 en el extremo claro del degradado. */
+    color: #fff;
   }
   .panel-flujo .stats-grid .stat-card:first-child .stat-value {
     font-size: clamp(26px, 8.2vw, 34px);
