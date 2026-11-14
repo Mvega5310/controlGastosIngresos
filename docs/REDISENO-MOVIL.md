@@ -256,6 +256,12 @@ Tamaños: 320×640, 360×800, 390×844, 430×932, 768×1024, 1366×768, 1440×90
 - Se añadió `inputMode="numeric"` al valor del movimiento: el campo ya rechazaba
   decimales (`step` por defecto), así que el teclado sin coma evita el error.
 - `package.json` recibió un script nuevo (`revision:responsive`); nada más.
+- **Orientación libre** (decisión del propietario): el manifiesto ya no fija
+  `portrait-primary`, para no limitar tablets ni plegables. Al hacerlo, el
+  guardián se amplió a 11 formatos (horizontales y un plegable) y encontró dos
+  fallos que el vertical no enseñaba: el avatar medía 31 px entre 601 y 900 px,
+  y a 844×390 el botón de guardar del modal quedaba fuera de vista porque los
+  botones fijos dependían del ancho y no de la altura. Corregidos.
 
 **Nota sobre la rama.** El entorno de esta sesión fija la rama de desarrollo en
 `claude/quirky-mayer-3caadd`, y Railway despliega solo lo que se sube a ella; la

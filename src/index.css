@@ -1375,6 +1375,11 @@ td b {
   .mobile-menu {
     flex: none;
   }
+  .top-avatar {
+    width: var(--touch-target);
+    height: var(--touch-target);
+    font-size: 11px;
+  }
   /* Instalada en el móvil, la página arranca por debajo de la barra de estado
      del sistema. Sin este hueco, la hora y la cobertura se comen la cabecera:
      el fondo se pinta detrás de ellas y no se lee ni el menú ni los iconos. */
@@ -2954,16 +2959,6 @@ body.dialogo-abierto {
     height: var(--touch-target);
     font-size: 13px;
   }
-  /* En un formulario largo los botones de guardar se quedan a la vista, en el
-     borde de abajo, en vez de esperar al final del desplazamiento. */
-  .modal form .modal-actions {
-    position: sticky;
-    bottom: -18px;
-    margin: 16px -18px -18px;
-    padding: 12px 18px 18px;
-    background: var(--panel);
-    border-top: 1px solid var(--line);
-  }
   .modal-actions {
     gap: 10px;
   }
@@ -3194,5 +3189,31 @@ body.dialogo-abierto {
   }
   .payment-date small {
     font-size: 11px;
+  }
+}
+
+/* En un formulario largo los botones de guardar se quedan a la vista, en el borde
+   de abajo, en vez de esperar al final del desplazamiento. Vale tanto para una
+   pantalla estrecha como para una BAJA: un móvil girado mide 844 px de ancho y
+   390 de alto, y ahí lo que falta es altura, no anchura. */
+@media (max-width: 767px), (max-height: 520px) {
+  .modal form .modal-actions {
+    position: sticky;
+    bottom: -18px;
+    margin: 16px -18px -18px;
+    padding: 12px 18px 18px;
+    background: var(--panel);
+    border-top: 1px solid var(--line);
+  }
+}
+@media (max-height: 520px) {
+  .modal-overlay {
+    padding-top: calc(12px + env(safe-area-inset-top));
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+  .modal {
+    max-height: calc(100vh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    padding: 18px;
   }
 }

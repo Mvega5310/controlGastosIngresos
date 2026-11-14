@@ -75,6 +75,16 @@ reduce. Por eso es donde más puede fallar y donde un simulador no sirve.
 | D5  | Borrar un traslado entre cuentas       | La pregunta avisa de que se borran los dos apuntes                          |
 | D6  | Calendario                             | Siete días legibles, flechas cómodas de pulsar con el pulgar                |
 
+## E. Horizontal y plegables
+
+| #   | Qué hacer                                                 | Esperado                                                                                                  |
+| --- | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| E1  | Girar el móvil a horizontal en Inicio                     | Se ve la cabecera completa y la barra inferior; nada se corta                                             |
+| E2  | En horizontal, abrir Nuevo movimiento                     | El modal cabe entero y **Guardar se ve sin desplazar**                                                    |
+| E3  | En horizontal, tocar un campo (teclado abierto)           | El campo sigue a la vista. Con el teclado casi no queda pantalla: anotar si se puede escribir cómodamente |
+| E4  | Girar con el modal o el menú abiertos                     | No se rompe ni se queda desplazado el fondo                                                               |
+| E5  | Plegable: abrir y cerrar la pantalla con la app en marcha | La disposición se adapta al cambiar de tamaño, sin recargar                                               |
+
 ## Si algo falla: causa probable y arreglo preparado
 
 - **C2 — el teclado tapa Guardar en iOS.** El modal usa `100dvh`, que en iOS no
@@ -99,8 +109,10 @@ reduce. Por eso es donde más puede fallar y donde un simulador no sirve.
    puede verse como una barra clara o verde sobre una app oscura. Hay que decidir
    si se prefiere que siga al tema (cabecera blanca/oscura) o se queda de marca.
    En iOS la barra es **estática**: no cambia con el tema.
-2. **Orientación.** El manifiesto fija `portrait-primary`. Si en horizontal debe
-   funcionar, quitarlo.
+2. ~~**Orientación.**~~ **Decidido:** se permiten vertical y horizontal; el
+   manifiesto ya no fija la orientación (tablets y plegables). Ver los pasos
+   E1–E4: en horizontal un móvil mide 844 px de ancho y 390 de alto, y lo que
+   falta es altura, no anchura.
 
 ## Resultado
 
