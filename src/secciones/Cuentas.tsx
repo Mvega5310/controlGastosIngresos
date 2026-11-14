@@ -3,6 +3,7 @@ import { Plus, Pencil, Trash2, Wallet } from 'lucide-react'
 import { Account, Movement, money, coloresCuenta, tiposCuenta } from '../datos/catalogo'
 import { accountBalance } from '../core/finanzas'
 import FormModal, { Campo } from '../components/FormModal'
+import { Confirmar } from '../components/Confirmar'
 
 type ColeccionCuentas = {
   items: Account[]
@@ -57,10 +58,13 @@ export function Cuentas({
   }
 
   /** Cuántos apuntes nombran esta cuenta, como origen o como destino. */
+  const [porBorrar, setPorBorrar] = useState<Account | null>(null)
+
   const usos = (nombre: string) =>
     movements.filter(m => m.account === nombre || m.contraparte === nombre).length
 
-  const borrar = (c: Account) => {
+  // Con movimientos dentro no se pregunta nada: no se puede, y se dice por qué.
+  const pedirBorrado = (c: Account) => {
     const n = usos(c.name)
     if (n > 0) {
       setAviso(
@@ -70,7 +74,7 @@ export function Cuentas({
       return
     }
     setAviso(null)
-    coleccion.eliminar(c.id)
+    setPorBorrar(c)
   }
 
   const guardar = (d: Record<string, unknown>) => {
@@ -131,7 +135,7 @@ export function Cuentas({
                     </button>
                     <button
                       className="mini-btn peligro"
-                      onClick={() => borrar(c)}
+                      onClick={() => pedirBorrado(c)}
                       aria-label={`Eliminar ${c.name}`}
                     >
                       <Trash2 size={13} />
@@ -166,6 +170,18 @@ export function Cuentas({
         valores={editando}
         onCerrar={() => setAbierto(false)}
         onGuardar={guardar}
+      />
+
+      <Confirmar
+        abierto={!!porBorrar}
+        titulo={porBorrar ? `¿Borrar la cuenta «${porBorrar.name}»?` : ''}
+        detalle="No tiene movimientos, así que no se pierde ningún importe. Dejará de aparecer en los formularios."
+        onCancelar={() => setPorBorrar(null)}
+        onConfirmar={() => {
+          const c = porBorrar
+          setPorBorrar(null)
+          if (c) coleccion.eliminar(c.id)
+        }}
       />
     </>
   )

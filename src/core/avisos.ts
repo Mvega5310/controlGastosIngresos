@@ -10,7 +10,7 @@
  */
 import { Movement } from '../datos/catalogo'
 import { Deuda, Presupuesto, Suscripcion, Vehiculo } from '../datos/entidades'
-import { Period, todayISO } from './finanzas'
+import { Period, periodKey, todayISO } from './finanzas'
 import {
   calcularDeudas,
   calcularPresupuestos,
@@ -61,7 +61,10 @@ export function calcularAvisos(entrada: EntradaAvisos, hoy = todayISO()): Aviso[
   for (const s of calcularSuscripciones(entrada.suscripciones, hoy)) {
     if (!s.activa || s.dias > DIAS_PAGO) continue
     avisos.push({
-      id: `sus-${s.id}`,
+      // La fecha forma parte del identificador: el cobro del mes que viene es
+      // otro aviso, no el mismo. Sin ella, dar por visto el de noviembre
+      // callaría también el de diciembre.
+      id: `sus-${s.id}-${s.proximoCobro}`,
       titulo: s.nombre,
       detalle: `Suscripción · ${cuandoSea(s.dias)}`,
       nivel: s.dias < 0 ? 'vencido' : 'pronto',
@@ -76,7 +79,7 @@ export function calcularAvisos(entrada: EntradaAvisos, hoy = todayISO()): Aviso[
     const dias = diasHasta(d.proximoPago, hoy)
     if (dias > DIAS_PAGO) continue
     avisos.push({
-      id: `deu-${d.id}`,
+      id: `deu-${d.id}-${d.proximoPago}`,
       titulo: d.nombre,
       detalle: `Cuota · ${cuandoSea(dias)}`,
       nivel: dias < 0 ? 'vencido' : 'pronto',
@@ -94,7 +97,7 @@ export function calcularAvisos(entrada: EntradaAvisos, hoy = todayISO()): Aviso[
     for (const [nombre, dias, fecha] of documentos) {
       if (!fecha || isNaN(dias) || dias > DIAS_DOCUMENTO) continue
       avisos.push({
-        id: `veh-${v.id}-${nombre}`,
+        id: `veh-${v.id}-${nombre}-${fecha}`,
         titulo: `${nombre} de ${v.nombre}`,
         detalle: cuandoSea(dias),
         nivel: dias < 0 ? 'vencido' : 'pronto',
@@ -108,7 +111,7 @@ export function calcularAvisos(entrada: EntradaAvisos, hoy = todayISO()): Aviso[
   for (const p of calcularPresupuestos(entrada.presupuestos, entrada.movimientos, entrada.periodo)) {
     if (p.estado === 'ok') continue
     avisos.push({
-      id: `pre-${p.id}`,
+      id: `pre-${p.id}-${periodKey(entrada.periodo)}`,
       titulo: p.categoria,
       detalle:
         p.estado === 'excedido'
@@ -178,4 +181,27 @@ export function proximosPagos(
   }
 
   return pagos.sort((a, b) => a.dias - b.dias).slice(0, cuantos)
+}
+
+/**
+ * Los avisos que todavía no se han mirado.
+ *
+ * La campana contaba todos los avisos pendientes, de modo que abrirla no
+ * cambiaba nada: el número seguía ahí hasta que venciera el pago. Lo que se
+ * espera de un número en una campana es que cuente lo nuevo.
+ */
+export const sinVer = (avisos: Aviso[], vistos: string[]): Aviso[] => {
+  const yaVistos = new Set(vistos)
+  return avisos.filter(a => !yaVistos.has(a.id))
+}
+
+/**
+ * Olvida los avisos que ya no existen.
+ *
+ * Sin esto, la lista de vistos crecería para siempre con los cobros de todos
+ * los meses pasados.
+ */
+export const podarVistos = (vistos: string[], avisos: Aviso[]): string[] => {
+  const vivos = new Set(avisos.map(a => a.id))
+  return vistos.filter(id => vivos.has(id))
 }

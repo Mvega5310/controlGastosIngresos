@@ -1,15 +1,6 @@
 import { useState } from 'react'
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  RefreshCw,
-  CreditCard,
-  Target,
-  Wallet,
-  ArrowUpRight,
-  CalendarClock
-} from 'lucide-react'
+import { Plus, RefreshCw, CreditCard, Target, Wallet, ArrowUpRight, CalendarClock } from 'lucide-react'
+import { Acciones } from '../components/Acciones'
 import { Account, Movement, money, categories } from '../datos/catalogo'
 import { Deuda, Meta, Presupuesto, Suscripcion } from '../datos/entidades'
 import {
@@ -54,19 +45,6 @@ function Cabecera({
       </div>
       <button className="btn-primary" onClick={onAccion}>
         <Plus size={16} /> {accion}
-      </button>
-    </div>
-  )
-}
-
-function Acciones({ onEditar, onBorrar }: { onEditar: () => void; onBorrar: () => void }) {
-  return (
-    <div className="row-actions">
-      <button className="mini-btn" onClick={onEditar} aria-label="Editar">
-        <Pencil size={13} />
-      </button>
-      <button className="mini-btn peligro" onClick={onBorrar} aria-label="Eliminar">
-        <Trash2 size={13} />
       </button>
     </div>
   )
@@ -177,7 +155,12 @@ export function Presupuestos({
                       ? `Excedido en ${money(f.gastado - f.limite)}`
                       : `Quedan ${money(f.restante)} · ${f.progreso}% usado`}
                   </small>
-                  <Acciones onEditar={() => ed.editar(f)} onBorrar={() => col.eliminar(f.id)} />
+                  <Acciones
+                    onEditar={() => ed.editar(f)}
+                    onBorrar={() => col.eliminar(f.id)}
+                    nombre={f.categoria}
+                    que="presupuesto"
+                  />
                 </div>
               </div>
             ))}
@@ -291,7 +274,12 @@ export function Suscripciones({ col, cuentas }: { col: Coleccion<Suscripcion>; c
                   <button className="mini-btn" onClick={() => col.actualizar(s.id, { activa: !s.activa })}>
                     {s.activa ? 'Pausar' : 'Activar'}
                   </button>
-                  <Acciones onEditar={() => ed.editar(s)} onBorrar={() => col.eliminar(s.id)} />
+                  <Acciones
+                    onEditar={() => ed.editar(s)}
+                    onBorrar={() => col.eliminar(s.id)}
+                    nombre={s.nombre}
+                    que="suscripción"
+                  />
                 </div>
               </div>
             ))}
@@ -391,7 +379,12 @@ export function Deudas({ col }: { col: Coleccion<Deuda> }) {
                     {d.progreso}% pagado · cuota {money(d.cuotaMensual)} el {d.diaPago}
                     {d.cuotasRestantes > 0 && ` · faltan ${d.cuotasRestantes} cuotas`}
                   </small>
-                  <Acciones onEditar={() => ed.editar(d)} onBorrar={() => col.eliminar(d.id)} />
+                  <Acciones
+                    onEditar={() => ed.editar(d)}
+                    onBorrar={() => col.eliminar(d.id)}
+                    nombre={d.nombre}
+                    que="deuda"
+                  />
                 </div>
               </div>
             ))}
@@ -461,7 +454,12 @@ export function Metas({ col }: { col: Coleccion<Meta> }) {
                 <div className="goal-symbol">
                   <Target />
                 </div>
-                <Acciones onEditar={() => ed.editar(m)} onBorrar={() => col.eliminar(m.id)} />
+                <Acciones
+                  onEditar={() => ed.editar(m)}
+                  onBorrar={() => col.eliminar(m.id)}
+                  nombre={m.nombre}
+                  que="meta"
+                />
               </div>
               <h2>{m.nombre}</h2>
               <p>

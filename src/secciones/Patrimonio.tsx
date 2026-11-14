@@ -1,14 +1,6 @@
 import { useState } from 'react'
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  TrendingUp,
-  ArrowUpRight,
-  PiggyBank,
-  CarFront,
-  ShieldCheck
-} from 'lucide-react'
+import { Plus, TrendingUp, ArrowUpRight, PiggyBank, CarFront, ShieldCheck } from 'lucide-react'
+import { Acciones } from '../components/Acciones'
 import { Movement, money } from '../datos/catalogo'
 import { Inversion, Vehiculo, tiposInversion } from '../datos/entidades'
 import {
@@ -42,19 +34,6 @@ const textoVigencia = (dias: number) =>
         : `faltan ${dias} días`
 
 const claseEstado = (e: Urgencia) => (e === 'vencido' ? 'bad' : e === 'proximo' ? 'warn' : '')
-
-function Acciones({ onEditar, onBorrar }: { onEditar: () => void; onBorrar: () => void }) {
-  return (
-    <div className="row-actions">
-      <button className="mini-btn" onClick={onEditar} aria-label="Editar">
-        <Pencil size={13} />
-      </button>
-      <button className="mini-btn peligro" onClick={onBorrar} aria-label="Eliminar">
-        <Trash2 size={13} />
-      </button>
-    </div>
-  )
-}
 
 function Cabecera({
   titulo,
@@ -189,7 +168,12 @@ export function Inversiones({ col }: { col: Coleccion<Inversion> }) {
                   {money(i.rendimiento)} · {signo(i.porcentajeRendimiento)}
                   {String(i.porcentajeRendimiento).replace('.', ',')}%
                 </span>
-                <Acciones onEditar={() => ed.editar(i)} onBorrar={() => col.eliminar(i.id)} />
+                <Acciones
+                  onEditar={() => ed.editar(i)}
+                  onBorrar={() => col.eliminar(i.id)}
+                  nombre={i.nombre}
+                  que="inversión"
+                />
               </div>
             ))}
           </div>
@@ -272,7 +256,12 @@ export function Transporte({ col }: { col: Coleccion<Vehiculo> }) {
                 <div className="bank-icon large green">
                   <CarFront size={19} />
                 </div>
-                <Acciones onEditar={() => ed.editar(v)} onBorrar={() => col.eliminar(v.id)} />
+                <Acciones
+                  onEditar={() => ed.editar(v)}
+                  onBorrar={() => col.eliminar(v.id)}
+                  nombre={v.nombre}
+                  que="vehículo"
+                />
               </div>
               <p>{v.placa || 'Sin placa'}</p>
               <h2>{v.nombre}</h2>

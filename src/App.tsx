@@ -18,7 +18,7 @@ import { useSincronizacion } from './lib/useSincronizacion'
 import { BotonCuenta, PanelCuenta } from './components/Cuenta'
 import { BotonAvisos, PanelAvisos } from './components/Avisos'
 import { MenuPerfil } from './components/MenuPerfil'
-import { calcularAvisos, proximosPagos } from './core/avisos'
+import { calcularAvisos, podarVistos, proximosPagos, sinVer } from './core/avisos'
 import { Presupuestos, Suscripciones, Deudas, Metas } from './secciones/Planificacion'
 import { Inversiones, Transporte, Reportes } from './secciones/Patrimonio'
 import { Movement } from './datos/catalogo'
@@ -55,6 +55,16 @@ function App() {
   }, [sync.recuperandoClave])
   const [panelAvisos, setPanelAvisos] = useState(false)
   const [menuPerfil, setMenuPerfil] = useState(false)
+  // Qué avisos se han mirado ya, para que la campana cuente lo nuevo en vez
+  // de repetir un número que no bajaba hasta que venciera el pago.
+  const [avisosVistos, setAvisosVistos] = useState<string[]>(() => {
+    try {
+      const guardado = JSON.parse(localStorage.getItem('fc-avisos-vistos') || '[]')
+      return Array.isArray(guardado) ? guardado : []
+    } catch {
+      return []
+    }
+  })
   // Qué venía buscando quien llega a Ajustes, para llevarle hasta ahí.
   const [focoAjustes, setFocoAjustes] = useState<string | null>(null)
   const [period, setPeriod] = useState<Period>(() => periodOf(new Date()))
@@ -124,6 +134,20 @@ function App() {
     ]
   )
 
+  const nuevos = useMemo(() => sinVer(avisos, avisosVistos), [avisos, avisosVistos])
+
+  // Abrir el panel da por vistos los que hay en ese momento. Se guardan ya
+  // podados: si no, la lista crecería con los cobros de todos los meses.
+  const marcarVistos = () => {
+    const vistos = podarVistos([...new Set([...avisosVistos, ...avisos.map(a => a.id)])], avisos)
+    setAvisosVistos(vistos)
+    try {
+      localStorage.setItem('fc-avisos-vistos', JSON.stringify(vistos))
+    } catch {
+      /* modo privado */
+    }
+  }
+
   const pagos = useMemo(
     () => proximosPagos(datos.suscripciones.items, datos.deudas.items),
     [datos.suscripciones.items, datos.deudas.items]
@@ -160,8 +184,10 @@ function App() {
             </button>
             <BotonAvisos
               avisos={avisos}
+              nuevos={nuevos}
               abierto={panelAvisos}
               onAlternar={() => {
+                if (!panelAvisos) marcarVistos()
                 setPanelAvisos(v => !v)
                 setMenuPerfil(false)
               }}

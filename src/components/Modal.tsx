@@ -20,13 +20,23 @@ export default function Modal({ open, onClose, onSave, cuentas }: Props) {
   const [cuentaDestino, setCuentaDestino] = useState('')
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
 
-  // Las cuentas son datos de la persona, así que no existen hasta que las crea.
-  // Al abrir el formulario se eligen las primeras disponibles; sin esto el
-  // movimiento se guardaría sin cuenta y no movería ningún saldo.
+  // El formulario empieza de cero cada vez que se abre. Antes conservaba lo de
+  // la última vez —la categoría, el tipo, la fecha, y la descripción si se
+  // había cancelado— y al volver a abrirlo parecía que había algo a medio
+  // escribir que no era de esta vez.
+  //
+  // Las cuentas son datos de la persona, así que no existen hasta que las
+  // crea; se elige la primera, porque sin cuenta el movimiento se guardaría
+  // sin mover ningún saldo.
   useEffect(() => {
     if (!open) return
-    setAccount(a => (a && accountNames.includes(a) ? a : (accountNames[0] ?? '')))
-    setCuentaDestino(d => (d && accountNames.includes(d) ? d : (accountNames[1] ?? accountNames[0] ?? '')))
+    setTitle('')
+    setAmount('')
+    setType('Gasto')
+    setCategory('Otros')
+    setDate(new Date().toISOString().slice(0, 10))
+    setAccount(accountNames[0] ?? '')
+    setCuentaDestino(accountNames[1] ?? accountNames[0] ?? '')
     // eslint-disable-next-line react-hooks/exhaustive-deps -- accountNames se sigue por clavesCuentas
   }, [open, clavesCuentas])
 
@@ -43,8 +53,6 @@ export default function Modal({ open, onClose, onSave, cuentas }: Props) {
       date,
       cuentaDestino: type === 'Transferencia' ? cuentaDestino : undefined
     })
-    setTitle('')
-    setAmount('')
     onClose()
   }
   return (

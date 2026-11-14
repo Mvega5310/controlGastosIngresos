@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { calcularAvisos, proximosPagos, EntradaAvisos } from './avisos'
+import { calcularAvisos, podarVistos, proximosPagos, sinVer, EntradaAvisos } from './avisos'
 import { Movement } from '../datos/catalogo'
 
 const HOY = '2026-11-12'
@@ -201,5 +201,52 @@ describe('proximosPagos', () => {
 
   it('no mira más allá de la ventana pedida', () => {
     expect(proximosPagos([sus({ diaCobro: 14 })], [], HOY, 1)).toEqual([])
+  })
+})
+
+describe('avisos vistos', () => {
+  const conSuscripcion = (dia: number) =>
+    calcularAvisos({ ...vacio, suscripciones: [sus({ diaCobro: dia })] }, HOY)
+
+  it('el cobro del mes que viene no hereda el «visto» de este', () => {
+    // Lo que se da por visto es una ocurrencia concreta, no la suscripción:
+    // si el identificador no llevara la fecha, callar el aviso de noviembre
+    // callaría también el de diciembre.
+    const esteMes = conSuscripcion(15)
+    const otroMes = calcularAvisos({ ...vacio, suscripciones: [sus({ diaCobro: 15 })] }, '2026-12-12')
+    expect(esteMes[0].id).not.toBe(otroMes[0].id)
+  })
+
+  it('sin ver nada, todos son nuevos', () => {
+    const r = conSuscripcion(15)
+    expect(sinVer(r, [])).toHaveLength(1)
+  })
+
+  it('una vez visto, deja de contar', () => {
+    const r = conSuscripcion(15)
+    expect(sinVer(r, [r[0].id])).toEqual([])
+  })
+
+  it('haber visto uno no calla a los demás', () => {
+    const r = calcularAvisos(
+      {
+        ...vacio,
+        suscripciones: [
+          sus({ id: 's1', nombre: 'Una', diaCobro: 14 }),
+          sus({ id: 's2', nombre: 'Otra', diaCobro: 15 })
+        ]
+      },
+      HOY
+    )
+    expect(sinVer(r, [r[0].id]).map(a => a.titulo)).toEqual([r[1].titulo])
+  })
+
+  it('se olvidan los vistos que ya no existen', () => {
+    const r = conSuscripcion(15)
+    expect(podarVistos([r[0].id, 'sus-viejo-2020-01-01'], r)).toEqual([r[0].id])
+  })
+
+  it('sin avisos, no queda nada guardado', () => {
+    expect(podarVistos(['a', 'b'], [])).toEqual([])
   })
 })

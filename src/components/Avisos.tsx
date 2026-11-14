@@ -10,20 +10,31 @@ const icono = (a: Aviso) =>
     <Target size={15} />
   )
 
-/** Campana con el número de avisos que piden atención. */
+/**
+ * Campana con el número de avisos sin mirar.
+ *
+ * Contaba todos los pendientes, así que abrirla no cambiaba nada: el número
+ * seguía ahí hasta que venciera el pago, y parecía atascado. Ahora cuenta lo
+ * que todavía no se ha visto; la lista de dentro los sigue enseñando todos,
+ * porque seguir pendientes es justo lo que son.
+ */
 export function BotonAvisos({
   avisos,
+  nuevos,
   abierto,
   onAlternar
 }: {
   avisos: Aviso[]
+  nuevos: Aviso[]
   abierto: boolean
   onAlternar: () => void
 }) {
-  const urgentes = avisos.filter(a => a.nivel === 'vencido').length
-  const titulo = avisos.length
-    ? `${avisos.length} aviso${avisos.length === 1 ? '' : 's'}${urgentes ? `, ${urgentes} sin atender` : ''}`
-    : 'No hay avisos'
+  const urgentes = nuevos.filter(a => a.nivel === 'vencido').length
+  const titulo = nuevos.length
+    ? `${nuevos.length} aviso${nuevos.length === 1 ? '' : 's'} sin mirar${urgentes ? `, ${urgentes} vencido${urgentes === 1 ? '' : 's'}` : ''}`
+    : avisos.length
+      ? `${avisos.length} aviso${avisos.length === 1 ? '' : 's'}, ya vistos`
+      : 'No hay avisos'
 
   return (
     <button
@@ -34,8 +45,8 @@ export function BotonAvisos({
       aria-expanded={abierto}
     >
       <Bell size={19} />
-      {avisos.length > 0 && (
-        <i className={urgentes ? 'urgente' : ''}>{avisos.length > 9 ? '9+' : avisos.length}</i>
+      {nuevos.length > 0 && (
+        <i className={urgentes ? 'urgente' : ''}>{nuevos.length > 9 ? '9+' : nuevos.length}</i>
       )}
     </button>
   )

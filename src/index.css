@@ -2263,3 +2263,95 @@ button.enlace:disabled {
   cursor: default;
   text-decoration: none;
 }
+
+/* --- Que el teléfono no acerque la pantalla al escribir ------------------- */
+
+/* Safari acerca la página cuando el campo que recibe el foco tiene la letra
+   por debajo de 16 px, y al guardar no vuelve a alejarla: queda agrandada.
+   No se arregla prohibiendo el zoom —eso también se lo quita a quien lo
+   necesita para leer—, sino dándole a los campos esos 16 px. Solo donde se
+   toca con el dedo; con ratón se queda la letra pequeña del diseño. */
+@media (pointer: coarse) {
+  input,
+  select,
+  textarea,
+  .modal input,
+  .modal select,
+  .search-input input,
+  .filter-select {
+    font-size: 16px;
+  }
+  .modal input,
+  .modal select {
+    height: 44px;
+  }
+}
+
+/* --- Paginación de tablas ------------------------------------------------ */
+
+.paginacion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 6px;
+  padding: 12px 2px 2px;
+  border-top: 1px solid var(--line);
+  font-size: 10.5px;
+  color: var(--muted);
+}
+.paginacion-botones {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.paginacion-botones b {
+  font-size: 10.5px;
+  color: var(--text);
+  min-width: 46px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.mini-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* --- Preguntar antes de borrar ------------------------------------------- */
+
+.confirmar {
+  text-align: center;
+  padding: 4px 6px 0;
+}
+.confirmar-icono {
+  display: inline-grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #fdecea;
+  color: #b3261e;
+  margin-bottom: 13px;
+}
+.dark .confirmar-icono {
+  background: #3a2220;
+  color: #f2938c;
+}
+.confirmar h2 {
+  margin: 0 0 9px;
+  font-size: 15px;
+}
+.confirmar p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.65;
+  color: var(--muted);
+}
+.confirmar .confirmar-nota {
+  margin-top: 9px;
+  font-weight: 600;
+  color: var(--text);
+}
+.confirmar + .modal-actions {
+  justify-content: center;
+}

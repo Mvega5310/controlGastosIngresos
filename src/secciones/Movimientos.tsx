@@ -1,14 +1,32 @@
-import { Search, Filter, Plus, Trash2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { ChevronLeft, ChevronRight, Search, Filter, Plus, Trash2 } from 'lucide-react'
 import { Movement, money } from '../datos/catalogo'
 import { fmtDate } from '../lib/fechas'
+import { POR_PAGINA, paginaDe, paginaValida, rangoVisible, totalPaginas } from '../core/paginacion'
+import { Confirmar } from '../components/Confirmar'
 
 export function TablaMovimientos({
   data,
-  onEliminar
+  onEliminar,
+  paginada = false
 }: {
   data: Movement[]
   onEliminar?: (id: string) => void
+  /** El panel enseña solo los últimos; la sección entera sí pagina. */
+  paginada?: boolean
 }) {
+  const [pagina, setPagina] = useState(1)
+  const [porBorrar, setPorBorrar] = useState<Movement | null>(null)
+
+  // Al buscar o filtrar, la página en la que estabas puede dejar de existir.
+  useEffect(() => {
+    setPagina(p => paginaValida(p, data.length))
+  }, [data.length])
+
+  const visibles = paginada ? paginaDe(data, pagina) : data
+  const paginas = totalPaginas(data.length)
+  const rango = rangoVisible(pagina, data.length)
+
   return (
     <div className="table-wrap">
       <table>
@@ -23,7 +41,7 @@ export function TablaMovimientos({
           </tr>
         </thead>
         <tbody>
-          {data.map(m => {
+          {visibles.map(m => {
             const traslado = m.type === 'Transferencia' && !!m.contraparte
             return (
               <tr key={m.id}>
@@ -54,7 +72,7 @@ export function TablaMovimientos({
                   <td className="right">
                     <button
                       className="mini-btn peligro"
-                      onClick={() => onEliminar(m.id)}
+                      onClick={() => setPorBorrar(m)}
                       aria-label={`Eliminar ${m.title}`}
                     >
                       <Trash2 size={13} />
@@ -71,6 +89,49 @@ export function TablaMovimientos({
           <p>No hay movimientos para mostrar.</p>
         </div>
       )}
+      {paginada && data.length > POR_PAGINA && (
+        <div className="paginacion">
+          <span>
+            {rango.desde}–{rango.hasta} de {data.length}
+          </span>
+          <div className="paginacion-botones">
+            <button
+              className="mini-btn"
+              onClick={() => setPagina(p => paginaValida(p - 1, data.length))}
+              disabled={pagina <= 1}
+              aria-label="Página anterior"
+            >
+              <ChevronLeft size={15} />
+            </button>
+            <b>
+              {paginaValida(pagina, data.length)} / {paginas}
+            </b>
+            <button
+              className="mini-btn"
+              onClick={() => setPagina(p => paginaValida(p + 1, data.length))}
+              disabled={pagina >= paginas}
+              aria-label="Página siguiente"
+            >
+              <ChevronRight size={15} />
+            </button>
+          </div>
+        </div>
+      )}
+      <Confirmar
+        abierto={!!porBorrar}
+        titulo={porBorrar ? `¿Borrar «${porBorrar.title}»?` : ''}
+        detalle={
+          porBorrar?.type === 'Transferencia'
+            ? 'Es un traslado entre cuentas: se borran los dos apuntes, el de salida y el de entrada.'
+            : 'El importe dejará de contar en el saldo de su cuenta.'
+        }
+        onCancelar={() => setPorBorrar(null)}
+        onConfirmar={() => {
+          const m = porBorrar
+          setPorBorrar(null)
+          if (m) onEliminar?.(m.id)
+        }}
+      />
     </div>
   )
 }
@@ -112,7 +173,7 @@ export function Movimientos({
           <Plus size={16} /> Nuevo
         </button>
       </div>
-      <TablaMovimientos data={data} onEliminar={onEliminar} />
+      <TablaMovimientos data={data} onEliminar={onEliminar} paginada />
     </section>
   )
 }
