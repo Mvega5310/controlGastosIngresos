@@ -1454,8 +1454,19 @@ td b {
   .form-grid {
     grid-template-columns: 1fr;
   }
+  /* El avatar se escondía en el móvil, de modo que el perfil, los ajustes y
+     cerrar sesión no se podían abrir desde el teléfono. Se queda, más
+     pequeño, y lo que cede sitio es la miga de pan. */
   .top-avatar {
-    display: none;
+    width: 28px;
+    height: 28px;
+    font-size: 9px;
+  }
+  .breadcrumb {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 38vw;
   }
   .setting-row {
     gap: 10px;
@@ -2013,4 +2024,161 @@ button.profile:hover b {
   font-size: 10px;
   line-height: 1.6;
   margin-bottom: 17px;
+}
+
+/* --- Contraseña visible, enlaces de cuenta y zona de datos ---------------- */
+
+/* Escribir a ciegas una contraseña que no se usa a diario acaba en «el correo
+   o la contraseña no son correctos» sin haberse equivocado de contraseña. */
+.campo-clave {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.campo-clave input {
+  padding-right: 40px;
+}
+.ver-clave {
+  position: absolute;
+  right: 4px;
+  width: 31px;
+  height: 31px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--muted);
+}
+.ver-clave:hover,
+.ver-clave[aria-pressed='true'] {
+  background: var(--soft);
+  color: var(--text);
+}
+
+.btn-secondary.ancho {
+  width: 100%;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.enlaces-cuenta {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 9px;
+}
+button.enlace {
+  border: 0;
+  background: none;
+  padding: 2px 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--green);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.dark button.enlace {
+  color: var(--green2);
+}
+button.enlace:hover {
+  opacity: 0.75;
+}
+
+/* Borrar todo vivía al final de Ajustes, sin marco y deshabilitado cuando no
+   había nada: imposible de encontrar justo cuando se buscaba. */
+.zona-datos {
+  margin-top: 14px;
+  border: 1px solid #e7c3c3;
+  background: #fdf6f6;
+  border-radius: 12px;
+  padding: 4px 15px 14px;
+}
+.dark .zona-datos {
+  border-color: #4a2f2f;
+  background: #241a1a;
+}
+.zona-datos .setting-row {
+  border-top: 0;
+  padding: 14px 0;
+}
+
+/* --- Menú de perfil ------------------------------------------------------ */
+
+.menu-perfil {
+  position: absolute;
+  top: 56px;
+  right: 38px;
+  z-index: 60;
+  width: 232px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  box-shadow: 0 12px 30px rgba(16, 32, 20, 0.14);
+  padding: 7px;
+  text-align: left;
+}
+.menu-perfil .cabecera {
+  padding: 8px 9px 10px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 6px;
+}
+.menu-perfil .cabecera b {
+  display: block;
+  font-size: 11.5px;
+  color: var(--text);
+}
+.menu-perfil .cabecera small {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.menu-perfil button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 9px;
+  border-radius: 9px;
+  text-align: left;
+}
+.menu-perfil button:hover {
+  background: var(--soft);
+}
+.menu-perfil button svg {
+  color: var(--muted);
+  flex: none;
+}
+.menu-perfil button.peligro {
+  color: #b3261e;
+}
+.dark .menu-perfil button.peligro {
+  color: #f2938c;
+}
+.menu-perfil button.peligro svg {
+  color: inherit;
+}
+.menu-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+}
+@media (max-width: 600px) {
+  .menu-perfil {
+    right: 14px;
+    top: 52px;
+  }
+}
+.profile-ir {
+  margin-left: auto;
+  color: var(--muted);
+  flex: none;
 }

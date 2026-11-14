@@ -9,7 +9,13 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { Remoto, RespuestaRemota } from '../core/motorSincronizacion'
 import { Registro } from '../core/sincronizacion'
-import { explicarError } from './mensajesAcceso'
+import {
+  ResultadoAcceso,
+  explicarError,
+  interpretarRegistro,
+  motivoDeError,
+  tipoDelEnlace
+} from './mensajesAcceso'
 
 const URL = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const CLAVE = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
@@ -84,15 +90,36 @@ export function remotoSupabase(cliente: SupabaseClient, usuarioId: string): Remo
 
 // --- Acceso -----------------------------------------------------------------
 
-export type ResultadoAcceso = { ok: true } | { ok: false; mensaje: string }
+export type { ResultadoAcceso } from './mensajesAcceso'
+
+/**
+ * El correo, tal y como lo guarda el servidor.
+ *
+ * Los espacios de más al copiar y pegar, y las mayúsculas del teclado del
+ * móvil, convierten " Yo@Correo.com " en una dirección que no entra: para el
+ * servidor es otra cuenta distinta de la que se registró.
+ */
+const normalizar = (correo: string) => correo.trim().toLowerCase()
+
+const fallo = (mensaje: string): ResultadoAcceso => ({
+  ok: false,
+  mensaje: explicarError(mensaje),
+  motivo: motivoDeError(mensaje)
+})
+
+const SIN_CONFIGURAR: ResultadoAcceso = {
+  ok: false,
+  mensaje: 'La sincronización no está configurada.',
+  motivo: 'otro'
+}
 
 export async function entrar(correo: string, contrasena: string): Promise<ResultadoAcceso> {
-  if (!clienteSupabase) return { ok: false, mensaje: 'La sincronización no está configurada.' }
+  if (!clienteSupabase) return SIN_CONFIGURAR
   const { error } = await clienteSupabase.auth.signInWithPassword({
-    email: correo.trim(),
+    email: normalizar(correo),
     password: contrasena
   })
-  return error ? { ok: false, mensaje: explicarError(error.message) } : { ok: true }
+  return error ? fallo(error.message) : { ok: true }
 }
 
 /**
@@ -107,24 +134,61 @@ export async function entrar(correo: string, contrasena: string): Promise<Result
 const destinoDelEnlace = () => `${window.location.origin}/`
 
 export async function registrarse(correo: string, contrasena: string): Promise<ResultadoAcceso> {
-  if (!clienteSupabase) return { ok: false, mensaje: 'La sincronización no está configurada.' }
-  const { error } = await clienteSupabase.auth.signUp({
-    email: correo.trim(),
+  if (!clienteSupabase) return SIN_CONFIGURAR
+  const { data, error } = await clienteSupabase.auth.signUp({
+    email: normalizar(correo),
     password: contrasena,
     options: { emailRedirectTo: destinoDelEnlace() }
   })
-  return error ? { ok: false, mensaje: explicarError(error.message) } : { ok: true }
+  if (error) return fallo(error.message)
+  return interpretarRegistro(data)
 }
 
 /** Vuelve a enviar el correo de confirmación, para cuando el enlace caducó. */
 export async function reenviarConfirmacion(correo: string): Promise<ResultadoAcceso> {
-  if (!clienteSupabase) return { ok: false, mensaje: 'La sincronización no está configurada.' }
+  if (!clienteSupabase) return SIN_CONFIGURAR
   const { error } = await clienteSupabase.auth.resend({
     type: 'signup',
-    email: correo.trim(),
+    email: normalizar(correo),
     options: { emailRedirectTo: destinoDelEnlace() }
   })
-  return error ? { ok: false, mensaje: explicarError(error.message) } : { ok: true }
+  return error
+    ? fallo(error.message)
+    : { ok: true, aviso: 'Te enviamos otro correo. El enlace caduca pronto, así que ábrelo cuanto antes.' }
+}
+
+/**
+ * Pide el correo para poner una contraseña nueva.
+ *
+ * La respuesta es la misma exista o no la cuenta, y a propósito: si dijera
+ * "no hay nadie con ese correo", cualquiera podría ir probando direcciones
+ * para averiguar quién tiene cuenta aquí. Por eso el aviso habla en
+ * condicional.
+ */
+export async function recuperarContrasena(correo: string): Promise<ResultadoAcceso> {
+  if (!clienteSupabase) return SIN_CONFIGURAR
+  const { error } = await clienteSupabase.auth.resetPasswordForEmail(normalizar(correo), {
+    redirectTo: destinoDelEnlace()
+  })
+  return error
+    ? fallo(error.message)
+    : {
+        ok: true,
+        aviso:
+          'Si existe una cuenta con ese correo, acaba de salir un enlace para cambiar la contraseña. Ábrelo desde este mismo dispositivo.'
+      }
+}
+
+/**
+ * Cambia la contraseña de la sesión abierta.
+ *
+ * Funciona tanto después de abrir el enlace de recuperación —que deja una
+ * sesión puesta justo para esto— como estando dentro normalmente.
+ */
+export async function cambiarContrasena(nueva: string): Promise<ResultadoAcceso> {
+  if (!clienteSupabase) return SIN_CONFIGURAR
+  const { error } = await clienteSupabase.auth.updateUser({ password: nueva })
+  return error ? fallo(error.message) : { ok: true, aviso: 'Contraseña cambiada. Ya puedes usarla.' }
 }
 
 /**
@@ -146,6 +210,10 @@ export function leerResultadoDelEnlace(): string | null {
   history.replaceState(null, '', window.location.pathname + window.location.search)
   return explicarError(`${codigo} ${descripcion}`.trim())
 }
+
+/** Cierto cuando esta carga viene del enlace de «he olvidado la contraseña». */
+export const esEnlaceDeRecuperacion = (): boolean =>
+  typeof window !== 'undefined' && tipoDelEnlace(window.location.hash) === 'recovery'
 
 export async function salir() {
   await clienteSupabase?.auth.signOut()

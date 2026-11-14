@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Sun, Moon, Cloud, CloudOff, TriangleAlert, Trash2, Sparkles } from 'lucide-react'
 import { borrarTodosLosDatos, cargarEjemplos, contarDatos } from '../datos/ejemplos'
 import { Sincronizacion } from '../lib/useSincronizacion'
@@ -8,6 +8,9 @@ type Props = {
   setDark: (v: boolean) => void
   sync: Sincronizacion
   onAbrirCuenta: () => void
+  /** Cuando se llega buscando algo concreto, se lleva la vista hasta ahí. */
+  foco?: string | null
+  onFocoAtendido?: () => void
 }
 
 /** Describe dónde viven los datos ahora mismo, sin prometer de más. */
@@ -48,11 +51,20 @@ function estadoDatos(sync: Sincronizacion) {
   }
 }
 
-export function Ajustes({ dark, setDark, sync, onAbrirCuenta }: Props) {
+export function Ajustes({ dark, setDark, sync, onAbrirCuenta, foco, onFocoAtendido }: Props) {
   const datos = estadoDatos(sync)
   const [confirmando, setConfirmando] = useState(false)
   const [hecho, setHecho] = useState<string | null>(null)
+  const zona = useRef<HTMLDivElement>(null)
   const registros = contarDatos()
+
+  // Al venir del menú «borrar todos mis datos», la sección queda al final de
+  // una página larga: sin esto habría que buscarla a ojo.
+  useEffect(() => {
+    if (foco !== 'datos') return
+    zona.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    onFocoAtendido?.()
+  }, [foco, onFocoAtendido])
 
   return (
     <section className="panel settings-panel">
@@ -120,40 +132,47 @@ export function Ajustes({ dark, setDark, sync, onAbrirCuenta }: Props) {
         </button>
       </div>
 
-      <div className="setting-row">
-        <div>
-          <b>Borrar todos mis datos</b>
-          <small>
-            {sync.correo
-              ? 'Se borran aquí y en tu cuenta, en todos tus dispositivos. No se puede deshacer.'
-              : 'Se borra todo lo guardado en este navegador. No se puede deshacer.'}
-          </small>
-        </div>
-        {confirmando ? (
-          <div className="row-actions">
-            <button className="btn-secondary" onClick={() => setConfirmando(false)}>
-              Cancelar
-            </button>
-            <button
-              className="btn-primary peligro-fuerte"
-              onClick={() => {
-                borrarTodosLosDatos()
-                setConfirmando(false)
-                setHecho('Listo, está todo vacío. Empieza creando una cuenta.')
-              }}
-            >
-              Sí, borrar todo
-            </button>
+      <div className="zona-datos" ref={zona}>
+        <div className="setting-row">
+          <div>
+            <b>Borrar todos mis datos</b>
+            <small>
+              {sync.correo
+                ? 'Se borran aquí y en tu cuenta, en todos tus dispositivos. No se puede deshacer.'
+                : 'Se borra todo lo guardado en este navegador. No se puede deshacer.'}
+            </small>
           </div>
-        ) : (
-          <button
-            className="btn-secondary peligro"
-            onClick={() => setConfirmando(true)}
-            disabled={!registros}
-          >
-            <Trash2 size={15} /> Borrar todo
-          </button>
-        )}
+          {confirmando ? (
+            <div className="row-actions">
+              <button className="btn-secondary" onClick={() => setConfirmando(false)}>
+                Cancelar
+              </button>
+              <button
+                className="btn-primary peligro-fuerte"
+                onClick={() => {
+                  borrarTodosLosDatos()
+                  setConfirmando(false)
+                  setHecho('Listo, está todo vacío. Empieza creando una cuenta.')
+                }}
+              >
+                Sí, borrar todo
+              </button>
+            </div>
+          ) : (
+            // El botón se deshabilitaba al no haber registros, y entonces era
+            // justo cuando se buscaba, para comprobar que no quedaba nada.
+            <button
+              className="btn-secondary peligro"
+              onClick={() =>
+                registros
+                  ? setConfirmando(true)
+                  : setHecho('No hay nada que borrar: esta cuenta ya está vacía.')
+              }
+            >
+              <Trash2 size={15} /> Borrar todo
+            </button>
+          )}
+        </div>
       </div>
 
       {hecho && <p className="aviso-bloque bueno">{hecho}</p>}

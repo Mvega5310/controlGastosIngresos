@@ -17,6 +17,7 @@ import { useDatos } from './lib/useDatos'
 import { useSincronizacion } from './lib/useSincronizacion'
 import { BotonCuenta, PanelCuenta } from './components/Cuenta'
 import { BotonAvisos, PanelAvisos } from './components/Avisos'
+import { MenuPerfil } from './components/MenuPerfil'
 import { calcularAvisos, proximosPagos } from './core/avisos'
 import { Presupuestos, Suscripciones, Deudas, Metas } from './secciones/Planificacion'
 import { Inversiones, Transporte, Reportes } from './secciones/Patrimonio'
@@ -46,7 +47,16 @@ function App() {
   // Si venimos de un enlace de correo que falló, se abre el panel: si no, la
   // persona se queda mirando una pantalla normal sin saber qué pasó.
   const [panelCuenta, setPanelCuenta] = useState(() => Boolean(sync.avisoEnlace))
+  // Al volver del enlace de «he olvidado la contraseña» hay que abrir el panel
+  // sí o sí: si no, la persona vuelve del correo a una pantalla normal, ya
+  // dentro, y sin dónde escribir la contraseña nueva.
+  useEffect(() => {
+    if (sync.recuperandoClave) setPanelCuenta(true)
+  }, [sync.recuperandoClave])
   const [panelAvisos, setPanelAvisos] = useState(false)
+  const [menuPerfil, setMenuPerfil] = useState(false)
+  // Qué venía buscando quien llega a Ajustes, para llevarle hasta ahí.
+  const [focoAjustes, setFocoAjustes] = useState<string | null>(null)
   const [period, setPeriod] = useState<Period>(() => periodOf(new Date()))
   const [active, setActive] = useState('Inicio'),
     [dark, setDark] = useState(() => {
@@ -148,15 +158,41 @@ function App() {
             <button className="icon-button" onClick={() => setDark(!dark)} title="Cambiar tema">
               {dark ? <Sun size={19} /> : <Moon size={19} />}
             </button>
-            <BotonAvisos avisos={avisos} abierto={panelAvisos} onAlternar={() => setPanelAvisos(v => !v)} />
+            <BotonAvisos
+              avisos={avisos}
+              abierto={panelAvisos}
+              onAlternar={() => {
+                setPanelAvisos(v => !v)
+                setMenuPerfil(false)
+              }}
+            />
             <button
               className="top-avatar"
-              onClick={() => setPanelCuenta(true)}
-              title={sync.correo ? `Conectado como ${sync.correo}` : 'Cuenta y sincronización'}
-              aria-label="Cuenta"
+              onClick={() => {
+                setMenuPerfil(v => !v)
+                setPanelAvisos(false)
+              }}
+              title={sync.correo ? `Conectado como ${sync.correo}` : 'Cuenta y ajustes'}
+              aria-label="Perfil y ajustes"
+              aria-expanded={menuPerfil}
             >
               {(sync.correo || 'FC').slice(0, 2).toUpperCase()}
             </button>
+            {menuPerfil && (
+              <MenuPerfil
+                correo={sync.correo}
+                onCerrar={() => setMenuPerfil(false)}
+                onAjustes={() => go('Ajustes')}
+                onCuenta={() => setPanelCuenta(true)}
+                onBorrarDatos={() => {
+                  go('Ajustes')
+                  setFocoAjustes('datos')
+                }}
+                onCerrarSesion={() => {
+                  void sync.cerrarSesion()
+                }}
+              />
+            )}
             <PanelAvisos
               avisos={avisos}
               abierto={panelAvisos}
@@ -241,7 +277,14 @@ function App() {
           ) : active === 'Reportes' ? (
             <Reportes movimientos={movements} totales={totals} periodo={period} />
           ) : (
-            <Ajustes dark={dark} setDark={setDark} sync={sync} onAbrirCuenta={() => setPanelCuenta(true)} />
+            <Ajustes
+              dark={dark}
+              setDark={setDark}
+              sync={sync}
+              onAbrirCuenta={() => setPanelCuenta(true)}
+              foco={focoAjustes}
+              onFocoAtendido={() => setFocoAjustes(null)}
+            />
           )}
           <footer className="footer">
             <span>© 2026 FinControl. Tus finanzas, bajo control.</span>

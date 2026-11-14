@@ -12,6 +12,7 @@ import {
   CarFront,
   ChartPie,
   Settings,
+  ChevronRight,
   X
 } from 'lucide-react'
 const icons: Record<string, LucideIcon> = {
@@ -118,12 +119,15 @@ export default function Sidebar({ active, onNavigate, open, onClose, correo, sec
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <button className="profile" onClick={() => irA('Ajustes')}>
+          {/* Ajustes queda por debajo del pliegue en la lista de arriba; este
+              botón está siempre a la vista, así que tiene que decir a dónde va. */}
+          <button className="profile" onClick={() => irA('Ajustes')} title="Ir a Ajustes">
             <div className="avatar profile-avatar">{iniciales}</div>
             <div>
               <b>{correo ? correo.split('@')[0] : 'Sin cuenta'}</b>
-              <small>{correo ? 'Sesión iniciada' : 'Entra para sincronizar'}</small>
+              <small>{correo ? 'Ajustes y cuenta' : 'Entra para sincronizar'}</small>
             </div>
+            <ChevronRight size={15} className="profile-ir" />
           </button>
         </div>
       </aside>

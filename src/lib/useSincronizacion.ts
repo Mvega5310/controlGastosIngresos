@@ -4,6 +4,7 @@ import { sincronizarTodo } from '../core/motorSincronizacion'
 import { Registro } from '../core/sincronizacion'
 import {
   clienteSupabase,
+  esEnlaceDeRecuperacion,
   haySincronizacion,
   leerResultadoDelEnlace,
   remotoSupabase,
@@ -31,6 +32,9 @@ export type Sincronizacion = {
   /** Lo que Supabase devolvió al volver del enlace del correo, si algo falló. */
   avisoEnlace: string | null
   descartarAviso: () => void
+  /** Cierto al volver del enlace de «he olvidado la contraseña». */
+  recuperandoClave: boolean
+  terminarRecuperacion: () => void
   sincronizar: () => Promise<void>
   cerrarSesion: () => Promise<void>
 }
@@ -55,6 +59,11 @@ export function useSincronizacion(): Sincronizacion {
   // Se lee una sola vez, al arrancar: el fragmento de la dirección llega con
   // la primera carga y se limpia al leerlo.
   const [avisoEnlace, setAvisoEnlace] = useState<string | null>(() => leerResultadoDelEnlace())
+  // El enlace de recuperación deja una sesión abierta igual que cualquier
+  // otra; lo único que la distingue es este aviso del cliente. Sin mirarlo, la
+  // persona volvería del correo «ya dentro» y sin pantalla donde escribir la
+  // contraseña nueva, que es justo a lo que iba.
+  const [recuperandoClave, setRecuperandoClave] = useState(() => esEnlaceDeRecuperacion())
   const enCurso = useRef(false)
 
   useEffect(() => {
@@ -65,9 +74,10 @@ export function useSincronizacion(): Sincronizacion {
       setSesion(data.session)
       setEstado(data.session ? 'listo' : 'desconectado')
     })
-    const { data } = clienteSupabase.auth.onAuthStateChange((_evento, nueva) => {
+    const { data } = clienteSupabase.auth.onAuthStateChange((evento, nueva) => {
       setSesion(nueva)
       setEstado(nueva ? 'listo' : 'desconectado')
+      if (evento === 'PASSWORD_RECOVERY') setRecuperandoClave(true)
     })
     return () => {
       vivo = false
@@ -144,6 +154,7 @@ export function useSincronizacion(): Sincronizacion {
     limpiarDatosSincronizados()
     avisarCambioDatos()
     setUltima(null)
+    setRecuperandoClave(false)
   }, [sincronizar])
 
   return {
@@ -153,6 +164,8 @@ export function useSincronizacion(): Sincronizacion {
     error,
     avisoEnlace,
     descartarAviso: () => setAvisoEnlace(null),
+    recuperandoClave,
+    terminarRecuperacion: () => setRecuperandoClave(false),
     sincronizar,
     cerrarSesion
   }

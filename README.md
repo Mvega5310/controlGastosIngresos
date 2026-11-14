@@ -99,8 +99,33 @@ navegador: no viajan de tu móvil a tu PC. Para que viajen:
 3. En **Project Settings → API**, copia la _URL_ y la clave _publishable_.
 4. Crea un archivo `.env` junto a `package.json` (toma `.env.example` como
    plantilla) con esos dos valores.
-5. Vuelve a compilar. Aparecerá un icono de nube en la barra superior para
+5. En **Authentication → URL Configuration** pon la dirección real de la
+   aplicación como _Site URL_, y añade a _Redirect URLs_ tanto esa dirección
+   con `/**` al final como `http://localhost:5173/**`. Sin este paso, los
+   enlaces de confirmar la cuenta y de recuperar la contraseña vuelven a
+   `http://localhost:3000`, que es el valor de fábrica, y acaban en lo que sea
+   que tengas escuchando en ese puerto.
+6. Vuelve a compilar. Aparecerá un icono de nube en la barra superior para
    crear la cuenta o entrar.
+
+### Confirmación por correo
+
+De fábrica, Supabase exige confirmar el correo antes de dejar entrar, y lo
+envía con su servidor de pruebas: un par de mensajes por hora y, en los
+proyectos nuevos, solo a las direcciones del equipo del propio proyecto. Para
+un uso personal estorba más de lo que protege.
+
+Se desactiva en **Authentication → Sign In / Providers → Email**, quitando
+_Confirm email_. A partir de ahí, crear la cuenta deja dentro al momento y no
+depende de que llegue ningún correo. Si prefieres dejarlo puesto, configura un
+SMTP propio en **Project Settings → Authentication → SMTP Settings**.
+
+Un apunte que desconcierta: registrarse con un correo que **ya tiene cuenta**
+no da error. Supabase responde que todo fue bien, pero no crea nada ni cambia
+la contraseña, porque decir «ese correo ya existe» permitiría ir probando
+direcciones ajenas para averiguar quién tiene cuenta. La aplicación detecta esa
+respuesta —viene sin identidades— y lo dice en vez de anunciar un alta que no
+ha ocurrido.
 
 La clave pública está pensada para vivir en el navegador: no da acceso a nada
 por sí sola, porque las políticas de la base de datos atan cada fila a su
@@ -132,8 +157,7 @@ de ninguno de los dos, sino de una lista de pendientes.
   organismos de tránsito.
 - **Sin notificaciones ni recordatorios.** El calendario y las suscripciones
   muestran los vencimientos, pero no avisan.
-- **Sin recuperación de contraseña probada.** Supabase la ofrece; aquí no se ha
-  conectado ni verificado.
+- **Sin verificación en dos pasos.** El acceso es correo y contraseña.
 
 ## Documentación
 
