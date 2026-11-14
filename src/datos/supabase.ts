@@ -213,33 +213,22 @@ export function leerResultadoDelEnlace(): string | null {
 }
 
 /**
- * Pide un código de seis cifras al correo.
+ * Pide un enlace de acceso al correo.
  *
- * Es la forma de entrar que no depende de ninguna redirección: el código se
- * teclea aquí y no hay ningún enlace que pueda acabar en la dirección
- * equivocada. También sirve para entrar en una cuenta cuya contraseña se ha
- * olvidado, y de paso confirma el correo si estaba pendiente.
+ * Entrar sin contraseña: se abre el enlace y la sesión queda puesta. Sirve
+ * además para entrar en una cuenta cuya contraseña se ha olvidado, y de paso
+ * confirma el correo si estaba pendiente.
+ *
+ * Lo suyo sería un código de seis cifras, que no depende de que ninguna
+ * redirección esté bien puesta. Pero el código vive en la plantilla del
+ * correo, y Supabase no deja editar las plantillas en el plan gratuito con su
+ * servidor de correo: haría falta un SMTP propio. Mientras tanto, el enlace.
  */
-export async function pedirCodigo(correo: string): Promise<ResultadoAcceso> {
+export async function pedirEnlace(correo: string): Promise<ResultadoAcceso> {
   if (!clienteSupabase) return SIN_CONFIGURAR
   const { error } = await clienteSupabase.auth.signInWithOtp({
     email: normalizar(correo),
-    // El enlace va igualmente en el correo, por si la plantilla lo incluye;
-    // lo que la aplicación usa es el código.
     options: { shouldCreateUser: true, emailRedirectTo: destinoDelEnlace() }
-  })
-  return error ? fallo(error.message) : { ok: true }
-}
-
-/** Canjea el código del correo por una sesión. */
-export async function entrarConCodigo(correo: string, codigo: string): Promise<ResultadoAcceso> {
-  if (!clienteSupabase) return SIN_CONFIGURAR
-  const { error } = await clienteSupabase.auth.verifyOtp({
-    email: normalizar(correo),
-    // Solo las cifras: se pega con espacios, con guiones o con un salto de
-    // línea del cliente de correo más veces de las que se teclea limpio.
-    token: codigo.replace(/\D/g, ''),
-    type: 'email'
   })
   return error ? fallo(error.message) : { ok: true }
 }

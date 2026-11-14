@@ -159,26 +159,6 @@ describe('tipo del enlace del correo', () => {
   })
 })
 
-describe('el código del correo', () => {
-  // Lo que devuelve Supabase cuando el código tecleado ya no vale.
-  const DEL_CODIGO = 'Token has expired or is invalid'
-
-  it('habla de código, no de enlace', () => {
-    const r = explicarError(DEL_CODIGO)
-    expect(r).toContain('código')
-    expect(r).not.toContain('enlace')
-  })
-
-  it('no lo captura la regla del enlace caducado, que comparte «expired»', () => {
-    expect(DEL_CODIGO.toLowerCase()).toContain('expired')
-    expect(explicarError(DEL_CODIGO)).not.toContain('Pide uno nuevo desde aquí')
-  })
-
-  it('y el enlace sigue hablando de enlace', () => {
-    expect(explicarError('otp_expired Email link is invalid or has expired')).toContain('enlace')
-  })
-})
-
 describe('proveedores externos', () => {
   it('saca los que están encendidos', () => {
     expect(proveedoresDe({ external: { google: true, github: false, apple: true } })).toEqual([

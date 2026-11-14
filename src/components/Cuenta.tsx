@@ -2,9 +2,8 @@ import { FormEvent, useEffect, useState } from 'react'
 import { X, CloudOff, Cloud, RefreshCw, TriangleAlert, LogOut, Eye, EyeOff, KeyRound } from 'lucide-react'
 import {
   entrar,
-  entrarConCodigo,
   entrarConGoogle,
-  pedirCodigo,
+  pedirEnlace,
   proveedoresExternos,
   registrarse,
   reenviarConfirmacion,
@@ -148,11 +147,10 @@ export function PanelCuenta({
   const [contrasena, setContrasena] = useState('')
   const [claveNueva, setClaveNueva] = useState('')
   const [claveRepetida, setClaveRepetida] = useState('')
-  const [codigo, setCodigo] = useState('')
-  // Dentro de «entrar»: el código es lo primero que se ofrece, porque no
-  // depende de recordar nada ni de que ningún enlace vuelva a su sitio.
+  // Dentro de «entrar»: el enlace es lo primero que se ofrece, porque no
+  // obliga a recordar nada.
   const [conClave, setConClave] = useState(false)
-  const [esperandoCodigo, setEsperandoCodigo] = useState(false)
+  const [enlaceEnviado, setEnlaceEnviado] = useState(false)
   const [aviso, setAviso] = useState<Aviso>(null)
   const [motivo, setMotivo] = useState<MotivoAcceso | null>(null)
   const [enviando, setEnviando] = useState(false)
@@ -182,7 +180,7 @@ export function PanelCuenta({
 
   const irA = (m: Modo) => {
     setModo(m)
-    setEsperandoCodigo(false)
+    setEnlaceEnviado(false)
     limpiarAviso()
   }
 
@@ -195,9 +193,9 @@ export function PanelCuenta({
     e.preventDefault()
     setEnviando(true)
     limpiarAviso()
-    const pidiendoCodigo = modo === 'entrar' && !conClave
-    const r = pidiendoCodigo
-      ? await pedirCodigo(correo)
+    const pidiendoEnlace = modo === 'entrar' && !conClave
+    const r = pidiendoEnlace
+      ? await pedirEnlace(correo)
       : modo === 'entrar'
         ? await entrar(correo, contrasena)
         : modo === 'crear'
@@ -211,9 +209,8 @@ export function PanelCuenta({
     }
 
     setContrasena('')
-    if (pidiendoCodigo) {
-      setCodigo('')
-      setEsperandoCodigo(true)
+    if (pidiendoEnlace) {
+      setEnlaceEnviado(true)
       return
     }
     // Al entrar bien no hay nada más que decir: se cierra y se ve la
@@ -225,29 +222,14 @@ export function PanelCuenta({
     if (r.aviso) setAviso({ texto: r.aviso, bueno: true })
   }
 
-  const canjearCodigo = async (e: FormEvent) => {
-    e.preventDefault()
-    setEnviando(true)
-    limpiarAviso()
-    const r = await entrarConCodigo(correo, codigo)
-    setEnviando(false)
-    if (!r.ok) {
-      fallo(r.mensaje, r.motivo)
-      return
-    }
-    setCodigo('')
-    setEsperandoCodigo(false)
-    onCerrar()
-  }
-
-  const otroCodigo = async () => {
+  const otroEnlace = async () => {
     setReenviando(true)
     limpiarAviso()
-    const r = await pedirCodigo(correo)
+    const r = await pedirEnlace(correo)
     setReenviando(false)
     setAviso(
       r.ok
-        ? { texto: 'Enviado. Usa el último que te llegue, los anteriores dejan de valer.', bueno: true }
+        ? { texto: 'Enviado. Abre el último que te llegue: los anteriores dejan de valer.', bueno: true }
         : { texto: r.mensaje, bueno: false }
     )
   }
@@ -287,7 +269,7 @@ export function PanelCuenta({
   // Al volver del enlace de recuperación hay sesión abierta, pero lo que toca
   // es escribir la contraseña nueva, no ver el estado de la sincronización.
   const poniendoClave = sync.recuperandoClave || cambiando
-  const pidiendoCodigo = modo === 'entrar' && !conClave
+  const pidiendoEnlace = modo === 'entrar' && !conClave
 
   const bloqueAviso = aMostrar && (
     <p className={aMostrar.bueno ? 'aviso-bloque bueno' : 'aviso-campo'}>{aMostrar.texto}</p>
@@ -295,7 +277,7 @@ export function PanelCuenta({
 
   const titulo = poniendoClave
     ? 'Elige una contraseña nueva'
-    : esperandoCodigo
+    : enlaceEnviado
       ? 'Mira tu correo'
       : sync.correo
         ? 'Tu cuenta'
@@ -426,52 +408,38 @@ export function PanelCuenta({
               </button>
             </div>
           </>
-        ) : esperandoCodigo ? (
-          <form onSubmit={canjearCodigo}>
+        ) : enlaceEnviado ? (
+          // No hay nada que teclear: al abrir el enlace, el cliente de
+          // Supabase deja la sesión puesta y la aplicación se entera sola.
+          <>
             <div className="nota-cuenta">
               <p>
-                Enviamos un código de seis cifras a <b>{correo.trim().toLowerCase()}</b>.
+                Enviamos un enlace de acceso a <b>{correo.trim().toLowerCase()}</b>.
               </p>
-              <p>Si no aparece, mira en correo no deseado. Caduca en una hora.</p>
+              <p>Ábrelo y entrarás sin más. Si no aparece, mira en correo no deseado.</p>
             </div>
-            <label htmlFor="cuenta-codigo">Código</label>
-            <input
-              id="cuenta-codigo"
-              className="campo-codigo"
-              required
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              maxLength={11}
-              value={codigo}
-              onChange={e => setCodigo(e.target.value)}
-              placeholder="000000"
-              autoFocus
-            />
             {bloqueAviso}
             <div className="enlaces-cuenta doble">
               <button
                 type="button"
                 className="enlace"
                 onClick={() => {
-                  setEsperandoCodigo(false)
+                  setEnlaceEnviado(false)
                   limpiarAviso()
                 }}
               >
                 Usar otro correo
               </button>
-              <button type="button" className="enlace" onClick={otroCodigo} disabled={reenviando}>
-                {reenviando ? 'Enviando…' : 'Enviar otro código'}
+              <button type="button" className="enlace" onClick={otroEnlace} disabled={reenviando}>
+                {reenviando ? 'Enviando…' : 'Enviar otro enlace'}
               </button>
             </div>
             <div className="modal-actions">
               <button type="button" className="btn-secondary" onClick={cerrar}>
-                Cancelar
-              </button>
-              <button className="btn-primary" type="submit" disabled={enviando}>
-                {enviando ? 'Comprobando…' : 'Entrar'}
+                Cerrar
               </button>
             </div>
-          </form>
+          </>
         ) : (
           <>
             {modo === 'recuperar' ? (
@@ -533,7 +501,7 @@ export function PanelCuenta({
                 onChange={e => setCorreo(e.target.value)}
                 placeholder="tucorreo@ejemplo.com"
               />
-              {!pidiendoCodigo && modo !== 'recuperar' && (
+              {!pidiendoEnlace && modo !== 'recuperar' && (
                 <CampoClave
                   id="cuenta-clave"
                   etiqueta="Contraseña"
@@ -542,9 +510,9 @@ export function PanelCuenta({
                   onCambiar={setContrasena}
                 />
               )}
-              {pidiendoCodigo && (
+              {pidiendoEnlace && (
                 <p className="pista-campo">
-                  Te mandamos un código de seis cifras. No hace falta recordar ninguna contraseña.
+                  Te mandamos un enlace al correo. Lo abres y entras, sin contraseña que recordar.
                 </p>
               )}
               {bloqueAviso}
@@ -582,7 +550,7 @@ export function PanelCuenta({
                       limpiarAviso()
                     }}
                   >
-                    {conClave ? 'Entrar con un código' : 'Entrar con mi contraseña'}
+                    {conClave ? 'Entrar con un enlace' : 'Entrar con mi contraseña'}
                   </button>
                   {conClave && (
                     <button type="button" className="enlace" onClick={() => irA('recuperar')}>
@@ -612,8 +580,8 @@ export function PanelCuenta({
                 <button className="btn-primary" type="submit" disabled={enviando}>
                   {enviando
                     ? 'Un momento…'
-                    : pidiendoCodigo
-                      ? 'Enviarme un código'
+                    : pidiendoEnlace
+                      ? 'Enviarme un enlace'
                       : modo === 'entrar'
                         ? 'Entrar'
                         : modo === 'crear'

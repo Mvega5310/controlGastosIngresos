@@ -2247,21 +2247,6 @@ button.enlace:hover {
   background: var(--line);
 }
 
-/* Seis cifras que se leen de un correo: grandes y separadas, porque
-   confundir un 0 con un 8 aquí cuesta otro correo y otra espera. */
-.modal input.campo-codigo {
-  height: 48px;
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 0.32em;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
-.modal input.campo-codigo::placeholder {
-  font-weight: 500;
-  color: var(--line);
-}
-
 .pista-campo {
   margin: 8px 0 0;
   font-size: 10px;

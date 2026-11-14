@@ -112,15 +112,20 @@ navegador: no viajan de tu móvil a tu PC. Para que viajen:
 
 Hay tres, y cada una necesita algo distinto del proyecto de Supabase.
 
-**Código al correo** (lo que se ofrece primero). Se teclean seis cifras y no
-interviene ningún enlace, así que es la única que no depende de la
-configuración de redirecciones. Para que el correo lleve el código y no un
-enlace, hay que añadir `{{ .Token }}` a la plantilla **Magic Link** en
-_Authentication → Emails_; la de fábrica solo trae `{{ .ConfirmationURL }}`. A
-una cuenta que todavía no existe se le manda la plantilla **Confirm signup**,
-así que conviene añadírselo también a esa.
-También sirve para entrar en una cuenta cuya contraseña se ha olvidado, y
-confirma el correo si estaba pendiente.
+**Enlace al correo** (lo que se ofrece primero). Se pide, llega un correo, se
+abre el enlace y la sesión queda puesta. Sin contraseña que recordar, y sirve
+también para entrar en una cuenta cuya contraseña se ha olvidado. Necesita que
+_Site URL_ y _Redirect URLs_ estén bien puestas, o el enlace vuelve a donde no
+debe.
+
+Lo suyo sería un **código de seis cifras**, que no depende de ninguna
+redirección. El código vive en la plantilla del correo, y ahí está el
+obstáculo: Supabase no deja editar las plantillas en el plan gratuito con su
+servidor de correo. La API responde «Email template modification is not
+available for free tier projects using the default email provider», y el panel
+hace lo mismo. Con un SMTP propio configurado se desbloquean, y entonces basta
+con añadir `{{ .Token }}` a las plantillas _Magic Link_ y _Confirm signup_ y
+volver a `verifyOtp`.
 
 **Contraseña.** No necesita nada más. Si se olvida, el enlace de recuperación
 sí depende de las redirecciones.
@@ -130,9 +135,11 @@ encendido: la aplicación lo pregunta al arrancar el panel, en vez de enseñar u
 botón que lleva a un error. Se configura en _Authentication → Sign In /
 Providers → Google_, con un cliente OAuth de Google Cloud cuya URI de
 redirección autorizada sea `https://<proyecto>.supabase.co/auth/v1/callback`.
+El campo _Client IDs_ quiere el identificador, que acaba en
+`.apps.googleusercontent.com`, no el nombre del proyecto.
 
 Con el servidor de correo de pruebas de Supabase salen dos mensajes por hora,
-así que conviene no pedir códigos en ráfaga.
+así que conviene no pedir enlaces en ráfaga.
 
 ### Confirmación por correo
 

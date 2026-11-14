@@ -29,11 +29,6 @@ export const explicarError = (mensaje: string): string => {
   if (m.includes('otp_expired') || (m.includes('expired') && m.includes('link')))
     return 'El enlace del correo caducó o ya se había usado. Pide uno nuevo desde aquí.'
   if (m.includes('access_denied')) return 'El enlace del correo no sirvió. Pide uno nuevo desde aquí.'
-  // El código que se teclea: su error habla de «token», no de enlace, así que
-  // no lo recogen las reglas de arriba. Si lo hicieran, diría «pide otro
-  // enlace» a quien está mirando una casilla para escribir seis cifras.
-  if (m.includes('token has expired') || m.includes('invalid token') || m.includes('token is invalid'))
-    return 'Ese código no vale o ya caducó. Pide otro: duran una hora.'
 
   if (m.includes('invalid login'))
     return 'El correo o la contraseña no son correctos. Si no te acuerdas, usa «He olvidado la contraseña».'
