@@ -116,7 +116,9 @@ Hay tres, y cada una necesita algo distinto del proyecto de Supabase.
 interviene ningún enlace, así que es la única que no depende de la
 configuración de redirecciones. Para que el correo lleve el código y no un
 enlace, hay que añadir `{{ .Token }}` a la plantilla **Magic Link** en
-_Authentication → Emails_; la de fábrica solo trae `{{ .ConfirmationURL }}`.
+_Authentication → Emails_; la de fábrica solo trae `{{ .ConfirmationURL }}`. A
+una cuenta que todavía no existe se le manda la plantilla **Confirm signup**,
+así que conviene añadírselo también a esa.
 También sirve para entrar en una cuenta cuya contraseña se ha olvidado, y
 confirma el correo si estaba pendiente.
 
