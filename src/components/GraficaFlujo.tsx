@@ -31,12 +31,18 @@ export default function GraficaFlujo({ series }: { series: DailyPoint[] }) {
           tick={{ fill: 'var(--muted)', fontSize: 11 }}
         />
         <Tooltip
-          formatter={(v: number) => [money(v), '']}
+          // El nombre iba en blanco y el recuadro quedaba con dos puntos
+          // sueltos delante de cada cifra, sin decir cuál era ingreso y cuál
+          // gasto, que es justo lo que se mira al tocar la gráfica.
+          formatter={(v: number, nombre) => [money(v), nombre]}
+          separator=": "
           contentStyle={{
             background: 'var(--panel)',
             border: '1px solid var(--line)',
-            borderRadius: 10
+            borderRadius: 10,
+            fontSize: 12
           }}
+          labelStyle={{ color: 'var(--text)', fontWeight: 600, marginBottom: 2 }}
         />
         <Area
           type="monotone"

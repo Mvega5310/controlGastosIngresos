@@ -111,9 +111,16 @@ export function Panel({
               Ver todas <ArrowRight size={14} />
             </button>
           </div>
+          {/* Un balance en cero con movimientos encima no se entiende solo: el
+              saldo sale de las cuentas, y hubo una época en la que no se
+              guardaban, así que los datos de entonces llegan sin ninguna. */}
           {!cuentas.length && (
             <p className="panel-vacio">
-              Aún no has creado ninguna cuenta. Sin cuentas no hay saldos que mostrar.
+              {movements.length
+                ? `Aún no has creado ninguna cuenta, pero tienes ${movements.length} movimiento${
+                    movements.length === 1 ? '' : 's'
+                  } registrados. Por eso el balance total sale en cero: el saldo se calcula a partir de las cuentas. Crea las tuyas, o empieza de cero desde Ajustes.`
+                : 'Aún no has creado ninguna cuenta. Sin cuentas no hay saldos que mostrar.'}
             </p>
           )}
           {cuentas.map(a => {

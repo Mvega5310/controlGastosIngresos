@@ -141,7 +141,10 @@ button {
   margin-left: auto;
   color: var(--muted);
 }
-nav {
+/* Acotado a la barra lateral: suelto alcanzaba también a la barra inferior
+   del móvil, que es otro <nav>, y le recortaba el botón de añadir por arriba
+   justo por donde asoma. */
+.sidebar nav {
   overflow: auto;
 }
 nav section {
@@ -1140,7 +1143,7 @@ td b {
   z-index: 50;
   display: grid;
   place-items: center;
-  padding: 16px;
+  padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
 }
 .modal {
   width: min(480px, 100%);
@@ -1267,8 +1270,16 @@ td b {
   .mobile-menu {
     display: grid;
   }
+  /* Instalada en el móvil, la página arranca por debajo de la barra de estado
+     del sistema. Sin este hueco, la hora y la cobertura se comen la cabecera:
+     el fondo se pinta detrás de ellas y no se lee ni el menú ni los iconos. */
   .topbar {
-    height: 60px;
+    height: calc(60px + env(safe-area-inset-top));
+    padding-top: env(safe-area-inset-top);
+  }
+  .sidebar {
+    padding-top: calc(25px + env(safe-area-inset-top));
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
   }
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -1281,18 +1292,23 @@ td b {
   .goal-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+  /* El alto era fijo y el hueco del indicador de inicio se descontaba de
+     dentro, así que en un móvil con gesto en vez de botón quedaban 28 px
+     útiles: los iconos se apretaban y el botón de añadir salía cortado por
+     abajo. Ahora el alto lo marca el contenido y el hueco se suma. */
   .mobile-nav {
     display: flex;
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    height: 62px;
+    min-height: 60px;
     background: var(--panel);
     border-top: 1px solid var(--line);
     z-index: 15;
+    align-items: center;
     justify-content: space-around;
-    padding-bottom: env(safe-area-inset-bottom);
+    padding: 7px 4px calc(9px + env(safe-area-inset-bottom));
   }
   .mobile-nav button {
     border: 0;
@@ -1311,17 +1327,26 @@ td b {
   .mobile-nav small {
     font-size: 8px;
   }
+  /* El de añadir sobresale por arriba, que es donde hay sitio, en vez de
+     pelearse con el alto de la barra. El borde del color del fondo lo recorta
+     de la barra y lo hace leerse como un botón aparte. */
   .mobile-nav button:nth-child(3) {
-    width: 42px;
-    height: 42px;
-    min-width: 42px;
-    align-self: center;
+    width: 54px;
+    height: 54px;
+    min-width: 54px;
+    gap: 0;
+    margin-top: -26px;
     background: var(--green);
-    color: white;
-    border-radius: 13px;
+    color: #fff;
+    border: 3px solid var(--bg);
+    border-radius: 18px;
+    box-shadow: 0 9px 18px -7px rgba(30, 107, 58, 0.6);
+  }
+  .mobile-nav button:nth-child(3):active {
+    transform: translateY(1px);
   }
   .content {
-    padding-bottom: 85px;
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
   }
   .footer {
     padding-bottom: 12px;
@@ -1329,7 +1354,7 @@ td b {
 }
 @media (max-width: 600px) {
   .content {
-    padding: 23px 14px 80px;
+    padding: 23px 14px calc(96px + env(safe-area-inset-bottom));
   }
   .topbar {
     padding: 0 14px;
@@ -1967,7 +1992,7 @@ button.top-avatar:hover {
 @media (max-width: 600px) {
   .avisos-panel {
     right: 14px;
-    top: 52px;
+    top: calc(52px + env(safe-area-inset-top));
   }
 }
 
@@ -2174,7 +2199,7 @@ button.enlace:hover {
 @media (max-width: 600px) {
   .menu-perfil {
     right: 14px;
-    top: 52px;
+    top: calc(52px + env(safe-area-inset-top));
   }
 }
 .profile-ir {
