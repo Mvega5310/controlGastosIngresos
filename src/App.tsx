@@ -43,7 +43,9 @@ import { Ajustes } from './secciones/Ajustes'
 
 function App() {
   const sync = useSincronizacion()
-  const [panelCuenta, setPanelCuenta] = useState(false)
+  // Si venimos de un enlace de correo que falló, se abre el panel: si no, la
+  // persona se queda mirando una pantalla normal sin saber qué pasó.
+  const [panelCuenta, setPanelCuenta] = useState(() => Boolean(sync.avisoEnlace))
   const [period, setPeriod] = useState<Period>(() => periodOf(new Date()))
   const [active, setActive] = useState('Inicio'),
     [dark, setDark] = useState(() => {

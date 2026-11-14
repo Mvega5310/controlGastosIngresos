@@ -1,6 +1,6 @@
 import { FormEvent, useState } from 'react'
 import { X, CloudOff, Cloud, RefreshCw, TriangleAlert, LogOut } from 'lucide-react'
-import { entrar, registrarse, haySincronizacion } from '../datos/supabase'
+import { entrar, registrarse, reenviarConfirmacion, haySincronizacion } from '../datos/supabase'
 import { Sincronizacion } from '../lib/useSincronizacion'
 
 const hora = (iso: string | null) =>
@@ -59,6 +59,7 @@ export function PanelCuenta({
   const [contrasena, setContrasena] = useState('')
   const [aviso, setAviso] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
+  const [reenviando, setReenviando] = useState(false)
 
   if (!abierto) return null
 
@@ -80,6 +81,7 @@ export function PanelCuenta({
 
   const cerrar = () => {
     setAviso(null)
+    sync.descartarAviso()
     onCerrar()
   }
 
@@ -202,7 +204,27 @@ export function PanelCuenta({
                 onChange={e => setContrasena(e.target.value)}
                 placeholder="Al menos 6 caracteres"
               />
-              {aviso && <p className="aviso-campo">{aviso}</p>}
+              {(aviso || sync.avisoEnlace) && <p className="aviso-campo">{aviso || sync.avisoEnlace}</p>}
+              {sync.avisoEnlace && !aviso && (
+                <button
+                  type="button"
+                  className="btn-secondary reenviar"
+                  disabled={reenviando || !correo.trim()}
+                  onClick={async () => {
+                    setReenviando(true)
+                    const r = await reenviarConfirmacion(correo)
+                    setReenviando(false)
+                    sync.descartarAviso()
+                    setAviso(
+                      r.ok
+                        ? 'Te enviamos un correo nuevo. El enlace caduca pronto, así que ábrelo cuanto antes.'
+                        : r.mensaje
+                    )
+                  }}
+                >
+                  {reenviando ? 'Enviando…' : 'Reenviar el correo de confirmación'}
+                </button>
+              )}
               <div className="nota-cuenta">
                 <p>
                   Lo que ya tienes guardado en este navegador se subirá a tu cuenta en la primera

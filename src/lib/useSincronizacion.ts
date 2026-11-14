@@ -2,7 +2,13 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { sincronizarTodo } from '../core/motorSincronizacion'
 import { Registro } from '../core/sincronizacion'
-import { clienteSupabase, haySincronizacion, remotoSupabase, salir } from '../datos/supabase'
+import {
+  clienteSupabase,
+  haySincronizacion,
+  leerResultadoDelEnlace,
+  remotoSupabase,
+  salir
+} from '../datos/supabase'
 import {
   COLECCIONES,
   avisarCambioDatos,
@@ -22,6 +28,9 @@ export type Sincronizacion = {
   correo: string | null
   ultima: string | null
   error: string | null
+  /** Lo que Supabase devolvió al volver del enlace del correo, si algo falló. */
+  avisoEnlace: string | null
+  descartarAviso: () => void
   sincronizar: () => Promise<void>
   cerrarSesion: () => Promise<void>
 }
@@ -43,6 +52,9 @@ export function useSincronizacion(): Sincronizacion {
   )
   const [ultima, setUltima] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // Se lee una sola vez, al arrancar: el fragmento de la dirección llega con
+  // la primera carga y se limpia al leerlo.
+  const [avisoEnlace, setAvisoEnlace] = useState<string | null>(() => leerResultadoDelEnlace())
   const enCurso = useRef(false)
 
   useEffect(() => {
@@ -139,6 +151,8 @@ export function useSincronizacion(): Sincronizacion {
     correo: sesion?.user?.email ?? null,
     ultima,
     error,
+    avisoEnlace,
+    descartarAviso: () => setAvisoEnlace(null),
     sincronizar,
     cerrarSesion
   }

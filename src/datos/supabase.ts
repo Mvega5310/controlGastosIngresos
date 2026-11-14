@@ -9,6 +9,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { Remoto, RespuestaRemota } from '../core/motorSincronizacion'
 import { Registro } from '../core/sincronizacion'
+import { explicarError } from './mensajesAcceso'
 
 const URL = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const CLAVE = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
@@ -85,43 +86,65 @@ export function remotoSupabase(cliente: SupabaseClient, usuarioId: string): Remo
 
 export type ResultadoAcceso = { ok: true } | { ok: false; mensaje: string }
 
-/**
- * Traduce los errores de Supabase, que llegan en inglés y en su jerga, a algo
- * que una persona pueda leer y actuar en consecuencia.
- */
-const explicar = (mensaje: string): string => {
-  const m = mensaje.toLowerCase()
-  if (m.includes('invalid login')) return 'El correo o la contraseña no son correctos.'
-  if (m.includes('email not confirmed')) return 'Falta confirmar el correo. Revisa tu bandeja de entrada.'
-  if (m.includes('already registered') || m.includes('already been registered'))
-    return 'Ese correo ya tiene cuenta. Entra con tu contraseña.'
-  if (m.includes('password should be at least'))
-    return 'La contraseña es demasiado corta: usa al menos 6 caracteres.'
-  if (m.includes('rate limit') || m.includes('too many'))
-    return 'Demasiados intentos seguidos. Espera un momento.'
-  if (m.includes('failed to fetch') || m.includes('network')) return 'No hay conexión con el servidor.'
-  if (m.includes('is invalid') && m.includes('email'))
-    return 'Ese correo no es válido. Usa una dirección real: el servidor rechaza los dominios de ejemplo y los desechables.'
-  if (m.includes('signups not allowed') || m.includes('signup is disabled'))
-    return 'El registro de cuentas nuevas está cerrado en este proyecto.'
-  if (m.includes('user not found')) return 'No hay ninguna cuenta con ese correo.'
-  if (m.includes('weak password')) return 'La contraseña es demasiado débil. Mézclala con números o símbolos.'
-  return mensaje
-}
-
 export async function entrar(correo: string, contrasena: string): Promise<ResultadoAcceso> {
   if (!clienteSupabase) return { ok: false, mensaje: 'La sincronización no está configurada.' }
   const { error } = await clienteSupabase.auth.signInWithPassword({
     email: correo.trim(),
     password: contrasena
   })
-  return error ? { ok: false, mensaje: explicar(error.message) } : { ok: true }
+  return error ? { ok: false, mensaje: explicarError(error.message) } : { ok: true }
 }
+
+/**
+ * A dónde debe volver el enlace del correo.
+ *
+ * Sin esto, Supabase usa el "Site URL" del panel, que por defecto es
+ * http://localhost:3000 — y el enlace acaba en lo que sea que tengas
+ * escuchando en ese puerto, no en esta aplicación. Esta dirección tiene que
+ * estar además en la lista de "Redirect URLs" del proyecto, o Supabase la
+ * ignora y vuelve al Site URL.
+ */
+const destinoDelEnlace = () => `${window.location.origin}/`
 
 export async function registrarse(correo: string, contrasena: string): Promise<ResultadoAcceso> {
   if (!clienteSupabase) return { ok: false, mensaje: 'La sincronización no está configurada.' }
-  const { error } = await clienteSupabase.auth.signUp({ email: correo.trim(), password: contrasena })
-  return error ? { ok: false, mensaje: explicar(error.message) } : { ok: true }
+  const { error } = await clienteSupabase.auth.signUp({
+    email: correo.trim(),
+    password: contrasena,
+    options: { emailRedirectTo: destinoDelEnlace() }
+  })
+  return error ? { ok: false, mensaje: explicarError(error.message) } : { ok: true }
+}
+
+/** Vuelve a enviar el correo de confirmación, para cuando el enlace caducó. */
+export async function reenviarConfirmacion(correo: string): Promise<ResultadoAcceso> {
+  if (!clienteSupabase) return { ok: false, mensaje: 'La sincronización no está configurada.' }
+  const { error } = await clienteSupabase.auth.resend({
+    type: 'signup',
+    email: correo.trim(),
+    options: { emailRedirectTo: destinoDelEnlace() }
+  })
+  return error ? { ok: false, mensaje: explicarError(error.message) } : { ok: true }
+}
+
+/**
+ * Lee el resultado que Supabase deja en la dirección al volver del correo.
+ *
+ * Cuando sale bien, el cliente consume el fragmento por su cuenta y aquí no
+ * queda nada. Cuando sale mal llega un `#error=...` que, si nadie lo mira,
+ * deja a la persona delante de una pantalla normal sin saber qué pasó.
+ * Devuelve el mensaje y limpia la dirección, para que no reaparezca al
+ * recargar.
+ */
+export function leerResultadoDelEnlace(): string | null {
+  if (typeof window === 'undefined') return null
+  const bruto = window.location.hash.replace(/^#/, '')
+  if (!bruto.includes('error')) return null
+  const partes = new URLSearchParams(bruto)
+  const codigo = partes.get('error_code') || ''
+  const descripcion = partes.get('error_description') || partes.get('error') || ''
+  history.replaceState(null, '', window.location.pathname + window.location.search)
+  return explicarError(`${codigo} ${descripcion}`.trim())
 }
 
 export async function salir() {

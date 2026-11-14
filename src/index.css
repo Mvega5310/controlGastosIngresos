@@ -1747,3 +1747,11 @@ td .mini-btn {
     }
   }
 }
+
+/* Reenviar el correo de confirmacion, bajo el aviso del enlace fallido. */
+.reenviar {
+  width: 100%;
+  margin-top: 9px;
+  height: 34px;
+  font-size: 10px;
+}
