@@ -194,6 +194,26 @@ Tamaños: 320×640, 360×800, 390×844, 430×932, 768×1024, 1366×768, 1440×90
   pantalla; el día actual lleva `aria-current="date"`. No se tocó `monthGrid`,
   `inPeriod` ni `todayISO`. Seleccionar un día queda como mejora opcional.
 
+**Fase 4** (formularios, paneles flotantes, cuentas y ajustes)
+
+- `lib/useDialogo.ts` unifica el comportamiento de todos los modales: Escape
+  cierra, el foco entra al primer campo y vuelve a quien abrió, Tab no se
+  escapa al fondo y el fondo no se desplaza (clase `dialogo-abierto`, con
+  contador por si dos diálogos se solapan). Lo usan `Modal`, `FormModal`,
+  `Confirmar` y `PanelCuenta`; antes el de nuevo movimiento no se cerraba con
+  Escape ni llevaba rol. Avisos y menú de perfil cierran con Escape.
+- `Modal.tsx`: `role="dialog"`, `aria-modal`, nombre accesible, etiquetas
+  enlazadas a sus campos (tocar el texto enfoca el campo), `aria-pressed` en el
+  tipo e `inputMode="numeric"` en el valor.
+- Los modales caben en pantallas bajas (probado a 320×480), desplazan por
+  dentro con `100dvh`, y los botones de guardar quedan fijos en el borde de
+  abajo en móvil. Campos de 44 px y 16 px de letra; botones de 44 px.
+- Los paneles de avisos y de perfil salen con `top: calc(100% + 6px)` respecto
+  a la cabecera, sea cual sea su alto (antes se montaban sobre su borde).
+- Ajustes: cada fila en vertical con el botón a ancho completo. «Borrar todo»
+  sigue pidiendo confirmación. Botones de editar/borrar de 44 px.
+- Con `prefers-reduced-motion: reduce` el menú lateral no se anima.
+
 **Pendiente de fases siguientes:** objetivos táctiles de `text-link`,
 `add-account` y `mini-btn` fuera de Movimientos (< 40 px), y la escala
 tipográfica de 7–10 px del resto de secciones.

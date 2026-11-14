@@ -1154,7 +1154,9 @@ td b {
 .modal {
   width: min(480px, 100%);
   max-height: 94vh;
+  max-height: 94dvh;
   overflow: auto;
+  overscroll-behavior: contain;
   background: var(--panel);
   border-radius: 15px;
   padding: 23px;
@@ -2013,12 +2015,6 @@ button.top-avatar:hover {
 .dark button.top-avatar:hover {
   background: #2c3930;
 }
-@media (max-width: 600px) {
-  .avisos-panel {
-    right: 14px;
-    top: calc(52px + env(safe-area-inset-top));
-  }
-}
 
 /* La barra lateral deja de tener adornos: estos dos son botones de verdad. */
 button.workspace,
@@ -2219,12 +2215,6 @@ button.enlace:hover {
   position: fixed;
   inset: 0;
   z-index: 55;
-}
-@media (max-width: 600px) {
-  .menu-perfil {
-    right: 14px;
-    top: calc(52px + env(safe-area-inset-top));
-  }
 }
 .profile-ir {
   margin-left: auto;
@@ -2861,5 +2851,231 @@ button.enlace:disabled {
 @media (max-width: 600px) {
   .chart-panel .select-like {
     display: none;
+  }
+}
+
+/* =========================================================================
+   Rediseño móvil · fase 4 — formularios, paneles flotantes, cuentas y ajustes
+   ========================================================================= */
+
+/* Mientras hay un diálogo abierto el fondo no se desplaza. */
+body.dialogo-abierto {
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  /* Los paneles que cuelgan de la cabecera salen justo debajo de ella, sea cual
+     sea su alto: antes se calculaba a mano y se montaban sobre su borde. */
+  .avisos-panel,
+  .menu-perfil {
+    top: calc(100% + 6px);
+    right: var(--mobile-gutter);
+  }
+  .avisos-panel {
+    width: min(380px, calc(100vw - 2 * var(--mobile-gutter)));
+  }
+  .menu-perfil {
+    width: min(290px, calc(100vw - 2 * var(--mobile-gutter)));
+  }
+  .avisos-lista {
+    max-height: min(420px, 60vh);
+    max-height: min(420px, 60dvh);
+  }
+}
+
+@media (max-width: 767px) {
+  /* ---- Modales: caben en pantalla, desplazan por dentro y se alcanzan con el pulgar */
+  .modal-overlay {
+    padding: calc(12px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));
+  }
+  .modal {
+    max-height: calc(100vh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    padding: 18px;
+    border-radius: 16px;
+  }
+  .modal-head {
+    margin-bottom: 14px;
+  }
+  .modal-head h2 {
+    font-size: 19px;
+  }
+  .eyebrow {
+    font-size: 11px;
+  }
+  .modal form label {
+    font-size: 13px;
+    margin: 14px 0 7px;
+  }
+  .modal input,
+  .modal select {
+    height: var(--touch-target);
+    font-size: 16px;
+    padding: 0 12px;
+  }
+  .type-switch button {
+    height: var(--touch-target);
+    font-size: 13px;
+  }
+  /* En un formulario largo los botones de guardar se quedan a la vista, en el
+     borde de abajo, en vez de esperar al final del desplazamiento. */
+  .modal form .modal-actions {
+    position: sticky;
+    bottom: -18px;
+    margin: 16px -18px -18px;
+    padding: 12px 18px 18px;
+    background: var(--panel);
+    border-top: 1px solid var(--line);
+  }
+  .modal-actions {
+    gap: 10px;
+  }
+  .modal-actions .btn-primary,
+  .modal-actions .btn-secondary {
+    flex: 1;
+    height: var(--touch-target);
+    font-size: 14px;
+  }
+  .nota-cuenta p,
+  .pista-campo,
+  .aviso-campo,
+  .aviso-bloque,
+  .confirmar p {
+    font-size: 12px;
+  }
+  .confirmar h2 {
+    font-size: 16px;
+  }
+  .sin-cuentas p {
+    font-size: 14px;
+  }
+  .sin-cuentas small {
+    font-size: 12px;
+  }
+  button.enlace {
+    font-size: 13px;
+    min-height: var(--touch-target);
+    padding: 0 4px;
+  }
+  .btn-secondary.ancho {
+    height: var(--touch-target);
+    font-size: 14px;
+  }
+  .boton-google {
+    height: var(--touch-target);
+    font-size: 14px;
+  }
+  .separador-o {
+    font-size: 11px;
+  }
+  .ver-clave {
+    width: 40px;
+    height: 40px;
+    right: 2px;
+  }
+
+  /* ---- Avisos y menú de perfil */
+  .avisos-cabecera {
+    padding: 16px;
+  }
+  .avisos-cabecera b {
+    font-size: 15px;
+  }
+  .avisos-cabecera span {
+    font-size: 12px;
+  }
+  .avisos-lista button {
+    padding: 14px 16px;
+    min-height: var(--touch-target);
+  }
+  .aviso-texto b {
+    font-size: 13px;
+  }
+  .aviso-texto small {
+    font-size: 12px;
+    margin-top: 4px;
+  }
+  .avisos-vacio p {
+    font-size: 14px;
+  }
+  .avisos-vacio small {
+    font-size: 12px;
+  }
+  .menu-perfil .cabecera b {
+    font-size: 14px;
+  }
+  .menu-perfil .cabecera small {
+    font-size: 12px;
+  }
+  .menu-perfil button {
+    min-height: var(--touch-target);
+    font-size: 14px;
+  }
+
+  /* ---- Botones de editar y borrar de las filas */
+  .mini-btn {
+    min-width: var(--touch-target);
+    height: var(--touch-target);
+    font-size: 12px;
+  }
+  .row-actions {
+    gap: 4px;
+  }
+  .status-pill {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+
+  /* ---- Ajustes: cada fila en vertical, con el botón a ancho completo */
+  .settings-panel h2 {
+    font-size: 17px;
+  }
+  .settings-panel > p {
+    font-size: 13px;
+  }
+  .setting-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 16px 0;
+  }
+  .setting-row b {
+    font-size: 14px;
+  }
+  .setting-row small {
+    font-size: 12px;
+    line-height: 1.55;
+    margin-top: 4px;
+  }
+  .setting-row > strong {
+    font-size: 13px;
+    text-align: left;
+  }
+  .setting-row .status-pill {
+    align-self: flex-start;
+  }
+  .setting-row .btn-secondary,
+  .setting-row .btn-primary {
+    width: 100%;
+    height: var(--touch-target);
+    font-size: 14px;
+  }
+  .setting-row .row-actions {
+    width: 100%;
+    margin-left: 0;
+  }
+  .setting-row .row-actions > button {
+    flex: 1;
+  }
+  .zona-datos {
+    padding: 2px 14px 14px;
+  }
+}
+
+/* Quien pide menos movimiento no lo recibe tampoco al abrir el menú. */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .sidebar.mobile-open {
+    transition: none;
   }
 }

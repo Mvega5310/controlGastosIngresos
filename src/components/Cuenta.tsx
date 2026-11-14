@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent, useEffect, useRef, useState } from 'react'
 import { X, CloudOff, Cloud, RefreshCw, TriangleAlert, LogOut, Eye, EyeOff, KeyRound } from 'lucide-react'
 import {
   entrar,
@@ -13,6 +13,7 @@ import {
 } from '../datos/supabase'
 import { MotivoAcceso } from '../datos/mensajesAcceso'
 import { Sincronizacion } from '../lib/useSincronizacion'
+import { useDialogo } from '../lib/useDialogo'
 
 const hora = (iso: string | null) =>
   iso
@@ -157,6 +158,10 @@ export function PanelCuenta({
   const [reenviando, setReenviando] = useState(false)
   const [cambiando, setCambiando] = useState(false)
   const [externos, setExternos] = useState<string[]>([])
+  // Escape cierra por el mismo camino que el botón de cerrar, que además limpia
+  // los avisos pendientes. `cerrarRef` evita declarar `cerrar` antes de usarlo.
+  const cerrarRef = useRef<() => void>(() => {})
+  const dialogo = useDialogo(abierto, () => cerrarRef.current())
 
   // Se pregunta al abrir, no al compilar: el botón de Google aparece solo si
   // el proyecto lo tiene encendido de verdad.
@@ -262,6 +267,7 @@ export function PanelCuenta({
     setCambiando(false)
     onCerrar()
   }
+  cerrarRef.current = cerrar
 
   // El aviso del enlace del correo manda mientras no haya uno más reciente.
   const aMostrar: Aviso = aviso || (sync.avisoEnlace ? { texto: sync.avisoEnlace, bueno: false } : null)
@@ -290,7 +296,7 @@ export function PanelCuenta({
         if (e.target === e.currentTarget) cerrar()
       }}
     >
-      <div className="modal modal-estrecho" role="dialog" aria-modal="true" aria-label="Cuenta">
+      <div ref={dialogo} className="modal modal-estrecho" role="dialog" aria-modal="true" aria-label="Cuenta">
         <div className="modal-head">
           <div>
             <span className="eyebrow">CUENTA</span>
