@@ -135,11 +135,31 @@ Tamaños: 320×640, 360×800, 390×844, 430×932, 768×1024, 1366×768, 1440×90
 
 ## 9. Registro de continuidad
 
-| Campo        | Valor                                                                                  |
-| ------------ | -------------------------------------------------------------------------------------- |
-| Fase actual  | 0 — hecha                                                                              |
-| Rama         | `feat/redisenio-movil`                                                                 |
-| Línea base   | 208 pruebas; a 320 px las 12 secciones desbordan 27 px; objetivos táctiles de 20–37 px |
-| Próximo paso | Fase 1 — estructura y navegación                                                       |
+| Campo                 | Valor                                                                         |
+| --------------------- | ----------------------------------------------------------------------------- |
+| Fase actual           | 1 — estructura y navegación, hecha                                            |
+| Rama                  | `feat/redisenio-movil`                                                        |
+| Archivos de la fase 1 | `App.tsx`, `Sidebar.tsx`, `index.css`                                         |
+| Medido                | a 320 px, de 12/12 secciones con desborde a 0/12; 0/12 en los otros 6 tamaños |
+| Pruebas               | `npm run verificar` en verde                                                  |
+| Próximo paso          | Fase 2 — Movimientos (tarjetas en móvil, tabla en escritorio)                 |
+
+### Decisiones de la fase 1
+
+- **Selector de mes** solo en Inicio, Reportes y Presupuestos. Calendario queda
+  fuera: lleva sus propias flechas contra el mismo periodo y repetirlas en la
+  cabecera era ruido. Movimientos no lo usa (no tiene filtro temporal).
+- **«Nuevo movimiento» arriba** solo en Inicio y Movimientos, y solo en
+  escritorio: donde hay barra inferior (≤ 900 px) el `+` central cumple ese
+  papel y repetirlo con texto era lo que desbordaba a 320 px. El `+` lleva
+  `aria-label`.
+- **Menú lateral**: `min(86vw, 340px)`, `100dvh`, `visibility: hidden` cerrado
+  (antes sus enlaces seguían en el orden del tabulador), fondo bloqueado,
+  Escape cierra y el foco vuelve al botón de apertura, y se cierra solo si la
+  ventana crece hasta el escritorio.
+- **Objetivos táctiles de 44 px** en la cabecera y la barra inferior, con
+  `--touch-target`, `--mobile-gutter` y `--mobile-nav-height` en `:root`.
+- Pendiente de fases siguientes: objetivos táctiles de `text-link`,
+  `add-account`, `mini-btn` y filtros (< 40 px), y la escala tipográfica de 7–10 px.
 
 > Este documento es un plan. Revisar siempre el código actual antes de editar.
