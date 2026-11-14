@@ -1531,21 +1531,6 @@ td b {
     height: 47px;
     padding: 7px;
   }
-  .toolbar {
-    flex-wrap: wrap;
-  }
-  .search-input {
-    flex-basis: 100%;
-  }
-  .filter-select {
-    flex: 1;
-  }
-  .toolbar .btn-secondary {
-    flex: 1;
-  }
-  .toolbar .btn-primary {
-    flex: 1;
-  }
   .simple-row {
     gap: 8px;
   }
@@ -2437,4 +2422,178 @@ button.enlace:disabled {
 }
 .confirmar + .modal-actions {
   justify-content: center;
+}
+
+/* =========================================================================
+   Rediseño móvil · fase 2 — Movimientos
+   Tabla en escritorio; tarjetas en pantallas estrechas. Son dos
+   representaciones de los mismos datos y el CSS enseña una u otra.
+   ========================================================================= */
+
+.lista-movil {
+  display: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tarjeta-mov {
+  display: grid;
+  gap: 5px;
+  padding: 14px 0 6px;
+  border-top: 1px solid var(--line);
+}
+.tarjeta-mov:first-child {
+  border-top: 0;
+  padding-top: 4px;
+}
+.tm-superior {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.tm-superior .movement-dot {
+  flex: none;
+  margin-top: 7px;
+}
+.tm-titulo {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.tm-importe {
+  flex: none;
+  font-size: 15px;
+  line-height: 1.35;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.tm-medio {
+  padding-left: 17px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+/* El nombre de una cuenta puede ser largo: en la tarjeta se parte en vez de
+   empujar el importe fuera de la pantalla. */
+.tarjeta-mov .traslado {
+  white-space: normal;
+  flex-wrap: wrap;
+}
+.tm-pie {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding-left: 17px;
+  min-height: var(--touch-target);
+}
+.tm-fecha {
+  font-size: 12px;
+  color: var(--muted);
+}
+.tm-tipo {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: var(--soft);
+  color: var(--green);
+}
+.tm-tipo.gasto {
+  background: #fbf3dc;
+  color: #8a6508;
+}
+.tm-tipo.transferencia {
+  background: #efe9fa;
+  color: #5d46a0;
+}
+.dark .tm-tipo {
+  color: #86d9a2;
+}
+.dark .tm-tipo.gasto {
+  background: #3a3216;
+  color: #e8c46a;
+}
+.dark .tm-tipo.transferencia {
+  background: #2f2849;
+  color: #c3b2ec;
+}
+/* El texto del tipo acompaña siempre al color: quien no distingue los tonos
+   lee igualmente si es ingreso, gasto o traslado. */
+.tm-borrar {
+  margin-left: auto;
+  width: var(--touch-target);
+  height: var(--touch-target);
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 10px;
+}
+.tm-borrar:hover,
+.tm-borrar:active {
+  background: #fdecea;
+  color: #b3261e;
+}
+.dark .tm-borrar:hover,
+.dark .tm-borrar:active {
+  background: #3a2220;
+  color: #f2938c;
+}
+
+@media (max-width: 767px) {
+  .tabla-escritorio {
+    display: none;
+  }
+  .lista-movil {
+    display: block;
+  }
+  .table-wrap {
+    overflow: visible;
+    margin-top: 6px;
+  }
+
+  /* Barra de búsqueda: la búsqueda ocupa todo el ancho; el filtro y, solo si
+     hay algo que limpiar, «Limpiar filtros» comparten la fila de debajo. */
+  .toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .search-input {
+    flex: 1 1 100%;
+    height: var(--touch-target);
+  }
+  .search-input input {
+    font-size: 16px;
+  }
+  .filter-select {
+    flex: 1 1 0;
+    min-width: 0;
+    height: var(--touch-target);
+    font-size: 14px;
+  }
+  .toolbar .btn-secondary {
+    flex: 1 1 0;
+    height: var(--touch-target);
+    font-size: 13px;
+  }
+
+  .paginacion {
+    font-size: 12px;
+    padding-top: 10px;
+  }
+  .paginacion-botones b {
+    font-size: 13px;
+  }
+  .boton-pagina {
+    width: var(--touch-target);
+    height: var(--touch-target);
+    font-size: 13px;
+  }
 }

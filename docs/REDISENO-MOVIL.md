@@ -135,16 +135,18 @@ Tamaños: 320×640, 360×800, 390×844, 430×932, 768×1024, 1366×768, 1440×90
 
 ## 9. Registro de continuidad
 
-| Campo                 | Valor                                                                         |
-| --------------------- | ----------------------------------------------------------------------------- |
-| Fase actual           | 1 — estructura y navegación, hecha                                            |
-| Rama                  | `feat/redisenio-movil`                                                        |
-| Archivos de la fase 1 | `App.tsx`, `Sidebar.tsx`, `index.css`                                         |
-| Medido                | a 320 px, de 12/12 secciones con desborde a 0/12; 0/12 en los otros 6 tamaños |
-| Pruebas               | `npm run verificar` en verde                                                  |
-| Próximo paso          | Fase 2 — Movimientos (tarjetas en móvil, tabla en escritorio)                 |
+| Campo                 | Valor                                                                                                                                          |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fase actual           | 2 — Movimientos, hecha                                                                                                                         |
+| Rama                  | `feat/redisenio-movil`                                                                                                                         |
+| Archivos de la fase 2 | `Movimientos.tsx`, nuevo `components/TarjetaMovimiento.tsx`, `index.css`                                                                       |
+| Medido                | tarjetas a 320 y 390 px sin desborde, con importes de 9 cifras y textos largos; objetivos táctiles de 44 px (borrar, paginar, buscar, filtrar) |
+| Pruebas               | `npm run verificar` en verde; flujo real de traslado creado y borrado comprobando sus dos apuntes                                              |
+| Próximo paso          | Fase 3 — Dashboard y calendario                                                                                                                |
 
-### Decisiones de la fase 1
+### Decisiones
+
+**Fase 1** (estructura y navegación)
 
 - **Selector de mes** solo en Inicio, Reportes y Presupuestos. Calendario queda
   fuera: lleva sus propias flechas contra el mismo periodo y repetirlas en la
@@ -159,7 +161,21 @@ Tamaños: 320×640, 360×800, 390×844, 430×932, 768×1024, 1366×768, 1440×90
   ventana crece hasta el escritorio.
 - **Objetivos táctiles de 44 px** en la cabecera y la barra inferior, con
   `--touch-target`, `--mobile-gutter` y `--mobile-nav-height` en `:root`.
-- Pendiente de fases siguientes: objetivos táctiles de `text-link`,
-  `add-account`, `mini-btn` y filtros (< 40 px), y la escala tipográfica de 7–10 px.
+
+**Fase 2** (Movimientos)
+
+- Dos representaciones de los mismos datos dentro de `TablaMovimientos`: la
+  tabla (`.tabla-escritorio`) y una lista de tarjetas (`.lista-movil`). El CSS
+  enseña una u otra a 767 px. Datos, página, borrado y `Confirmar` son los
+  mismos; `TarjetaMovimiento` es solo presentación.
+- Un traslado se lee «Cuenta A → Cuenta B», con la etiqueta _Transferencia_, sin
+  signo y sin color de ingreso ni de gasto. Aparece una vez, no dos.
+- «Limpiar filtros» solo aparece si hay filtros activos y ahora limpia también la
+  búsqueda (antes solo restablecía el tipo).
+- El tipo se dice siempre con texto, además de con color.
+
+**Pendiente de fases siguientes:** objetivos táctiles de `text-link`,
+`add-account` y `mini-btn` fuera de Movimientos (< 40 px), y la escala
+tipográfica de 7–10 px del resto de secciones.
 
 > Este documento es un plan. Revisar siempre el código actual antes de editar.

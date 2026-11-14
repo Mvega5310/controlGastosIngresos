@@ -4,6 +4,7 @@ import { Movement, money } from '../datos/catalogo'
 import { fmtDate } from '../lib/fechas'
 import { POR_PAGINA, paginaDe, paginaValida, rangoVisible, totalPaginas } from '../core/paginacion'
 import { Confirmar } from '../components/Confirmar'
+import { TarjetaMovimiento } from '../components/TarjetaMovimiento'
 
 export function TablaMovimientos({
   data,
@@ -29,7 +30,15 @@ export function TablaMovimientos({
 
   return (
     <div className="table-wrap">
-      <table>
+      {/* Dos representaciones de los mismos datos. El CSS enseña una u otra
+          según el ancho; el filtrado, la página, el borrado y su confirmación
+          son los mismos para las dos. */}
+      <ul className="lista-movil">
+        {visibles.map(m => (
+          <TarjetaMovimiento key={m.id} m={m} onEliminar={onEliminar ? setPorBorrar : undefined} />
+        ))}
+      </ul>
+      <table className="tabla-escritorio">
         <thead>
           <tr>
             <th>DESCRIPCIÓN</th>
@@ -96,7 +105,7 @@ export function TablaMovimientos({
           </span>
           <div className="paginacion-botones">
             <button
-              className="mini-btn"
+              className="mini-btn boton-pagina"
               onClick={() => setPagina(p => paginaValida(p - 1, data.length))}
               disabled={pagina <= 1}
               aria-label="Página anterior"
@@ -107,7 +116,7 @@ export function TablaMovimientos({
               {paginaValida(pagina, data.length)} / {paginas}
             </b>
             <button
-              className="mini-btn"
+              className="mini-btn boton-pagina"
               onClick={() => setPagina(p => paginaValida(p + 1, data.length))}
               disabled={pagina >= paginas}
               aria-label="Página siguiente"
@@ -153,24 +162,45 @@ export function Movimientos({
   onAdd: () => void
   onEliminar: (id: string) => void
 }) {
+  const hayFiltros = filter !== 'Todos' || query.trim() !== ''
+  const limpiar = () => {
+    setFilter('Todos')
+    setQuery('')
+  }
   return (
     <section className="panel full-panel">
       <div className="toolbar">
         <div className="search-input">
-          <Search size={17} />
-          <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Buscar movimiento..." />
+          <Search size={17} aria-hidden="true" />
+          <input
+            type="search"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Buscar movimiento..."
+            aria-label="Buscar movimiento"
+          />
         </div>
-        <select className="filter-select" value={filter} onChange={e => setFilter(e.target.value)}>
+        <select
+          className="filter-select"
+          value={filter}
+          onChange={e => setFilter(e.target.value)}
+          aria-label="Filtrar por tipo de movimiento"
+        >
           <option>Todos</option>
           <option>Ingreso</option>
           <option>Gasto</option>
           <option>Transferencia</option>
         </select>
-        <button className="btn-secondary" onClick={() => setFilter('Todos')}>
-          <Filter size={16} /> Limpiar filtros
-        </button>
-        <button className="btn-primary" onClick={onAdd}>
-          <Plus size={16} /> Nuevo
+        {/* Solo aparece cuando hay algo que limpiar. Y limpia las dos cosas:
+            antes solo restablecía el tipo y dejaba la búsqueda puesta, de modo
+            que «limpiar» no devolvía la lista entera. */}
+        {hayFiltros && (
+          <button className="btn-secondary" onClick={limpiar}>
+            <Filter size={16} aria-hidden="true" /> Limpiar filtros
+          </button>
+        )}
+        <button className="btn-primary boton-nuevo" onClick={onAdd}>
+          <Plus size={16} aria-hidden="true" /> Nuevo
         </button>
       </div>
       <TablaMovimientos data={data} onEliminar={onEliminar} paginada />
