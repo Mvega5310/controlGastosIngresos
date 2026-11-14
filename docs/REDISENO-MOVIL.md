@@ -174,6 +174,26 @@ Tamaños: 320×640, 360×800, 390×844, 430×932, 768×1024, 1366×768, 1440×90
   búsqueda (antes solo restablecía el tipo).
 - El tipo se dice siempre con texto, además de con color.
 
+**Fase 3** (Dashboard y calendario)
+
+- `Panel.tsx` se envuelve en `.panel-flujo`. En escritorio no cambia nada; hasta
+  900 px es una columna flex y los dos contenedores en rejilla pasan a
+  `display: contents`, de modo que sus secciones se ordenan entre sí con CSS
+  `order` y sin duplicar nada en el DOM: balance → próximos pagos → flujo →
+  cuentas → recientes → consejo.
+- El balance ocupa el ancho entero con un degradado verde de la marca (blanco
+  sobre `#1e6b3a`, 6,6:1); ingresos y gastos van de dos en dos y el ahorro, solo
+  en su fila, ocupa el ancho. A ≤ 359 px las tarjetas van de una en una para que
+  una cifra de doce dígitos no se corte.
+- «Próximos pagos» no reserva tarjeta cuando no hay pagos (`.sin-pagos`).
+- El periodo junto al título de la gráfica se oculta en móvil: ya está en el
+  selector de arriba.
+- Calendario: siete columnas a 320 px (celdas de 36×50), flechas de 44 px y
+  listado apilado en rejilla (fecha e importe arriba, descripción debajo).
+  Los días con movimientos dicen cuántos con texto solo para lectores de
+  pantalla; el día actual lleva `aria-current="date"`. No se tocó `monthGrid`,
+  `inPeriod` ni `todayISO`. Seleccionar un día queda como mejora opcional.
+
 **Pendiente de fases siguientes:** objetivos táctiles de `text-link`,
 `add-account` y `mini-btn` fuera de Movimientos (< 40 px), y la escala
 tipográfica de 7–10 px del resto de secciones.

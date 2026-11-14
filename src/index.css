@@ -917,7 +917,7 @@ td b {
 .calendar-day.muted {
   color: #b7c0b9;
 }
-.calendar-day.today span {
+.calendar-day.today > span:first-of-type {
   background: var(--green);
   color: white;
   border-radius: 50%;
@@ -1471,37 +1471,8 @@ td b {
     justify-content: center;
     font-size: 14px;
   }
-  .stats-grid {
-    gap: 9px;
-  }
-  .stat-card {
-    min-height: 108px;
-    padding: 12px;
-  }
-  .stat-value {
-    font-size: 16px;
-  }
-  .stat-top {
-    font-size: 9px;
-  }
-  .stat-icon {
-    width: 27px;
-    height: 27px;
-  }
-  .stat-foot {
-    font-size: 8px;
-  }
   .panel {
     padding: 14px;
-  }
-  .chart {
-    height: 190px;
-  }
-  .chart-legend {
-    gap: 9px;
-  }
-  .chart-legend b {
-    display: none;
   }
   .panel-heading h2 {
     font-size: 12px;
@@ -1509,27 +1480,12 @@ td b {
   .lower-grid {
     gap: 10px;
   }
-  .tip-banner {
-    align-items: flex-start;
-    padding: 12px;
-  }
-  .tip-banner button {
-    font-size: 0;
-  }
-  .tip-banner button svg {
-    width: 18px;
-    height: 18px;
-  }
   .module-grid,
   .goal-grid {
     grid-template-columns: 1fr;
   }
   .calendar-layout {
     grid-template-columns: 1fr;
-  }
-  .calendar-day {
-    height: 47px;
-    padding: 7px;
   }
   .simple-row {
     gap: 8px;
@@ -2595,5 +2551,315 @@ button.enlace:disabled {
     width: var(--touch-target);
     height: var(--touch-target);
     font-size: 13px;
+  }
+}
+
+/* =========================================================================
+   Rediseño móvil · fase 3 — Dashboard y calendario
+   ========================================================================= */
+
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Orden de lectura en pantalla estrecha: el balance, lo que vence, el flujo,
+   las cuentas y lo reciente. Los dos contenedores en rejilla se disuelven para
+   que sus secciones se puedan ordenar entre sí, sin duplicar nada en el DOM. */
+@media (max-width: 900px) {
+  .panel-flujo {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .panel-flujo > .dashboard-grid,
+  .panel-flujo > .lower-grid {
+    display: contents;
+  }
+  .panel-flujo > .stats-grid {
+    order: 1;
+    margin-bottom: 0;
+  }
+  .panel-flujo .upcoming-panel {
+    order: 2;
+  }
+  .panel-flujo .chart-panel {
+    order: 3;
+  }
+  .panel-flujo .accounts-panel {
+    order: 4;
+  }
+  .panel-flujo .transactions-panel {
+    order: 5;
+  }
+  .panel-flujo > .tip-banner {
+    order: 6;
+    margin-top: 0;
+  }
+  /* Sin pagos a la vista no se reserva una tarjeta para decir que no hay. */
+  .panel-flujo .upcoming-panel.sin-pagos {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .stats-grid,
+  .stats-grid.three {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  /* Una tarjeta sola en su fila ocupa la fila entera. */
+  .stats-grid .stat-card:last-child {
+    grid-column: 1 / -1;
+  }
+  .stat-card {
+    min-height: 0;
+    padding: 14px;
+  }
+  .stat-top {
+    font-size: 12px;
+    gap: 8px;
+  }
+  .stat-icon {
+    width: 32px;
+    height: 32px;
+    flex: none;
+  }
+  .stat-value {
+    font-size: clamp(15px, 4.6vw, 22px);
+    line-height: 1.15;
+    margin: 10px 0 8px;
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-foot {
+    font-size: 11px;
+    flex-wrap: wrap;
+    gap: 2px 6px;
+  }
+
+  /* El balance es la cifra que se viene a mirar: ocupa el ancho y se destaca. */
+  .panel-flujo .stats-grid .stat-card:first-child {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, #1e6b3a, #2a8a4f);
+    border-color: transparent;
+    color: #fff;
+  }
+  .panel-flujo .stats-grid .stat-card:first-child .stat-top,
+  .panel-flujo .stats-grid .stat-card:first-child .stat-foot {
+    color: rgba(255, 255, 255, 0.86);
+  }
+  .panel-flujo .stats-grid .stat-card:first-child .stat-value {
+    font-size: clamp(26px, 8.2vw, 34px);
+    color: #fff;
+  }
+
+  .panel {
+    padding: 16px;
+  }
+  .panel-heading h2 {
+    font-size: 15px;
+  }
+  .panel-heading p,
+  .panel > p {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .text-link {
+    font-size: 12px;
+    min-height: var(--touch-target);
+    padding: 0 6px;
+    white-space: nowrap;
+    flex: none;
+  }
+  .panel-vacio {
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .chart-panel {
+    min-width: 0;
+  }
+  .chart {
+    height: 220px;
+  }
+  .chart-legend {
+    font-size: 12px;
+    gap: 14px;
+  }
+  .chart-legend b {
+    display: none;
+  }
+
+  .account-row,
+  .payment {
+    gap: 12px;
+    padding: 12px 0;
+  }
+  .bank-icon {
+    width: 36px;
+    height: 36px;
+    flex: none;
+  }
+  .account-info b,
+  .payment-info b {
+    font-size: 13px;
+    overflow-wrap: anywhere;
+  }
+  .account-info small,
+  .payment-info small {
+    font-size: 11px;
+    margin-top: 3px;
+  }
+  .account-row > strong,
+  .payment > strong {
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  .payment-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .payment-date {
+    width: 40px;
+    height: 44px;
+    flex: none;
+  }
+  .payment-date b {
+    font-size: 15px;
+  }
+  .payment-date small {
+    font-size: 9px;
+  }
+  .add-account {
+    height: var(--touch-target);
+    font-size: 13px;
+  }
+
+  .tip-banner {
+    align-items: flex-start;
+    padding: 14px;
+    gap: 12px;
+  }
+  .tip-banner b {
+    font-size: 13px;
+  }
+  .tip-banner p {
+    font-size: 12px;
+    line-height: 1.55;
+  }
+  .tip-banner button {
+    min-width: var(--touch-target);
+    min-height: var(--touch-target);
+    justify-content: center;
+    font-size: 0;
+  }
+  .tip-banner button svg {
+    width: 20px;
+    height: 20px;
+  }
+  .footer {
+    font-size: 11px;
+  }
+
+  /* Calendario: siete columnas que entran a 320 px, con celdas que se pueden
+     tocar, y el listado apilado. */
+  .calendar-panel .panel-heading {
+    align-items: center;
+  }
+  .calendar-nav {
+    display: flex;
+    gap: 8px;
+    flex: none;
+  }
+  .calendar-panel .btn-secondary {
+    width: var(--touch-target);
+    height: var(--touch-target);
+    font-size: 20px;
+    padding: 0;
+  }
+  .calendar-grid {
+    margin-top: 14px;
+  }
+  .weekday {
+    font-size: 11px;
+    padding-bottom: 6px;
+  }
+  .calendar-day {
+    height: 50px;
+    padding: 6px 4px;
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .calendar-day.today > span:first-of-type {
+    width: 26px;
+    height: 26px;
+  }
+  .calendar-day i {
+    bottom: 6px;
+  }
+  .calendar-legend {
+    font-size: 11px;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+  }
+  .muted-text {
+    font-size: 12px;
+  }
+  .event-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'fecha importe'
+      'detalle detalle';
+    gap: 4px 12px;
+    align-items: center;
+    padding: 12px 0;
+  }
+  .event-row .event-date {
+    grid-area: fecha;
+    justify-self: start;
+    font-size: 11px;
+  }
+  .event-row > div:nth-child(2) {
+    grid-area: detalle;
+    min-width: 0;
+  }
+  .event-row strong {
+    grid-area: importe;
+    font-size: 14px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .event-row b {
+    font-size: 13px;
+    overflow-wrap: anywhere;
+  }
+  .event-row small {
+    font-size: 11px;
+    margin-top: 3px;
+  }
+}
+
+/* A 320 px las tarjetas de ingresos y gastos, una al lado de la otra, dejarían
+   cifras de ocho o nueve dígitos sin sitio: aquí van de una en una. */
+@media (max-width: 359px) {
+  .stats-grid,
+  .stats-grid.three {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* El periodo ya está en el selector de arriba: repetirlo junto al título de la
+   gráfica solo le quitaba ancho. */
+@media (max-width: 600px) {
+  .chart-panel .select-like {
+    display: none;
   }
 }
