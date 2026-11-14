@@ -2,7 +2,15 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!--
+      Sin "viewport-fit=cover" el sistema recorta la ventana por su cuenta y la
+      pagina empieza por debajo de la barra de estado. Con el, la pagina ocupa
+      hasta el borde y es ella quien tiene que dejar el hueco: eso depende de
+      que el navegador informe de los margenes seguros, y cuando no lo hace la
+      hora y la cobertura se comen la cabecera. En una aplicacion de cuentas
+      pesa mas que se lea siempre que llegar al borde de la pantalla.
+    -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#1e6b3a" />
     <meta name="description" content="FinControl: organiza tus finanzas personales." />
     <title>FinControl | Finanzas personales</title>
@@ -11,7 +19,8 @@
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="FinControl" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- "black-translucent" mete la pagina debajo de la barra de estado. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="mobile-web-app-capable" content="yes" />
   </head>
   <body>
