@@ -17,6 +17,10 @@
  *   npm run build
  *   npm run revision:responsive
  *
+ * También sirve para revisar algo ya desplegado, sin compilar ni arrancar nada:
+ *
+ *   REVISION_URL=https://mi-staging.up.railway.app npm run revision:responsive
+ *
  * Arranca su propio servidor sobre `dist/`, con el mismo `server.mjs` que usa
  * producción, de modo que lo que se revisa es lo que se despliega.
  */
@@ -27,7 +31,9 @@ import { existsSync } from 'node:fs'
 
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..')
 const PUERTO = Number(process.env.PUERTO) || 4179
-const BASE = `http://127.0.0.1:${PUERTO}/`
+/** Con REVISION_URL se revisa una dirección ya desplegada (p. ej. el staging). */
+const URL_EXTERNA = process.env.REVISION_URL
+const BASE = URL_EXTERNA ? URL_EXTERNA.replace(/\/?$/, '/') : `http://127.0.0.1:${PUERTO}/`
 
 /**
  * [ancho, alto, táctil]. `táctil` es si el dispositivo se maneja con el dedo, que
@@ -75,24 +81,29 @@ try {
   console.error('Falta Playwright. Instálalo con:  npm i -D playwright && npx playwright install chromium')
   process.exit(2)
 }
-if (!existsSync(join(RAIZ, 'dist', 'index.html'))) {
+if (!URL_EXTERNA && !existsSync(join(RAIZ, 'dist', 'index.html'))) {
   console.error('No hay compilación. Ejecuta primero:  npm run build')
   process.exit(2)
 }
 
-const servidor = spawn(process.execPath, ['server.mjs'], {
-  cwd: RAIZ,
-  env: { ...process.env, PORT: String(PUERTO) },
-  stdio: 'ignore'
-})
-const apagar = () => servidor.kill()
+// Con una dirección externa no hay servidor que arrancar.
+const servidor = URL_EXTERNA
+  ? null
+  : spawn(process.execPath, ['server.mjs'], {
+      cwd: RAIZ,
+      env: { ...process.env, PORT: String(PUERTO) },
+      stdio: 'ignore'
+    })
+const apagar = () => servidor?.kill()
 process.on('exit', apagar)
-await new Promise(r => setTimeout(r, 900))
+if (servidor) await new Promise(r => setTimeout(r, 900))
 
 const fallos = []
 const anotar = (tam, seccion, texto) => fallos.push(`${tam[0]}×${tam[1]} · ${seccion}: ${texto}`)
 
-const navegador = await playwright.chromium.launch()
+// Si el entorno obliga a salir por un proxy, se indica con REVISION_PROXY.
+const proxy = process.env.REVISION_PROXY ? { server: process.env.REVISION_PROXY } : undefined
+const navegador = await playwright.chromium.launch({ proxy })
 try {
   for (const tam of TAMANOS) {
     const [w, h, tactil] = tam

@@ -9,9 +9,20 @@ Duración estimada: 20 minutos por dispositivo.
 
 ## Antes de empezar
 
-**Hace falta una dirección HTTPS con la versión a probar.** No sirve abrirla desde
-el ordenador por `http://192.168…`: sin HTTPS ni el service worker ni la
-instalación como PWA funcionan, y el resultado no diría nada del rediseño.
+**Dirección de pruebas (HTTPS):**
+https://fincontrol-staging-web-staging.up.railway.app
+
+Es una copia aislada de producción (ver `docs/ENTORNOS.md`): se instala como
+**«FinControl · pruebas»** para no confundirla con la real, y **no tiene
+Supabase**, así que nada de lo que se haga ahí toca datos reales.
+
+Hace falta HTTPS: sin él ni el service worker ni la instalación como PWA
+funcionan.
+
+**Qué no se puede probar ahí:** el acceso con cuenta. En staging el panel de
+cuenta dice que la sincronización no está configurada, así que el paso **C7**
+(gestor de contraseñas) queda pendiente hasta tener un Supabase solo para
+pruebas, o hasta probarlo en producción tras la autorización.
 
 **Dispositivos mínimos:** un iPhone con iOS 16 o superior (Safari) y un Android
 con Chrome actualizado. Si solo hay uno, empezar por el iPhone: iOS es donde más

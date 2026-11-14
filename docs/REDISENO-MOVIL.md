@@ -135,16 +135,16 @@ Tamaños: 320×640, 360×800, 390×844, 430×932, 768×1024, 1366×768, 1440×90
 
 ## 9. Registro de continuidad
 
-| Campo          | Valor                                                                                                                                                       |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Fase actual    | 5 — regresión y cierre, hecha. **Rediseño completo.**                                                                                                       |
-| Rama           | `feat/redisenio-movil` (sin subir; ver nota abajo)                                                                                                          |
-| Pruebas        | 208 unitarias en verde; `npm run verificar` limpio                                                                                                          |
-| Matriz         | 7 tamaños × 12 secciones × 2 temas: **0 desbordes** (línea base: 12/12 a 320 px)                                                                            |
-| Contraste      | **0 fallos AA** en claro y oscuro a 320, 390, 768, 1366 y 1440 px. Los días de otro mes del calendario y la «/» de la miga de pan pasaron de 3,07:1 a 5,0:1 |
-| Reglas 1–3 y 5 | `src/core`, `src/datos`, sincronización y Supabase: **0 archivos modificados** (`git diff 1de3287`)                                                         |
-| Dependencias   | ninguna nueva                                                                                                                                               |
-| Próximo paso   | Prueba en dispositivos reales (`docs/PRUEBA-EN-DISPOSITIVOS.md`); después, aprobación para subir y desplegar                                                |
+| Campo          | Valor                                                                                                                                                                                   |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fase actual    | 5 — regresión y cierre, hecha. **Rediseño completo.**                                                                                                                                   |
+| Rama           | `feat/redisenio-movil` → despliega el **staging** (`docs/ENTORNOS.md`); producción no se ha tocado                                                                                      |
+| Pruebas        | 208 unitarias en verde; `npm run verificar` limpio                                                                                                                                      |
+| Matriz         | 7 tamaños × 12 secciones × 2 temas: **0 desbordes** (línea base: 12/12 a 320 px)                                                                                                        |
+| Contraste      | **0 fallos AA** en claro y oscuro a 320, 390, 768, 1366 y 1440 px. Los días de otro mes del calendario y la «/» de la miga de pan pasaron de 3,07:1 a 5,0:1                             |
+| Reglas 1–3 y 5 | `src/core`, `src/datos`, sincronización y Supabase: **0 archivos modificados** (`git diff 1de3287`)                                                                                     |
+| Dependencias   | ninguna nueva                                                                                                                                                                           |
+| Próximo paso   | Probar en iPhone Safari y Chrome Android sobre el staging (`docs/PRUEBA-EN-DISPOSITIVOS.md`), corregir lo que salga y, solo entonces, autorizar por separado el despliegue a producción |
 
 ### Decisiones
 
@@ -263,10 +263,12 @@ Tamaños: 320×640, 360×800, 390×844, 430×932, 768×1024, 1366×768, 1440×90
   y a 844×390 el botón de guardar del modal quedaba fuera de vista porque los
   botones fijos dependían del ancho y no de la altura. Corregidos.
 
-**Nota sobre la rama.** El entorno de esta sesión fija la rama de desarrollo en
-`claude/quirky-mayer-3caadd`, y Railway despliega solo lo que se sube a ella; la
-guía pide no desplegar sin aprobación. Por eso el trabajo está en
-`feat/redisenio-movil` y **no se ha subido**.
+**Nota sobre la rama y los entornos.** El entorno de esta sesión fija la rama de
+desarrollo en `claude/quirky-mayer-3caadd`, y Railway despliega solo lo que se
+sube a ella: subir ahí es desplegar a producción, y la guía pide no hacerlo sin
+aprobación. Por eso el trabajo vive en `feat/redisenio-movil`, que despliega un
+**staging aislado** (proyecto de Railway propio, sin Supabase, que se instala
+como «FinControl · pruebas»). Producción no se ha tocado. Ver `docs/ENTORNOS.md`.
 
 **Pendiente tras el rediseño:** la prueba en iOS Safari y Chrome Android
 reales, con la app instalada y el teclado en pantalla, que un navegador
