@@ -20,19 +20,38 @@ export type Movement = {
 }
 
 export type Account = {
+  id: string
   name: string
   bank: string
   kind: string
-  color: 'yellow' | 'purple' | 'blue' | 'green'
+  color: string
   /** Saldo de partida, antes de aplicar los movimientos registrados. */
   openingBalance: number
 }
 
+export const coloresCuenta = ['yellow', 'purple', 'blue', 'green'] as const
+
+export const tiposCuenta = ['Ahorros', 'Corriente', 'Crédito', 'Disponible', 'Inversión', 'Otra']
+
+export const categories = [
+  'Alimentación',
+  'Transporte',
+  'Vivienda',
+  'Salud',
+  'Entretenimiento',
+  'Trabajo',
+  'Otros'
+]
+
 /**
- * Catálogo de cuentas. Es la única fuente de verdad: el formulario de alta y el
- * cálculo de saldos leen de aquí, de modo que no puedan desincronizarse.
+ * Datos de ejemplo.
+ *
+ * No se cargan solos. Antes sí lo hacían, y el resultado era que cualquier
+ * navegador —y cualquier cuenta nueva— aparecía con cuentas y movimientos que
+ * no eran suyos. Ahora se cargan únicamente si alguien lo pide desde Ajustes,
+ * para ver cómo queda la aplicación con datos dentro.
  */
-export const accounts: Account[] = [
+export const cuentasDeEjemplo: Omit<Account, 'id'>[] = [
   {
     name: 'Cuenta principal',
     bank: 'Bancolombia',
@@ -57,21 +76,8 @@ export const accounts: Account[] = [
   { name: 'Efectivo', bank: 'Caja', kind: 'Disponible', color: 'green', openingBalance: aCentavos(250000) }
 ]
 
-export const accountNames = accounts.map(a => a.name)
-
-export const categories = [
-  'Alimentación',
-  'Transporte',
-  'Vivienda',
-  'Salud',
-  'Entretenimiento',
-  'Trabajo',
-  'Otros'
-]
-
-export const initialMovements: Movement[] = [
+export const movimientosDeEjemplo: Omit<Movement, 'id'>[] = [
   {
-    id: 'seed-1',
     title: 'Salario',
     category: 'Trabajo',
     account: 'Cuenta principal',
@@ -80,7 +86,6 @@ export const initialMovements: Movement[] = [
     type: 'Ingreso'
   },
   {
-    id: 'seed-2',
     title: 'Mercado',
     category: 'Alimentación',
     account: 'Cuenta principal',
@@ -89,7 +94,6 @@ export const initialMovements: Movement[] = [
     type: 'Gasto'
   },
   {
-    id: 'seed-3',
     title: 'Netflix',
     category: 'Entretenimiento',
     account: 'Tarjeta crédito',
@@ -98,7 +102,6 @@ export const initialMovements: Movement[] = [
     type: 'Gasto'
   },
   {
-    id: 'seed-4',
     title: 'Transporte',
     category: 'Transporte',
     account: 'Efectivo',
@@ -107,7 +110,6 @@ export const initialMovements: Movement[] = [
     type: 'Gasto'
   },
   {
-    id: 'seed-5',
     title: 'Freelance',
     category: 'Trabajo',
     account: 'Cuenta principal',

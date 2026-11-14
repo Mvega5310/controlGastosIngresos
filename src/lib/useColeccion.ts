@@ -19,7 +19,7 @@ import { alCambiarDatos, escribirLista, escribirPendientes, leerLista, leerPendi
 const darDeBaja = <T extends { id: string } & Partial<Registro>>(x: T): T =>
   sellarBorrado({ ...x, actualizadoEn: x.actualizadoEn || '' })
 
-export function useColeccion<T extends { id: string }>(clave: string, iniciales: T[]) {
+export function useColeccion<T extends { id: string }>(clave: string, iniciales: T[] = []) {
   type Fila = T & Partial<Registro>
 
   const [todos, setTodos] = useState<Fila[]>(() => leerLista<Fila>(clave, iniciales as Fila[]))

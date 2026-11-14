@@ -10,18 +10,8 @@ import {
   ArrowUpRight,
   CalendarClock
 } from 'lucide-react'
-import { Movement, money, categories, accountNames } from '../datos/catalogo'
-import {
-  CLAVES,
-  Deuda,
-  Meta,
-  Presupuesto,
-  Suscripcion,
-  deudasIniciales,
-  metasIniciales,
-  presupuestosIniciales,
-  suscripcionesIniciales
-} from '../datos/entidades'
+import { Account, Movement, money, categories } from '../datos/catalogo'
+import { Deuda, Meta, Presupuesto, Suscripcion } from '../datos/entidades'
 import {
   calcularDeudas,
   calcularMetas,
@@ -34,8 +24,8 @@ import {
   diasHasta
 } from '../core/planificacion'
 import { Period, periodLabel } from '../core/finanzas'
-import { useColeccion } from '../lib/useColeccion'
 import FormModal, { Campo } from '../components/FormModal'
+import { Coleccion } from '../lib/useDatos'
 import StatCard from '../components/StatCard'
 
 const fechaCorta = (iso: string) =>
@@ -116,8 +106,15 @@ const camposPresupuesto: Campo[] = [
   { nombre: 'limite', etiqueta: 'Límite mensual en COP', tipo: 'dinero', requerido: true, min: 1, ayuda: '0' }
 ]
 
-export function Presupuestos({ movimientos, periodo }: { movimientos: Movement[]; periodo: Period }) {
-  const col = useColeccion<Presupuesto>(CLAVES.presupuestos, presupuestosIniciales)
+export function Presupuestos({
+  col,
+  movimientos,
+  periodo
+}: {
+  col: Coleccion<Presupuesto>
+  movimientos: Movement[]
+  periodo: Period
+}) {
   const ed = useEdicion<Presupuesto>()
   const filas = calcularPresupuestos(col.items, movimientos, periodo)
   const limite = filas.reduce((s, f) => s + f.limite, 0)
@@ -225,15 +222,19 @@ const camposSuscripcion: Campo[] = [
     ancho: 'medio'
   },
   { nombre: 'categoria', etiqueta: 'Categoría', tipo: 'seleccion', opciones: categories, ancho: 'medio' },
-  { nombre: 'cuenta', etiqueta: 'Cuenta', tipo: 'seleccion', opciones: accountNames, ancho: 'medio' }
+  { nombre: 'cuenta', etiqueta: 'Cuenta', tipo: 'seleccion', opciones: [], ancho: 'medio' }
 ]
 
-export function Suscripciones() {
-  const col = useColeccion<Suscripcion>(CLAVES.suscripciones, suscripcionesIniciales)
+/** Las cuentas disponibles cambian con los datos, así que el campo se arma al vuelo. */
+const camposSuscripcionCon = (cuentas: string[]): Campo[] =>
+  camposSuscripcion.map(c => (c.nombre === 'cuenta' ? { ...c, opciones: cuentas } : c))
+
+export function Suscripciones({ col, cuentas }: { col: Coleccion<Suscripcion>; cuentas: Account[] }) {
   const ed = useEdicion<Suscripcion>()
   const filas = calcularSuscripciones(col.items)
   const mensual = gastoMensualSuscripciones(col.items)
   const activas = col.items.filter(s => s.activa).length
+  const campos = camposSuscripcionCon(cuentas.map(c => c.name))
 
   return (
     <>
@@ -301,7 +302,7 @@ export function Suscripciones() {
         abierto={ed.abierto}
         eyebrow="SUSCRIPCIÓN"
         titulo={ed.editando ? 'Editar suscripción' : 'Nueva suscripción'}
-        campos={camposSuscripcion}
+        campos={campos}
         valores={ed.editando}
         onCerrar={ed.cerrar}
         onGuardar={d =>
@@ -325,8 +326,7 @@ const camposDeuda: Campo[] = [
   { nombre: 'diaPago', etiqueta: 'Día de pago', tipo: 'numero', min: 1, max: 31, ancho: 'medio' }
 ]
 
-export function Deudas() {
-  const col = useColeccion<Deuda>(CLAVES.deudas, deudasIniciales)
+export function Deudas({ col }: { col: Coleccion<Deuda> }) {
   const ed = useEdicion<Deuda>()
   const filas = calcularDeudas(col.items)
   const pendiente = totalDeuda(filas)
@@ -437,8 +437,7 @@ const camposMeta: Campo[] = [
   { nombre: 'fechaLimite', etiqueta: 'Fecha límite', tipo: 'fecha' }
 ]
 
-export function Metas() {
-  const col = useColeccion<Meta>(CLAVES.metas, metasIniciales)
+export function Metas({ col }: { col: Coleccion<Meta> }) {
   const ed = useEdicion<Meta>()
   const filas = calcularMetas(col.items)
 

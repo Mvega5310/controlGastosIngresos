@@ -10,14 +10,7 @@ import {
   ShieldCheck
 } from 'lucide-react'
 import { Movement, money } from '../datos/catalogo'
-import {
-  CLAVES,
-  Inversion,
-  Vehiculo,
-  inversionesIniciales,
-  vehiculosIniciales,
-  tiposInversion
-} from '../datos/entidades'
+import { Inversion, Vehiculo, tiposInversion } from '../datos/entidades'
 import {
   calcularInversiones,
   calcularVehiculos,
@@ -26,8 +19,8 @@ import {
   Urgencia
 } from '../core/planificacion'
 import { Period, periodLabel, Totals } from '../core/finanzas'
-import { useColeccion } from '../lib/useColeccion'
 import FormModal, { Campo } from '../components/FormModal'
+import { Coleccion } from '../lib/useDatos'
 import StatCard from '../components/StatCard'
 
 const fechaLarga = (iso: string) =>
@@ -132,8 +125,7 @@ const camposInversion: Campo[] = [
   { nombre: 'valorActual', etiqueta: 'Valor actual', tipo: 'dinero', requerido: true, min: 0, ancho: 'medio' }
 ]
 
-export function Inversiones() {
-  const col = useColeccion<Inversion>(CLAVES.inversiones, inversionesIniciales)
+export function Inversiones({ col }: { col: Coleccion<Inversion> }) {
   const ed = useEdicion<Inversion>()
   const filas = calcularInversiones(col.items)
   const r = resumenInversiones(filas)
@@ -229,8 +221,7 @@ const camposVehiculo: Campo[] = [
   { nombre: 'tecnomecanica', etiqueta: 'Vence la tecnomecánica', tipo: 'fecha', ancho: 'medio' }
 ]
 
-export function Transporte() {
-  const col = useColeccion<Vehiculo>(CLAVES.vehiculos, vehiculosIniciales)
+export function Transporte({ col }: { col: Coleccion<Vehiculo> }) {
   const ed = useEdicion<Vehiculo>()
   const filas = calcularVehiculos(col.items)
   const alertas = filas.filter(v => v.soatEstado !== 'vigente' || v.tecnoEstado !== 'vigente').length

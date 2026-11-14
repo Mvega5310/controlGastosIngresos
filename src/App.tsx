@@ -3,24 +3,24 @@ import {
   LucideIcon,
   Menu,
   Plus,
-  Bell,
   Search,
   Sun,
   Moon,
   MoreHorizontal,
   CalendarDays,
-  CircleHelp,
   LayoutDashboard,
   ArrowLeftRight
 } from 'lucide-react'
 import Sidebar from './components/Sidebar'
 import Modal from './components/Modal'
-import { useColeccion } from './lib/useColeccion'
+import { useDatos } from './lib/useDatos'
 import { useSincronizacion } from './lib/useSincronizacion'
 import { BotonCuenta, PanelCuenta } from './components/Cuenta'
+import { BotonAvisos, PanelAvisos } from './components/Avisos'
+import { calcularAvisos, proximosPagos } from './core/avisos'
 import { Presupuestos, Suscripciones, Deudas, Metas } from './secciones/Planificacion'
 import { Inversiones, Transporte, Reportes } from './secciones/Patrimonio'
-import { initialMovements, Movement } from './datos/catalogo'
+import { Movement } from './datos/catalogo'
 import {
   Period,
   periodOf,
@@ -46,6 +46,7 @@ function App() {
   // Si venimos de un enlace de correo que falló, se abre el panel: si no, la
   // persona se queda mirando una pantalla normal sin saber qué pasó.
   const [panelCuenta, setPanelCuenta] = useState(() => Boolean(sync.avisoEnlace))
+  const [panelAvisos, setPanelAvisos] = useState(false)
   const [period, setPeriod] = useState<Period>(() => periodOf(new Date()))
   const [active, setActive] = useState('Inicio'),
     [dark, setDark] = useState(() => {
@@ -61,8 +62,10 @@ function App() {
     [modal, setModal] = useState(false),
     [query, setQuery] = useState(''),
     [filter, setFilter] = useState('Todos')
-  const movs = useColeccion<Movement>('fc-movements', initialMovements)
+  const datos = useDatos()
+  const movs = datos.movimientos
   const movements = movs.items
+  const cuentas = datos.cuentas.items
   useEffect(() => {
     try {
       localStorage.setItem('fc-theme', dark ? 'dark' : 'light')
@@ -72,6 +75,16 @@ function App() {
   }, [dark])
   const totals = useMemo(() => totalsFor(movements, period), [movements, period])
   const previous = useMemo(() => totalsFor(movements, shiftPeriod(period, -1)), [movements, period])
+  // Al renombrar una cuenta hay que arrastrar los movimientos que la nombran,
+  // o se quedan huérfanos y dejan de sumar en ningún saldo.
+  const renombrarCuenta = (anterior: string, nuevo: string) => {
+    if (!anterior || anterior === nuevo) return
+    for (const m of movs.items) {
+      if (m.account === anterior) movs.actualizar(m.id, { account: nuevo } as Partial<Movement>)
+      else if (m.contraparte === anterior) movs.actualizar(m.id, { contraparte: nuevo } as Partial<Movement>)
+    }
+  }
+
   const addMovement = (m: NuevoMovimiento) => movs.agregarVarios(crearApuntes(m))
   const eliminarMovimiento = (id: string) => movs.eliminarVarios(idsAEliminar(movements, id))
   const filtered = apuntesVisibles(movements)
@@ -81,10 +94,42 @@ function App() {
         (filter === 'Todos' || m.type === filter) &&
         `${m.title} ${m.category} ${m.account}`.toLowerCase().includes(query.toLowerCase())
     )
+  const avisos = useMemo(
+    () =>
+      calcularAvisos({
+        suscripciones: datos.suscripciones.items,
+        deudas: datos.deudas.items,
+        vehiculos: datos.vehiculos.items,
+        presupuestos: datos.presupuestos.items,
+        movimientos: movements,
+        periodo: period
+      }),
+    [
+      datos.suscripciones.items,
+      datos.deudas.items,
+      datos.vehiculos.items,
+      datos.presupuestos.items,
+      movements,
+      period
+    ]
+  )
+
+  const pagos = useMemo(
+    () => proximosPagos(datos.suscripciones.items, datos.deudas.items),
+    [datos.suscripciones.items, datos.deudas.items]
+  )
+
   const go = (s: string) => setActive(s)
   return (
     <div className={`app ${dark ? 'dark' : ''}`}>
-      <Sidebar active={active} onNavigate={go} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar
+        active={active}
+        onNavigate={go}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        correo={sync.correo}
+        seccionesConAviso={[...new Set(avisos.map(a => a.seccion))]}
+      />
       <main className="main-area">
         <header className="topbar">
           <div className="top-left">
@@ -103,11 +148,21 @@ function App() {
             <button className="icon-button" onClick={() => setDark(!dark)} title="Cambiar tema">
               {dark ? <Sun size={19} /> : <Moon size={19} />}
             </button>
-            <button className="icon-button notification">
-              <Bell size={19} />
-              <i />
+            <BotonAvisos avisos={avisos} abierto={panelAvisos} onAlternar={() => setPanelAvisos(v => !v)} />
+            <button
+              className="top-avatar"
+              onClick={() => setPanelCuenta(true)}
+              title={sync.correo ? `Conectado como ${sync.correo}` : 'Cuenta y sincronización'}
+              aria-label="Cuenta"
+            >
+              {(sync.correo || 'FC').slice(0, 2).toUpperCase()}
             </button>
-            <div className="top-avatar">US</div>
+            <PanelAvisos
+              avisos={avisos}
+              abierto={panelAvisos}
+              onCerrar={() => setPanelAvisos(false)}
+              onIr={go}
+            />
           </div>
         </header>
         <div className="content">
@@ -148,6 +203,8 @@ function App() {
           </div>
           {active === 'Inicio' ? (
             <Panel
+              cuentas={cuentas}
+              pagos={pagos}
               movements={movements}
               totals={totals}
               previous={previous}
@@ -166,21 +223,21 @@ function App() {
               onEliminar={eliminarMovimiento}
             />
           ) : active === 'Cuentas' ? (
-            <Cuentas movements={movements} />
+            <Cuentas movements={movements} coleccion={datos.cuentas} onRenombrar={renombrarCuenta} />
           ) : active === 'Calendario' ? (
             <Calendario movements={movements} period={period} setPeriod={setPeriod} />
           ) : active === 'Suscripciones' ? (
-            <Suscripciones />
+            <Suscripciones col={datos.suscripciones} cuentas={cuentas} />
           ) : active === 'Deudas' ? (
-            <Deudas />
+            <Deudas col={datos.deudas} />
           ) : active === 'Metas de ahorro' ? (
-            <Metas />
+            <Metas col={datos.metas} />
           ) : active === 'Presupuestos' ? (
-            <Presupuestos movimientos={movements} periodo={period} />
+            <Presupuestos col={datos.presupuestos} movimientos={movements} periodo={period} />
           ) : active === 'Inversiones' ? (
-            <Inversiones />
+            <Inversiones col={datos.inversiones} />
           ) : active === 'Transporte' ? (
-            <Transporte />
+            <Transporte col={datos.vehiculos} />
           ) : active === 'Reportes' ? (
             <Reportes movimientos={movements} totales={totals} periodo={period} />
           ) : (
@@ -188,9 +245,6 @@ function App() {
           )}
           <footer className="footer">
             <span>© 2026 FinControl. Tus finanzas, bajo control.</span>
-            <span>
-              <CircleHelp size={14} /> Centro de ayuda
-            </span>
           </footer>
         </div>
       </main>
@@ -214,7 +268,7 @@ function App() {
           </button>
         ))}
       </nav>
-      <Modal open={modal} onClose={() => setModal(false)} onSave={addMovement} />
+      <Modal open={modal} onClose={() => setModal(false)} onSave={addMovement} cuentas={cuentas} />
       <PanelCuenta sync={sync} abierto={panelCuenta} onCerrar={() => setPanelCuenta(false)} />
     </div>
   )

@@ -1,4 +1,6 @@
-import { Sun, Moon, Cloud, CloudOff, TriangleAlert } from 'lucide-react'
+import { useState } from 'react'
+import { Sun, Moon, Cloud, CloudOff, TriangleAlert, Trash2, Sparkles } from 'lucide-react'
+import { borrarTodosLosDatos, cargarEjemplos, contarDatos } from '../datos/ejemplos'
 import { Sincronizacion } from '../lib/useSincronizacion'
 
 type Props = {
@@ -48,6 +50,9 @@ function estadoDatos(sync: Sincronizacion) {
 
 export function Ajustes({ dark, setDark, sync, onAbrirCuenta }: Props) {
   const datos = estadoDatos(sync)
+  const [confirmando, setConfirmando] = useState(false)
+  const [hecho, setHecho] = useState<string | null>(null)
+  const registros = contarDatos()
 
   return (
     <section className="panel settings-panel">
@@ -90,6 +95,68 @@ export function Ajustes({ dark, setDark, sync, onAbrirCuenta }: Props) {
         </div>
         <strong>Español</strong>
       </div>
+
+      <h2 className="settings-subtitulo">Tus datos</h2>
+      <p>
+        {registros > 0
+          ? `Tienes ${registros} registro${registros === 1 ? '' : 's'} guardados.`
+          : 'Todavía no has guardado nada.'}
+      </p>
+
+      <div className="setting-row">
+        <div>
+          <b>Cargar datos de ejemplo</b>
+          <small>Añade cuentas y movimientos de muestra para ver la aplicación llena</small>
+        </div>
+        <button
+          className="btn-secondary"
+          onClick={() => {
+            cargarEjemplos()
+            setHecho('Datos de ejemplo cargados. Puedes borrarlos cuando quieras desde aquí mismo.')
+            setConfirmando(false)
+          }}
+        >
+          <Sparkles size={15} /> Cargar ejemplos
+        </button>
+      </div>
+
+      <div className="setting-row">
+        <div>
+          <b>Borrar todos mis datos</b>
+          <small>
+            {sync.correo
+              ? 'Se borran aquí y en tu cuenta, en todos tus dispositivos. No se puede deshacer.'
+              : 'Se borra todo lo guardado en este navegador. No se puede deshacer.'}
+          </small>
+        </div>
+        {confirmando ? (
+          <div className="row-actions">
+            <button className="btn-secondary" onClick={() => setConfirmando(false)}>
+              Cancelar
+            </button>
+            <button
+              className="btn-primary peligro-fuerte"
+              onClick={() => {
+                borrarTodosLosDatos()
+                setConfirmando(false)
+                setHecho('Listo, está todo vacío. Empieza creando una cuenta.')
+              }}
+            >
+              Sí, borrar todo
+            </button>
+          </div>
+        ) : (
+          <button
+            className="btn-secondary peligro"
+            onClick={() => setConfirmando(true)}
+            disabled={!registros}
+          >
+            <Trash2 size={15} /> Borrar todo
+          </button>
+        )}
+      </div>
+
+      {hecho && <p className="aviso-bloque bueno">{hecho}</p>}
     </section>
   )
 }

@@ -95,8 +95,15 @@ describe('totalsFor', () => {
 
 describe('saldos', () => {
   const cuentas: Account[] = [
-    { name: 'Cuenta principal', bank: 'B', kind: 'Ahorros', color: 'yellow', openingBalance: 6850000 },
-    { name: 'Tarjeta crédito', bank: 'V', kind: 'Crédito', color: 'blue', openingBalance: -840000 }
+    {
+      id: 'c1',
+      name: 'Cuenta principal',
+      bank: 'B',
+      kind: 'Ahorros',
+      color: 'yellow',
+      openingBalance: 6850000
+    },
+    { id: 'c2', name: 'Tarjeta crédito', bank: 'V', kind: 'Crédito', color: 'blue', openingBalance: -840000 }
   ]
   const movs = [
     mov({ id: '1', account: 'Cuenta principal', amount: 4200000, type: 'Ingreso' }),

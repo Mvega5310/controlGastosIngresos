@@ -11,6 +11,7 @@ import { CLAVES } from '../datos/entidades'
 /** Todas las colecciones que viajan entre dispositivos. */
 export const COLECCIONES = {
   movimientos: 'fc-movements',
+  cuentas: CLAVES.cuentas,
   suscripciones: CLAVES.suscripciones,
   deudas: CLAVES.deudas,
   metas: CLAVES.metas,

@@ -4,7 +4,8 @@ import StatCard from '../components/StatCard'
 
 const GraficaFlujo = lazy(() => import('../components/GraficaFlujo'))
 import { TablaMovimientos } from './Movimientos'
-import { Movement, money, accounts } from '../datos/catalogo'
+import { Account, Movement, money } from '../datos/catalogo'
+import { PagoProximo } from '../core/avisos'
 import {
   Period,
   Totals,
@@ -17,7 +18,13 @@ import {
   periodLabel
 } from '../core/finanzas'
 
+/** Mes abreviado y en mayúsculas, como lo muestra la tarjeta de fecha. */
+const mesCorto = (iso: string) =>
+  new Date(iso + 'T12:00:00').toLocaleDateString('es-CO', { month: 'short' }).replace('.', '').toUpperCase()
+
 export function Panel({
+  cuentas,
+  pagos,
   movements,
   totals,
   previous,
@@ -25,6 +32,8 @@ export function Panel({
   onAdd,
   onGo
 }: {
+  cuentas: Account[]
+  pagos: PagoProximo[]
   movements: Movement[]
   totals: Totals
   previous: Totals
@@ -32,7 +41,7 @@ export function Panel({
   onAdd: () => void
   onGo: (s: string) => void
 }) {
-  const balance = totalBalance(accounts, movements)
+  const balance = totalBalance(cuentas, movements)
   const series = dailySeries(movements, period)
   const recent = apuntesVisibles(movements).sort(byDateDesc).slice(0, 5)
   return (
@@ -102,11 +111,16 @@ export function Panel({
               Ver todas <ArrowRight size={14} />
             </button>
           </div>
-          {accounts.map(a => {
+          {!cuentas.length && (
+            <p className="panel-vacio">
+              Aún no has creado ninguna cuenta. Sin cuentas no hay saldos que mostrar.
+            </p>
+          )}
+          {cuentas.map(a => {
             const saldo = accountBalance(a, movements)
             return (
-              <div className="account-row" key={a.name}>
-                <div className={`bank-icon ${a.color}`}>{a.bank[0]}</div>
+              <div className="account-row" key={a.id}>
+                <div className={`bank-icon ${a.color}`}>{(a.bank || a.name)[0]}</div>
                 <div className="account-info">
                   <b>{a.name}</b>
                   <small>
@@ -145,39 +159,31 @@ export function Panel({
               Ver calendario <ArrowRight size={14} />
             </button>
           </div>
-          <div className="payment">
-            <div className="payment-date">
-              <b>15</b>
-              <small>NOV</small>
+          {!pagos.length && (
+            <p className="panel-vacio">
+              No hay pagos a la vista. Aquí aparecerán tus suscripciones y las cuotas de tus deudas.
+            </p>
+          )}
+          {pagos.map(p => (
+            <div className="payment" key={p.id}>
+              <div className="payment-date">
+                <b>{p.fecha.slice(8, 10)}</b>
+                <small>{mesCorto(p.fecha)}</small>
+              </div>
+              <div className="payment-info">
+                <b>{p.nombre}</b>
+                <small>
+                  {p.concepto} ·{' '}
+                  {p.dias < 0
+                    ? `venció hace ${Math.abs(p.dias)} d`
+                    : p.dias === 0
+                      ? 'vence hoy'
+                      : `vence en ${p.dias} día${p.dias === 1 ? '' : 's'}`}
+                </small>
+              </div>
+              <strong>{money(p.monto)}</strong>
             </div>
-            <div className="payment-info">
-              <b>Internet hogar</b>
-              <small>Servicios · vence en 4 días</small>
-            </div>
-            <strong>{money(95000)}</strong>
-          </div>
-          <div className="payment">
-            <div className="payment-date">
-              <b>18</b>
-              <small>NOV</small>
-            </div>
-            <div className="payment-info">
-              <b>Tarjeta de crédito</b>
-              <small>Deuda · vence en 7 días</small>
-            </div>
-            <strong>{money(420000)}</strong>
-          </div>
-          <div className="payment">
-            <div className="payment-date">
-              <b>22</b>
-              <small>NOV</small>
-            </div>
-            <div className="payment-info">
-              <b>Netflix</b>
-              <small>Suscripción · vence en 11 días</small>
-            </div>
-            <strong>{money(32900)}</strong>
-          </div>
+          ))}
         </section>
       </div>
       <div className="tip-banner">

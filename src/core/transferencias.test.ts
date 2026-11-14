@@ -13,13 +13,21 @@ import { Account, Movement } from '../datos/catalogo'
 
 const cuentas: Account[] = [
   {
+    id: 'c1',
     name: 'Cuenta principal',
     bank: 'B',
     kind: 'Ahorros',
     color: 'yellow',
     openingBalance: aCentavos(1000000)
   },
-  { name: 'Ahorros', bank: 'N', kind: 'Ahorros', color: 'purple', openingBalance: aCentavos(500000) }
+  {
+    id: 'c2',
+    name: 'Ahorros',
+    bank: 'N',
+    kind: 'Ahorros',
+    color: 'purple',
+    openingBalance: aCentavos(500000)
+  }
 ]
 
 const alta = (extra: Partial<Movement> & { cuentaDestino?: string } = {}) =>

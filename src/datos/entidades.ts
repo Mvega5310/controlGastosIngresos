@@ -63,6 +63,7 @@ export const tiposInversion = ['Renta fija', 'Renta variable', 'Fondo', 'Liquide
 
 /** Claves de localStorage. Cambiarlas descarta lo guardado, así que no se tocan. */
 export const CLAVES = {
+  cuentas: 'fc-cuentas',
   suscripciones: 'fc-suscripciones',
   deudas: 'fc-deudas',
   metas: 'fc-metas',
@@ -71,9 +72,8 @@ export const CLAVES = {
   vehiculos: 'fc-vehiculos'
 } as const
 
-export const suscripcionesIniciales: Suscripcion[] = [
+export const suscripcionesDeEjemplo: Omit<Suscripcion, 'id'>[] = [
   {
-    id: 's1',
     nombre: 'Netflix',
     monto: aCentavos(32900),
     diaCobro: 22,
@@ -82,7 +82,6 @@ export const suscripcionesIniciales: Suscripcion[] = [
     activa: true
   },
   {
-    id: 's2',
     nombre: 'Spotify',
     monto: aCentavos(20900),
     diaCobro: 25,
@@ -91,7 +90,6 @@ export const suscripcionesIniciales: Suscripcion[] = [
     activa: true
   },
   {
-    id: 's3',
     nombre: 'iCloud',
     monto: aCentavos(3900),
     diaCobro: 28,
@@ -100,7 +98,6 @@ export const suscripcionesIniciales: Suscripcion[] = [
     activa: true
   },
   {
-    id: 's4',
     nombre: 'Internet hogar',
     monto: aCentavos(95000),
     diaCobro: 15,
@@ -110,9 +107,8 @@ export const suscripcionesIniciales: Suscripcion[] = [
   }
 ]
 
-export const deudasIniciales: Deuda[] = [
+export const deudasDeEjemplo: Omit<Deuda, 'id'>[] = [
   {
-    id: 'd1',
     nombre: 'Tarjeta de crédito',
     entidad: 'Visa',
     montoTotal: aCentavos(2400000),
@@ -121,7 +117,6 @@ export const deudasIniciales: Deuda[] = [
     diaPago: 18
   },
   {
-    id: 'd2',
     nombre: 'Crédito de libre inversión',
     entidad: 'Bancolombia',
     montoTotal: aCentavos(2450000),
@@ -131,23 +126,15 @@ export const deudasIniciales: Deuda[] = [
   }
 ]
 
-export const metasIniciales: Meta[] = [
+export const metasDeEjemplo: Omit<Meta, 'id'>[] = [
   {
-    id: 'm1',
     nombre: 'Fondo de emergencia',
     objetivo: aCentavos(5000000),
     ahorrado: aCentavos(3500000),
     fechaLimite: '2027-06-30'
   },
+  { nombre: 'Viaje', objetivo: aCentavos(4000000), ahorrado: aCentavos(1200000), fechaLimite: '2027-12-15' },
   {
-    id: 'm2',
-    nombre: 'Viaje',
-    objetivo: aCentavos(4000000),
-    ahorrado: aCentavos(1200000),
-    fechaLimite: '2027-12-15'
-  },
-  {
-    id: 'm3',
     nombre: 'Nuevo computador',
     objetivo: aCentavos(3500000),
     ahorrado: aCentavos(2800000),
@@ -155,38 +142,29 @@ export const metasIniciales: Meta[] = [
   }
 ]
 
-export const presupuestosIniciales: Presupuesto[] = [
-  { id: 'b1', categoria: 'Alimentación', limite: aCentavos(600000) },
-  { id: 'b2', categoria: 'Transporte', limite: aCentavos(300000) },
-  { id: 'b3', categoria: 'Entretenimiento', limite: aCentavos(150000) },
-  { id: 'b4', categoria: 'Vivienda', limite: aCentavos(900000) },
-  { id: 'b5', categoria: 'Salud', limite: aCentavos(250000) }
+export const presupuestosDeEjemplo: Omit<Presupuesto, 'id'>[] = [
+  { categoria: 'Alimentación', limite: aCentavos(600000) },
+  { categoria: 'Transporte', limite: aCentavos(300000) },
+  { categoria: 'Entretenimiento', limite: aCentavos(150000) },
+  { categoria: 'Vivienda', limite: aCentavos(900000) },
+  { categoria: 'Salud', limite: aCentavos(250000) }
 ]
 
-export const inversionesIniciales: Inversion[] = [
+export const inversionesDeEjemplo: Omit<Inversion, 'id'>[] = [
+  { nombre: 'CDT', tipo: 'Renta fija', invertido: aCentavos(3000000), valorActual: aCentavos(3180000) },
   {
-    id: 'i1',
-    nombre: 'CDT',
-    tipo: 'Renta fija',
-    invertido: aCentavos(3000000),
-    valorActual: aCentavos(3180000)
-  },
-  {
-    id: 'i2',
     nombre: 'Fondo de inversión',
     tipo: 'Fondo',
     invertido: aCentavos(2450000),
     valorActual: aCentavos(2610000)
   },
   {
-    id: 'i3',
     nombre: 'Acciones',
     tipo: 'Renta variable',
     invertido: aCentavos(1800000),
     valorActual: aCentavos(1660000)
   },
   {
-    id: 'i4',
     nombre: 'Cuenta remunerada',
     tipo: 'Liquidez',
     invertido: aCentavos(1200000),
@@ -194,7 +172,7 @@ export const inversionesIniciales: Inversion[] = [
   }
 ]
 
-export const vehiculosIniciales: Vehiculo[] = [
-  { id: 'v1', nombre: 'Automóvil', placa: 'ABC-123', soat: '2027-02-12', tecnomecanica: '2027-03-20' },
-  { id: 'v2', nombre: 'Motocicleta', placa: 'XYZ-89D', soat: '2027-01-05', tecnomecanica: '2027-04-10' }
+export const vehiculosDeEjemplo: Omit<Vehiculo, 'id'>[] = [
+  { nombre: 'Automóvil', placa: 'ABC-123', soat: '2027-02-12', tecnomecanica: '2027-03-20' },
+  { nombre: 'Motocicleta', placa: 'XYZ-89D', soat: '2027-01-05', tecnomecanica: '2027-04-10' }
 ]

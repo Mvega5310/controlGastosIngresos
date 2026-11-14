@@ -57,8 +57,24 @@ const groups = [
   },
   { label: 'CUENTA', items: [['Ajustes', 'Settings']] }
 ]
-type Props = { active: string; onNavigate: (s: string) => void; open: boolean; onClose: () => void }
-export default function Sidebar({ active, onNavigate, open, onClose }: Props) {
+type Props = {
+  active: string
+  onNavigate: (s: string) => void
+  open: boolean
+  onClose: () => void
+  /** Correo de la sesión, si la hay. Lo decide App, que es quien conoce la cuenta. */
+  correo: string | null
+  /** Secciones con algún aviso pendiente, para marcarlas con un punto. */
+  seccionesConAviso: string[]
+}
+
+export default function Sidebar({ active, onNavigate, open, onClose, correo, seccionesConAviso }: Props) {
+  const irA = (s: string) => {
+    onNavigate(s)
+    onClose()
+  }
+  const iniciales = (correo || 'FC').slice(0, 2).toUpperCase()
+
   return (
     <>
       <div className={`sidebar-backdrop ${open ? 'show' : ''}`} onClick={onClose} />
@@ -73,14 +89,13 @@ export default function Sidebar({ active, onNavigate, open, onClose }: Props) {
             <X size={19} />
           </button>
         </div>
-        <div className="workspace">
-          <span className="avatar">FC</span>
+        <button className="workspace" onClick={() => irA('Ajustes')} title="Cuenta y preferencias">
+          <span className="avatar">{iniciales}</span>
           <div>
-            <b>Mi espacio</b>
-            <small>Plan personal</small>
+            <b>{correo ? 'Tu cuenta' : 'Mi espacio'}</b>
+            <small>{correo || 'Solo en este dispositivo'}</small>
           </div>
-          <span className="chevron">⌄</span>
-        </div>
+        </button>
         <nav>
           {groups.map(g => (
             <section key={g.label}>
@@ -91,14 +106,11 @@ export default function Sidebar({ active, onNavigate, open, onClose }: Props) {
                   <button
                     key={name}
                     className={`nav-item ${active === name ? 'active' : ''}`}
-                    onClick={() => {
-                      onNavigate(name)
-                      onClose()
-                    }}
+                    onClick={() => irA(name)}
                   >
                     <Icon size={18} />
                     <span>{name}</span>
-                    {name === 'Calendario' && <i className="nav-dot" />}
+                    {seccionesConAviso.includes(name) && <i className="nav-dot" />}
                   </button>
                 )
               })}
@@ -106,22 +118,13 @@ export default function Sidebar({ active, onNavigate, open, onClose }: Props) {
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <div className="upgrade">
-            <div className="upgrade-icon">✦</div>
-            <b>Haz más con FinControl</b>
-            <p>Desbloquea análisis y herramientas avanzadas.</p>
-            <button onClick={() => onNavigate('Ajustes')}>
-              Conocer Pro <span>→</span>
-            </button>
-          </div>
-          <div className="profile">
-            <div className="avatar profile-avatar">US</div>
+          <button className="profile" onClick={() => irA('Ajustes')}>
+            <div className="avatar profile-avatar">{iniciales}</div>
             <div>
-              <b>Usuario</b>
-              <small>Cuenta personal</small>
+              <b>{correo ? correo.split('@')[0] : 'Sin cuenta'}</b>
+              <small>{correo ? 'Sesión iniciada' : 'Entra para sincronizar'}</small>
             </div>
-            <span>••‣</span>
-          </div>
+          </button>
         </div>
       </aside>
     </>

@@ -1755,3 +1755,262 @@ td .mini-btn {
   height: 34px;
   font-size: 10px;
 }
+
+/* --- Ajustes: datos, y avisos de bloque ---------------------------------- */
+.settings-subtitulo {
+  margin-top: 30px;
+}
+.aviso-bloque {
+  margin: 14px 0 0;
+  padding: 11px 13px;
+  border-radius: 9px;
+  font-size: 10px;
+  line-height: 1.6;
+  background: #fbeae8;
+  border: 1px solid #f0cdc8;
+  color: #8f362d;
+}
+.aviso-bloque.bueno {
+  background: var(--soft);
+  border-color: #cfe4d6;
+  color: var(--green);
+}
+.dark .aviso-bloque {
+  background: #36211e;
+  border-color: #4d2f2a;
+  color: #e5938a;
+}
+.dark .aviso-bloque.bueno {
+  background: #1d2f24;
+  border-color: #2f4b39;
+  color: #5cc081;
+}
+.btn-secondary.peligro {
+  color: #b4463c;
+}
+.btn-secondary.peligro:hover {
+  border-color: #e0b0ab;
+}
+.dark .btn-secondary.peligro {
+  color: #e5938a;
+}
+.btn-primary.peligro-fuerte {
+  background: #b4463c;
+  border-color: #b4463c;
+}
+.btn-primary.peligro-fuerte:hover {
+  background: #9c3a31;
+}
+.panel-vacio {
+  font-size: 10px;
+  color: var(--muted);
+  padding: 16px 0;
+  margin: 0;
+}
+
+/* --- Avisos --------------------------------------------------------------- */
+.notification i {
+  position: absolute;
+  right: 2px;
+  top: 1px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 3px;
+  border-radius: 9px;
+  background: var(--green);
+  color: #fff;
+  font-size: 8px;
+  font-weight: 700;
+  font-style: normal;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--panel);
+}
+.notification i.urgente {
+  background: #d35b50;
+}
+.icon-button.activo {
+  background: var(--bg);
+  color: var(--text);
+}
+.avisos-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+.avisos-panel {
+  position: absolute;
+  top: 56px;
+  right: 38px;
+  width: min(330px, calc(100vw - 28px));
+  z-index: 41;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 14px 40px -18px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+.avisos-cabecera {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 15px;
+  border-bottom: 1px solid var(--line);
+}
+.avisos-cabecera b {
+  font-size: 12px;
+}
+.avisos-cabecera span {
+  font-size: 9px;
+  color: var(--muted);
+}
+.avisos-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: min(420px, 60vh);
+  overflow: auto;
+}
+.avisos-lista li + li {
+  border-top: 1px solid var(--line);
+}
+.avisos-lista button {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 13px 15px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  color: var(--text);
+}
+.avisos-lista button:hover {
+  background: var(--bg);
+}
+.aviso-icono {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: var(--soft);
+  color: var(--green);
+}
+.aviso-icono.vencido {
+  background: #fbeae8;
+  color: #b4463c;
+}
+.aviso-icono.atencion {
+  background: #fdf4de;
+  color: #a97d16;
+}
+.dark .aviso-icono.vencido {
+  background: #36211e;
+  color: #e5938a;
+}
+.dark .aviso-icono.atencion {
+  background: #2c2616;
+  color: #e0b64a;
+}
+.aviso-texto {
+  min-width: 0;
+}
+.aviso-texto b {
+  display: block;
+  font-size: 10px;
+}
+.aviso-texto small {
+  display: block;
+  font-size: 9px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+.avisos-vacio {
+  padding: 26px 20px;
+  text-align: center;
+  color: var(--muted);
+}
+.avisos-vacio p {
+  margin: 9px 0 6px;
+  font-size: 11px;
+  color: var(--text);
+}
+.avisos-vacio small {
+  font-size: 9px;
+  line-height: 1.6;
+  display: block;
+}
+button.top-avatar {
+  border: 0;
+  font-family: inherit;
+}
+button.top-avatar:hover {
+  background: #dbe6dd;
+}
+.dark button.top-avatar:hover {
+  background: #2c3930;
+}
+@media (max-width: 600px) {
+  .avisos-panel {
+    right: 14px;
+    top: 52px;
+  }
+}
+
+/* La barra lateral deja de tener adornos: estos dos son botones de verdad. */
+button.workspace,
+button.profile {
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+}
+button.workspace {
+  background: transparent;
+  color: var(--text);
+}
+button.workspace:hover {
+  border-color: #b7c9bb;
+}
+button.profile {
+  border: 0;
+  background: transparent;
+  color: var(--text);
+}
+button.profile:hover b {
+  color: var(--green);
+}
+.workspace small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 150px;
+}
+.profile b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 140px;
+}
+
+/* Un movimiento necesita una cuenta: si no hay ninguna, se dice y no se deja guardar. */
+.sin-cuentas {
+  text-align: center;
+  padding: 22px 10px 6px;
+  color: var(--muted);
+}
+.sin-cuentas p {
+  margin: 10px 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+.sin-cuentas small {
+  display: block;
+  font-size: 10px;
+  line-height: 1.6;
+  margin-bottom: 17px;
+}
