@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { explicarError, interpretarRegistro, motivoDeError, tipoDelEnlace } from './mensajesAcceso'
+import {
+  explicarError,
+  interpretarRegistro,
+  motivoDeError,
+  proveedoresDe,
+  tipoDelEnlace
+} from './mensajesAcceso'
 
 describe('mensajes del enlace del correo', () => {
   // La descripción real que devuelve Supabase al volver de un enlace caducado.
@@ -150,5 +156,48 @@ describe('tipo del enlace del correo', () => {
     expect(tipoDelEnlace('')).toBeNull()
     expect(tipoDelEnlace('#')).toBeNull()
     expect(tipoDelEnlace('#error=access_denied&error_code=otp_expired')).toBeNull()
+  })
+})
+
+describe('el código del correo', () => {
+  // Lo que devuelve Supabase cuando el código tecleado ya no vale.
+  const DEL_CODIGO = 'Token has expired or is invalid'
+
+  it('habla de código, no de enlace', () => {
+    const r = explicarError(DEL_CODIGO)
+    expect(r).toContain('código')
+    expect(r).not.toContain('enlace')
+  })
+
+  it('no lo captura la regla del enlace caducado, que comparte «expired»', () => {
+    expect(DEL_CODIGO.toLowerCase()).toContain('expired')
+    expect(explicarError(DEL_CODIGO)).not.toContain('Pide uno nuevo desde aquí')
+  })
+
+  it('y el enlace sigue hablando de enlace', () => {
+    expect(explicarError('otp_expired Email link is invalid or has expired')).toContain('enlace')
+  })
+})
+
+describe('proveedores externos', () => {
+  it('saca los que están encendidos', () => {
+    expect(proveedoresDe({ external: { google: true, github: false, apple: true } })).toEqual([
+      'google',
+      'apple'
+    ])
+  })
+
+  it('deja fuera correo y teléfono, que no son botones de otro sitio', () => {
+    expect(proveedoresDe({ external: { email: true, phone: true, google: true } })).toEqual(['google'])
+  })
+
+  it('sin nada encendido no ofrece ninguno', () => {
+    expect(proveedoresDe({ external: { google: false } })).toEqual([])
+  })
+
+  it('una respuesta rara no rompe ni inventa proveedores', () => {
+    expect(proveedoresDe(null)).toEqual([])
+    expect(proveedoresDe({})).toEqual([])
+    expect(proveedoresDe('vaya')).toEqual([])
   })
 })

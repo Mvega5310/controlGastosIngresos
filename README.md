@@ -108,6 +108,30 @@ navegador: no viajan de tu móvil a tu PC. Para que viajen:
 6. Vuelve a compilar. Aparecerá un icono de nube en la barra superior para
    crear la cuenta o entrar.
 
+### Formas de entrar
+
+Hay tres, y cada una necesita algo distinto del proyecto de Supabase.
+
+**Código al correo** (lo que se ofrece primero). Se teclean seis cifras y no
+interviene ningún enlace, así que es la única que no depende de la
+configuración de redirecciones. Para que el correo lleve el código y no un
+enlace, hay que añadir `{{ .Token }}` a la plantilla **Magic Link** en
+_Authentication → Emails_; la de fábrica solo trae `{{ .ConfirmationURL }}`.
+También sirve para entrar en una cuenta cuya contraseña se ha olvidado, y
+confirma el correo si estaba pendiente.
+
+**Contraseña.** No necesita nada más. Si se olvida, el enlace de recuperación
+sí depende de las redirecciones.
+
+**Google.** El botón aparece solo cuando el proyecto tiene el proveedor
+encendido: la aplicación lo pregunta al arrancar el panel, en vez de enseñar un
+botón que lleva a un error. Se configura en _Authentication → Sign In /
+Providers → Google_, con un cliente OAuth de Google Cloud cuya URI de
+redirección autorizada sea `https://<proyecto>.supabase.co/auth/v1/callback`.
+
+Con el servidor de correo de pruebas de Supabase salen dos mensajes por hora,
+así que conviene no pedir códigos en ráfaga.
+
 ### Confirmación por correo
 
 De fábrica, Supabase exige confirmar el correo antes de dejar entrar, y lo

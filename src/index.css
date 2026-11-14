@@ -2182,3 +2182,74 @@ button.enlace:hover {
   color: var(--muted);
   flex: none;
 }
+
+/* --- Entrar con código o con Google -------------------------------------- */
+
+.boton-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  height: 40px;
+  margin: 14px 0 0;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.boton-google:hover {
+  background: var(--soft);
+}
+
+.separador-o {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 15px 0 2px;
+  color: var(--muted);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.separador-o::before,
+.separador-o::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+/* Seis cifras que se leen de un correo: grandes y separadas, porque
+   confundir un 0 con un 8 aquí cuesta otro correo y otra espera. */
+.modal input.campo-codigo {
+  height: 48px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.modal input.campo-codigo::placeholder {
+  font-weight: 500;
+  color: var(--line);
+}
+
+.pista-campo {
+  margin: 8px 0 0;
+  font-size: 10px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.enlaces-cuenta.doble {
+  justify-content: space-between;
+  gap: 12px;
+}
+button.enlace:disabled {
+  opacity: 0.5;
+  cursor: default;
+  text-decoration: none;
+}

@@ -14,6 +14,7 @@ import {
   explicarError,
   interpretarRegistro,
   motivoDeError,
+  proveedoresDe,
   tipoDelEnlace
 } from './mensajesAcceso'
 
@@ -209,6 +210,72 @@ export function leerResultadoDelEnlace(): string | null {
   const descripcion = partes.get('error_description') || partes.get('error') || ''
   history.replaceState(null, '', window.location.pathname + window.location.search)
   return explicarError(`${codigo} ${descripcion}`.trim())
+}
+
+/**
+ * Pide un código de seis cifras al correo.
+ *
+ * Es la forma de entrar que no depende de ninguna redirección: el código se
+ * teclea aquí y no hay ningún enlace que pueda acabar en la dirección
+ * equivocada. También sirve para entrar en una cuenta cuya contraseña se ha
+ * olvidado, y de paso confirma el correo si estaba pendiente.
+ */
+export async function pedirCodigo(correo: string): Promise<ResultadoAcceso> {
+  if (!clienteSupabase) return SIN_CONFIGURAR
+  const { error } = await clienteSupabase.auth.signInWithOtp({
+    email: normalizar(correo),
+    // El enlace va igualmente en el correo, por si la plantilla lo incluye;
+    // lo que la aplicación usa es el código.
+    options: { shouldCreateUser: true, emailRedirectTo: destinoDelEnlace() }
+  })
+  return error ? fallo(error.message) : { ok: true }
+}
+
+/** Canjea el código del correo por una sesión. */
+export async function entrarConCodigo(correo: string, codigo: string): Promise<ResultadoAcceso> {
+  if (!clienteSupabase) return SIN_CONFIGURAR
+  const { error } = await clienteSupabase.auth.verifyOtp({
+    email: normalizar(correo),
+    // Solo las cifras: se pega con espacios, con guiones o con un salto de
+    // línea del cliente de correo más veces de las que se teclea limpio.
+    token: codigo.replace(/\D/g, ''),
+    type: 'email'
+  })
+  return error ? fallo(error.message) : { ok: true }
+}
+
+/**
+ * Entra con una cuenta de Google.
+ *
+ * Lleva fuera de la página, así que si devuelve algo es porque ni siquiera
+ * pudo empezar. Requiere el proveedor configurado en Supabase y la dirección
+ * de vuelta en la lista de permitidas.
+ */
+export async function entrarConGoogle(): Promise<ResultadoAcceso> {
+  if (!clienteSupabase) return SIN_CONFIGURAR
+  const { error } = await clienteSupabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: destinoDelEnlace() }
+  })
+  return error ? fallo(error.message) : { ok: true }
+}
+
+/**
+ * Qué proveedores externos tiene encendidos el proyecto.
+ *
+ * Se pregunta al servidor en vez de darlo por supuesto: así el botón de Google
+ * aparece solo cuando de verdad funciona, y aparece sin tocar el código en
+ * cuanto se configure. Si la consulta falla, no se ofrece ninguno.
+ */
+export async function proveedoresExternos(): Promise<string[]> {
+  if (!URL || !CLAVE) return []
+  try {
+    const r = await fetch(`${URL}/auth/v1/settings`, { headers: { apikey: CLAVE } })
+    if (!r.ok) return []
+    return proveedoresDe(await r.json())
+  } catch {
+    return []
+  }
 }
 
 /** Cierto cuando esta carga viene del enlace de «he olvidado la contraseña». */

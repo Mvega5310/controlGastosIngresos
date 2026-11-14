@@ -1,7 +1,11 @@
-import { FormEvent, useState } from 'react'
+import { FormEvent, useEffect, useState } from 'react'
 import { X, CloudOff, Cloud, RefreshCw, TriangleAlert, LogOut, Eye, EyeOff, KeyRound } from 'lucide-react'
 import {
   entrar,
+  entrarConCodigo,
+  entrarConGoogle,
+  pedirCodigo,
+  proveedoresExternos,
   registrarse,
   reenviarConfirmacion,
   recuperarContrasena,
@@ -51,6 +55,28 @@ export function BotonCuenta({ sync, onAbrir }: { sync: Sincronizacion; onAbrir: 
     </button>
   )
 }
+
+/** La G de Google, para que el botón se reconozca de un vistazo. */
+const MarcaGoogle = () => (
+  <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true">
+    <path
+      fill="#4285F4"
+      d="M45.1 24.5c0-1.6-.1-3.2-.4-4.7H24v8.9h11.8c-.5 2.7-2 5-4.4 6.6v5.5h7.1c4.2-3.8 6.6-9.5 6.6-16.3z"
+    />
+    <path
+      fill="#34A853"
+      d="M24 46c6 0 11-2 14.5-5.2l-7.1-5.5c-2 1.3-4.5 2.1-7.4 2.1-5.7 0-10.6-3.9-12.3-9.1H4.3v5.7C7.8 41.1 15.3 46 24 46z"
+    />
+    <path
+      fill="#FBBC05"
+      d="M11.7 28.3c-.4-1.3-.7-2.7-.7-4.3s.3-3 .7-4.3v-5.7H4.3A22 22 0 0 0 2 24c0 3.6.9 6.9 2.3 9.9l7.4-5.6z"
+    />
+    <path
+      fill="#EA4335"
+      d="M24 10.6c3.2 0 6.1 1.1 8.4 3.3l6.3-6.3C35 4.1 30 2 24 2 15.3 2 7.8 6.9 4.3 14.1l7.4 5.7c1.7-5.3 6.6-9.2 12.3-9.2z"
+    />
+  </svg>
+)
 
 /**
  * Campo de contraseña con interruptor para verla.
@@ -122,11 +148,30 @@ export function PanelCuenta({
   const [contrasena, setContrasena] = useState('')
   const [claveNueva, setClaveNueva] = useState('')
   const [claveRepetida, setClaveRepetida] = useState('')
+  const [codigo, setCodigo] = useState('')
+  // Dentro de «entrar»: el código es lo primero que se ofrece, porque no
+  // depende de recordar nada ni de que ningún enlace vuelva a su sitio.
+  const [conClave, setConClave] = useState(false)
+  const [esperandoCodigo, setEsperandoCodigo] = useState(false)
   const [aviso, setAviso] = useState<Aviso>(null)
   const [motivo, setMotivo] = useState<MotivoAcceso | null>(null)
   const [enviando, setEnviando] = useState(false)
   const [reenviando, setReenviando] = useState(false)
   const [cambiando, setCambiando] = useState(false)
+  const [externos, setExternos] = useState<string[]>([])
+
+  // Se pregunta al abrir, no al compilar: el botón de Google aparece solo si
+  // el proyecto lo tiene encendido de verdad.
+  useEffect(() => {
+    if (!abierto || !haySincronizacion()) return
+    let vivo = true
+    void proveedoresExternos().then(p => {
+      if (vivo) setExternos(p)
+    })
+    return () => {
+      vivo = false
+    }
+  }, [abierto])
 
   if (!abierto) return null
 
@@ -137,15 +182,23 @@ export function PanelCuenta({
 
   const irA = (m: Modo) => {
     setModo(m)
+    setEsperandoCodigo(false)
     limpiarAviso()
+  }
+
+  const fallo = (mensaje: string, m?: MotivoAcceso) => {
+    setAviso({ texto: mensaje, bueno: false })
+    if (m) setMotivo(m)
   }
 
   const enviar = async (e: FormEvent) => {
     e.preventDefault()
     setEnviando(true)
     limpiarAviso()
-    const r =
-      modo === 'entrar'
+    const pidiendoCodigo = modo === 'entrar' && !conClave
+    const r = pidiendoCodigo
+      ? await pedirCodigo(correo)
+      : modo === 'entrar'
         ? await entrar(correo, contrasena)
         : modo === 'crear'
           ? await registrarse(correo, contrasena)
@@ -153,12 +206,16 @@ export function PanelCuenta({
     setEnviando(false)
 
     if (!r.ok) {
-      setAviso({ texto: r.mensaje, bueno: false })
-      setMotivo(r.motivo)
+      fallo(r.mensaje, r.motivo)
       return
     }
 
     setContrasena('')
+    if (pidiendoCodigo) {
+      setCodigo('')
+      setEsperandoCodigo(true)
+      return
+    }
     // Al entrar bien no hay nada más que decir: se cierra y se ve la
     // aplicación ya sincronizando.
     if (modo === 'entrar' && !r.aviso) {
@@ -168,10 +225,37 @@ export function PanelCuenta({
     if (r.aviso) setAviso({ texto: r.aviso, bueno: true })
   }
 
+  const canjearCodigo = async (e: FormEvent) => {
+    e.preventDefault()
+    setEnviando(true)
+    limpiarAviso()
+    const r = await entrarConCodigo(correo, codigo)
+    setEnviando(false)
+    if (!r.ok) {
+      fallo(r.mensaje, r.motivo)
+      return
+    }
+    setCodigo('')
+    setEsperandoCodigo(false)
+    onCerrar()
+  }
+
+  const otroCodigo = async () => {
+    setReenviando(true)
+    limpiarAviso()
+    const r = await pedirCodigo(correo)
+    setReenviando(false)
+    setAviso(
+      r.ok
+        ? { texto: 'Enviado. Usa el último que te llegue, los anteriores dejan de valer.', bueno: true }
+        : { texto: r.mensaje, bueno: false }
+    )
+  }
+
   const guardarClaveNueva = async (e: FormEvent) => {
     e.preventDefault()
     if (claveNueva !== claveRepetida) {
-      setAviso({ texto: 'Las dos contraseñas no coinciden.', bueno: false })
+      fallo('Las dos contraseñas no coinciden.')
       return
     }
     setEnviando(true)
@@ -179,8 +263,7 @@ export function PanelCuenta({
     const r = await cambiarContrasena(claveNueva)
     setEnviando(false)
     if (!r.ok) {
-      setAviso({ texto: r.mensaje, bueno: false })
-      setMotivo(r.motivo)
+      fallo(r.mensaje, r.motivo)
       return
     }
     setClaveNueva('')
@@ -204,10 +287,19 @@ export function PanelCuenta({
   // Al volver del enlace de recuperación hay sesión abierta, pero lo que toca
   // es escribir la contraseña nueva, no ver el estado de la sincronización.
   const poniendoClave = sync.recuperandoClave || cambiando
+  const pidiendoCodigo = modo === 'entrar' && !conClave
 
   const bloqueAviso = aMostrar && (
     <p className={aMostrar.bueno ? 'aviso-bloque bueno' : 'aviso-campo'}>{aMostrar.texto}</p>
   )
+
+  const titulo = poniendoClave
+    ? 'Elige una contraseña nueva'
+    : esperandoCodigo
+      ? 'Mira tu correo'
+      : sync.correo
+        ? 'Tu cuenta'
+        : 'Sincronizar entre dispositivos'
 
   return (
     <div
@@ -220,13 +312,7 @@ export function PanelCuenta({
         <div className="modal-head">
           <div>
             <span className="eyebrow">CUENTA</span>
-            <h2>
-              {poniendoClave
-                ? 'Elige una contraseña nueva'
-                : sync.correo
-                  ? 'Tu cuenta'
-                  : 'Sincronizar entre dispositivos'}
-            </h2>
+            <h2>{titulo}</h2>
           </div>
           <button className="icon-button" onClick={cerrar} aria-label="Cerrar">
             <X size={20} />
@@ -340,6 +426,52 @@ export function PanelCuenta({
               </button>
             </div>
           </>
+        ) : esperandoCodigo ? (
+          <form onSubmit={canjearCodigo}>
+            <div className="nota-cuenta">
+              <p>
+                Enviamos un código de seis cifras a <b>{correo.trim().toLowerCase()}</b>.
+              </p>
+              <p>Si no aparece, mira en correo no deseado. Caduca en una hora.</p>
+            </div>
+            <label htmlFor="cuenta-codigo">Código</label>
+            <input
+              id="cuenta-codigo"
+              className="campo-codigo"
+              required
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={11}
+              value={codigo}
+              onChange={e => setCodigo(e.target.value)}
+              placeholder="000000"
+              autoFocus
+            />
+            {bloqueAviso}
+            <div className="enlaces-cuenta doble">
+              <button
+                type="button"
+                className="enlace"
+                onClick={() => {
+                  setEsperandoCodigo(false)
+                  limpiarAviso()
+                }}
+              >
+                Usar otro correo
+              </button>
+              <button type="button" className="enlace" onClick={otroCodigo} disabled={reenviando}>
+                {reenviando ? 'Enviando…' : 'Enviar otro código'}
+              </button>
+            </div>
+            <div className="modal-actions">
+              <button type="button" className="btn-secondary" onClick={cerrar}>
+                Cancelar
+              </button>
+              <button className="btn-primary" type="submit" disabled={enviando}>
+                {enviando ? 'Comprobando…' : 'Entrar'}
+              </button>
+            </div>
+          </form>
         ) : (
           <>
             {modo === 'recuperar' ? (
@@ -370,6 +502,26 @@ export function PanelCuenta({
                 </button>
               </div>
             )}
+
+            {externos.includes('google') && modo !== 'recuperar' && (
+              <>
+                <button
+                  type="button"
+                  className="boton-google"
+                  onClick={async () => {
+                    limpiarAviso()
+                    const r = await entrarConGoogle()
+                    if (!r.ok) fallo(r.mensaje, r.motivo)
+                  }}
+                >
+                  <MarcaGoogle /> Continuar con Google
+                </button>
+                <div className="separador-o">
+                  <span>o con tu correo</span>
+                </div>
+              </>
+            )}
+
             <form onSubmit={enviar}>
               <label htmlFor="cuenta-correo">Correo</label>
               <input
@@ -381,7 +533,7 @@ export function PanelCuenta({
                 onChange={e => setCorreo(e.target.value)}
                 placeholder="tucorreo@ejemplo.com"
               />
-              {modo !== 'recuperar' && (
+              {!pidiendoCodigo && modo !== 'recuperar' && (
                 <CampoClave
                   id="cuenta-clave"
                   etiqueta="Contraseña"
@@ -389,6 +541,11 @@ export function PanelCuenta({
                   valor={contrasena}
                   onCambiar={setContrasena}
                 />
+              )}
+              {pidiendoCodigo && (
+                <p className="pista-campo">
+                  Te mandamos un código de seis cifras. No hace falta recordar ninguna contraseña.
+                </p>
               )}
               {bloqueAviso}
               {ofrecerReenvio && (
@@ -412,17 +569,36 @@ export function PanelCuenta({
                   {reenviando ? 'Enviando…' : 'Enviarme otra vez el correo de confirmación'}
                 </button>
               )}
-              <div className="enlaces-cuenta">
-                {modo === 'recuperar' ? (
+
+              {/* En «crear cuenta» no se ofrece recuperar nada: no hay todavía
+                  ninguna contraseña que se haya podido olvidar. */}
+              {modo === 'entrar' && (
+                <div className="enlaces-cuenta doble">
+                  <button
+                    type="button"
+                    className="enlace"
+                    onClick={() => {
+                      setConClave(c => !c)
+                      limpiarAviso()
+                    }}
+                  >
+                    {conClave ? 'Entrar con un código' : 'Entrar con mi contraseña'}
+                  </button>
+                  {conClave && (
+                    <button type="button" className="enlace" onClick={() => irA('recuperar')}>
+                      He olvidado la contraseña
+                    </button>
+                  )}
+                </div>
+              )}
+              {modo === 'recuperar' && (
+                <div className="enlaces-cuenta">
                   <button type="button" className="enlace" onClick={() => irA('entrar')}>
                     Volver a entrar
                   </button>
-                ) : (
-                  <button type="button" className="enlace" onClick={() => irA('recuperar')}>
-                    He olvidado la contraseña
-                  </button>
-                )}
-              </div>
+                </div>
+              )}
+
               <div className="nota-cuenta">
                 <p>
                   Lo que ya tienes guardado en este navegador se subirá a tu cuenta en la primera
@@ -436,11 +612,13 @@ export function PanelCuenta({
                 <button className="btn-primary" type="submit" disabled={enviando}>
                   {enviando
                     ? 'Un momento…'
-                    : modo === 'entrar'
-                      ? 'Entrar'
-                      : modo === 'crear'
-                        ? 'Crear cuenta'
-                        : 'Enviarme el enlace'}
+                    : pidiendoCodigo
+                      ? 'Enviarme un código'
+                      : modo === 'entrar'
+                        ? 'Entrar'
+                        : modo === 'crear'
+                          ? 'Crear cuenta'
+                          : 'Enviarme el enlace'}
                 </button>
               </div>
             </form>

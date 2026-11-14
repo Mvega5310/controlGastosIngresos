@@ -29,6 +29,11 @@ export const explicarError = (mensaje: string): string => {
   if (m.includes('otp_expired') || (m.includes('expired') && m.includes('link')))
     return 'El enlace del correo caducó o ya se había usado. Pide uno nuevo desde aquí.'
   if (m.includes('access_denied')) return 'El enlace del correo no sirvió. Pide uno nuevo desde aquí.'
+  // El código que se teclea: su error habla de «token», no de enlace, así que
+  // no lo recogen las reglas de arriba. Si lo hicieran, diría «pide otro
+  // enlace» a quien está mirando una casilla para escribir seis cifras.
+  if (m.includes('token has expired') || m.includes('invalid token') || m.includes('token is invalid'))
+    return 'Ese código no vale o ya caducó. Pide otro: duran una hora.'
 
   if (m.includes('invalid login'))
     return 'El correo o la contraseña no son correctos. Si no te acuerdas, usa «He olvidado la contraseña».'
@@ -69,6 +74,20 @@ export const motivoDeError = (mensaje: string): MotivoAcceso => {
   if (m.includes('already registered') || m.includes('already been registered')) return 'ya-existe'
   if (m.includes('invalid login')) return 'credenciales'
   return 'otro'
+}
+
+/**
+ * Qué formas de entrar tiene encendidas el proyecto.
+ *
+ * Mostrar un botón de Google que el proyecto no tiene configurado solo lleva a
+ * una pantalla de error de Google; se pregunta y se enseña lo que hay.
+ */
+export const proveedoresDe = (ajustes: unknown): string[] => {
+  const externos = (ajustes as { external?: Record<string, unknown> } | null)?.external
+  if (!externos || typeof externos !== 'object') return []
+  return Object.entries(externos)
+    .filter(([nombre, encendido]) => encendido === true && nombre !== 'email' && nombre !== 'phone')
+    .map(([nombre]) => nombre)
 }
 
 /** La forma de la respuesta de `signUp` que nos importa. */
