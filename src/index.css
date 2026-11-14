@@ -12,7 +12,7 @@
   --bg: #f7f8f6;
   --panel: #fff;
   --text: #17231b;
-  --muted: #87928a;
+  --muted: #66726a;
   --line: #e9ede9;
   --green: #1e6b3a;
   --green2: #4cb873;
@@ -22,6 +22,9 @@
      pulgar; el margen lateral y el alto de la barra inferior se usan también
      para reservar el sitio del contenido, de modo que viven en un solo lugar. */
   --touch-target: 44px;
+  /* El verde de marca como COLOR DE TEXTO. Como fondo (botones) sigue siendo
+     --green; como texto sobre el fondo oscuro daba 1,9–2,5:1, que no se lee. */
+  --verde-texto: #1e6b3a;
   --mobile-gutter: 16px;
   --mobile-nav-height: 64px;
 }
@@ -48,12 +51,13 @@ button {
   --bg: #f7f8f6;
   --panel: #fff;
   --text: #17231b;
-  --muted: #87928a;
+  --muted: #66726a;
   --line: #e9ede9;
   --soft: #edf6ef;
   --shadow: 0 2px 12px rgba(25, 50, 32, 0.035);
 }
 .app.dark {
+  --verde-texto: #7bd89a;
   --bg: #111914;
   --panel: #1a241e;
   --text: #edf5ef;
@@ -186,7 +190,7 @@ nav section {
 }
 .nav-item.active {
   background: var(--soft);
-  color: var(--green);
+  color: var(--verde-texto);
   font-weight: 700;
 }
 .nav-dot {
@@ -226,7 +230,7 @@ nav section {
 .upgrade button {
   border: 0;
   background: transparent;
-  color: var(--green);
+  color: var(--verde-texto);
   font-size: 10px;
   font-weight: 700;
   padding: 0;
@@ -274,7 +278,13 @@ nav section {
 }
 .breadcrumb span {
   padding: 0 9px;
-  color: #c3cbc5;
+  color: #8a968e;
+}
+/* El texto «Mi espacio» va dentro de un span propio: sin esto, la regla de la
+   barra separadora de arriba lo alcanzaba y lo pintaba casi invisible. */
+.breadcrumb .breadcrumb-raiz {
+  padding: 0;
+  color: var(--muted);
 }
 .breadcrumb b {
   color: var(--text);
@@ -340,7 +350,7 @@ nav section {
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 1.1px;
-  color: #98a49b;
+  color: var(--muted);
   margin-bottom: 9px;
 }
 .welcome-row h1 {
@@ -470,10 +480,17 @@ nav section {
   gap: 6px;
 }
 .positive {
-  color: #23904e !important;
+  color: #1a7a41 !important;
 }
 .negative {
-  color: #d35b50 !important;
+  color: #c0392b !important;
+}
+/* Sobre el fondo oscuro los mismos tonos no llegan a 4,5:1: versión clara. */
+.dark .positive {
+  color: #52c883 !important;
+}
+.dark .negative {
+  color: #ff8f85 !important;
 }
 .neutral {
   color: var(--muted) !important;
@@ -556,7 +573,7 @@ nav section {
   gap: 5px;
   border: 0;
   background: transparent;
-  color: var(--green);
+  color: var(--verde-texto);
   font-size: 9px;
   font-weight: 700;
   padding: 3px;
@@ -582,7 +599,7 @@ nav section {
 }
 .bank-icon.yellow {
   background: #fff4d6;
-  color: #b58b21;
+  color: #8a650a;
 }
 .bank-icon.purple {
   background: #f0eafb;
@@ -590,7 +607,7 @@ nav section {
 }
 .bank-icon.blue {
   background: #e8f1fb;
-  color: #3d78b4;
+  color: #2f66a0;
 }
 .bank-icon.green {
   background: #e6f4ea;
@@ -618,7 +635,7 @@ nav section {
   width: 100%;
   border: 1px dashed #cbd9ce;
   background: transparent;
-  color: var(--green);
+  color: var(--verde-texto);
   height: 34px;
   border-radius: 7px;
   margin-top: 12px;
@@ -650,7 +667,7 @@ th {
   text-align: left;
   font-size: 8px;
   letter-spacing: 0.6px;
-  color: #9aa59d;
+  color: var(--muted);
   font-weight: 600;
   padding: 0 10px 11px;
 }
@@ -702,7 +719,7 @@ td b {
   display: grid;
   align-content: center;
   justify-items: center;
-  color: var(--green);
+  color: var(--verde-texto);
 }
 .payment-date b {
   font-size: 13px;
@@ -743,6 +760,12 @@ td b {
   border-color: #314a38;
   color: #e2f0e5;
 }
+.dark .tip-banner p {
+  color: #b7cdbc;
+}
+.dark .status-pill {
+  color: #86d9a2;
+}
 .tip-icon {
   width: 32px;
   height: 32px;
@@ -757,14 +780,14 @@ td b {
 }
 .tip-banner p {
   font-size: 9px;
-  color: #79917e;
+  color: #4a6a52;
   margin: 4px 0 0;
 }
 .tip-banner button {
   margin-left: auto;
   border: 0;
   background: transparent;
-  color: var(--green);
+  color: var(--verde-texto);
   font-size: 9px;
   font-weight: 700;
   display: flex;
@@ -775,7 +798,7 @@ td b {
 .footer {
   display: flex;
   justify-content: space-between;
-  color: #a2aca4;
+  color: var(--muted);
   font-size: 8px;
   padding: 23px 2px 4px;
 }
@@ -847,7 +870,7 @@ td b {
 }
 .status-pill {
   font-size: 8px;
-  color: #398354;
+  color: #2c6f45;
   background: var(--soft);
   padding: 5px 8px;
   border-radius: 20px;
@@ -876,7 +899,7 @@ td b {
   border: 1px dashed #c6d4c9;
   border-radius: 12px;
   background: transparent;
-  color: var(--green);
+  color: var(--verde-texto);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -915,7 +938,7 @@ td b {
   font-size: 10px;
 }
 .calendar-day.muted {
-  color: #b7c0b9;
+  color: #8a968e;
 }
 .calendar-day.today > span:first-of-type {
   background: var(--green);
@@ -964,7 +987,7 @@ td b {
 .event-date {
   font-size: 9px;
   font-weight: 700;
-  color: var(--green);
+  color: var(--verde-texto);
   background: var(--soft);
   padding: 8px;
   border-radius: 7px;
@@ -999,7 +1022,7 @@ td b {
   width: 29px;
   height: 29px;
   background: var(--soft);
-  color: var(--green);
+  color: var(--verde-texto);
   border-radius: 8px;
   display: grid;
   place-items: center;
@@ -1036,7 +1059,7 @@ td b {
   height: 36px;
   border-radius: 10px;
   background: var(--soft);
-  color: var(--green);
+  color: var(--verde-texto);
   display: grid;
   place-items: center;
   margin-bottom: 14px;
@@ -1206,7 +1229,7 @@ td b {
 .type-switch button.selected {
   background: var(--soft);
   border-color: #a7cdb0;
-  color: var(--green);
+  color: var(--verde-texto);
   font-weight: 700;
 }
 .form-grid {
@@ -1394,7 +1417,7 @@ td b {
     border-radius: 10px;
   }
   .mobile-nav button.selected {
-    color: var(--green);
+    color: var(--verde-texto);
   }
   .mobile-nav small {
     font-size: 11px;
@@ -1597,11 +1620,11 @@ td b {
 }
 .status-pill.warn {
   background: #fdf4de;
-  color: #a97d16;
+  color: #7a5a0c;
 }
 .status-pill.bad {
   background: #fbeae8;
-  color: #b4463c;
+  color: #a33a30;
 }
 .dark .status-pill.warn {
   background: #2c2616;
@@ -1721,7 +1744,7 @@ td b {
 }
 .traslado i {
   font-style: normal;
-  color: var(--green);
+  color: var(--verde-texto);
 }
 .movement-dot.transferencia {
   background: #8d73c7;
@@ -1743,13 +1766,13 @@ td .mini-btn {
 
 /* --- Cuenta y sincronizacion --------------------------------------------- */
 .estado-sync.listo {
-  color: var(--green);
+  color: var(--verde-texto);
 }
 .estado-sync.error {
   color: #d35b50;
 }
 .estado-sync.sincronizando {
-  color: var(--green);
+  color: var(--verde-texto);
 }
 @media (prefers-reduced-motion: no-preference) {
   .girando {
@@ -1959,7 +1982,7 @@ td .mini-btn {
   display: grid;
   place-items: center;
   background: var(--soft);
-  color: var(--green);
+  color: var(--verde-texto);
 }
 .aviso-icono.vencido {
   background: #fbeae8;
@@ -2037,7 +2060,7 @@ button.profile {
   color: var(--text);
 }
 button.profile:hover b {
-  color: var(--green);
+  color: var(--verde-texto);
 }
 .workspace small {
   overflow: hidden;
@@ -2118,7 +2141,7 @@ button.enlace {
   padding: 2px 0;
   font-size: 11px;
   font-weight: 600;
-  color: var(--green);
+  color: var(--verde-texto);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -2448,7 +2471,7 @@ button.enlace:disabled {
   padding: 5px 9px;
   border-radius: 999px;
   background: var(--soft);
-  color: var(--green);
+  color: var(--verde-texto);
 }
 .tm-tipo.gasto {
   background: #fbf3dc;
@@ -2635,7 +2658,7 @@ button.enlace:disabled {
   /* El balance es la cifra que se viene a mirar: ocupa el ancho y se destaca. */
   .panel-flujo .stats-grid .stat-card:first-child {
     grid-column: 1 / -1;
-    background: linear-gradient(135deg, #1e6b3a, #2a8a4f);
+    background: linear-gradient(135deg, #1e6b3a, #25804a);
     border-color: transparent;
     color: #fff;
   }
@@ -3077,5 +3100,85 @@ body.dialogo-abierto {
   .sidebar,
   .sidebar.mobile-open {
     transition: none;
+  }
+}
+
+/* =========================================================================
+   Rediseño móvil · fase 5 — lo que quedaba en las secciones de planificación y
+   patrimonio: tipografía por debajo de 11 px y botones por debajo de 44 px.
+   ========================================================================= */
+@media (max-width: 767px) {
+  .panel-heading .btn-primary,
+  .panel-heading .btn-secondary {
+    height: var(--touch-target);
+    font-size: 14px;
+  }
+  /* Todo el recuadro de búsqueda se puede tocar, no solo la línea de texto. */
+  .search-input input {
+    height: 100%;
+  }
+
+  .simple-row b {
+    font-size: 13px;
+  }
+  .simple-row small {
+    font-size: 11px;
+    line-height: 1.45;
+  }
+  .simple-row > strong {
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  .simple-bullet {
+    font-size: 12px;
+  }
+  .budget-item > div:first-child {
+    font-size: 13px;
+  }
+  .budget-item span,
+  .budget-item small,
+  .budget-foot small {
+    font-size: 11px;
+  }
+  .goal-card > p {
+    font-size: 12px;
+  }
+  .goal-card > small,
+  .goal-values span {
+    font-size: 11px;
+  }
+  .doc-row {
+    font-size: 12px;
+  }
+  .doc-row b {
+    font-size: 13px;
+  }
+  .report-row {
+    font-size: 13px;
+  }
+  .report-row.total {
+    font-size: 14px;
+  }
+  .add-card b {
+    font-size: 13px;
+  }
+  .add-card span {
+    font-size: 12px;
+  }
+  .account-card h2 {
+    font-size: 15px;
+  }
+  .account-card p {
+    font-size: 12px;
+  }
+  .account-card > small {
+    font-size: 11px;
+  }
+  .payment-date {
+    width: 46px;
+    height: 48px;
+  }
+  .payment-date small {
+    font-size: 11px;
   }
 }

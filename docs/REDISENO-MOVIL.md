@@ -135,14 +135,16 @@ Tamaños: 320×640, 360×800, 390×844, 430×932, 768×1024, 1366×768, 1440×90
 
 ## 9. Registro de continuidad
 
-| Campo                 | Valor                                                                                                                                          |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Fase actual           | 2 — Movimientos, hecha                                                                                                                         |
-| Rama                  | `feat/redisenio-movil`                                                                                                                         |
-| Archivos de la fase 2 | `Movimientos.tsx`, nuevo `components/TarjetaMovimiento.tsx`, `index.css`                                                                       |
-| Medido                | tarjetas a 320 y 390 px sin desborde, con importes de 9 cifras y textos largos; objetivos táctiles de 44 px (borrar, paginar, buscar, filtrar) |
-| Pruebas               | `npm run verificar` en verde; flujo real de traslado creado y borrado comprobando sus dos apuntes                                              |
-| Próximo paso          | Fase 3 — Dashboard y calendario                                                                                                                |
+| Campo          | Valor                                                                                               |
+| -------------- | --------------------------------------------------------------------------------------------------- |
+| Fase actual    | 5 — regresión y cierre, hecha. **Rediseño completo.**                                               |
+| Rama           | `feat/redisenio-movil` (sin subir; ver nota abajo)                                                  |
+| Pruebas        | 208 unitarias en verde; `npm run verificar` limpio                                                  |
+| Matriz         | 7 tamaños × 12 secciones × 2 temas: **0 desbordes** (línea base: 12/12 a 320 px)                    |
+| Contraste      | tema oscuro 0 fallos AA; claro solo el relleno de días de otro mes (3,07:1, texto inactivo)         |
+| Reglas 1–3 y 5 | `src/core`, `src/datos`, sincronización y Supabase: **0 archivos modificados** (`git diff 1de3287`) |
+| Dependencias   | ninguna nueva                                                                                       |
+| Próximo paso   | Aprobación para subir la rama y desplegar                                                           |
 
 ### Decisiones
 
@@ -214,8 +216,50 @@ Tamaños: 320×640, 360×800, 390×844, 430×932, 768×1024, 1366×768, 1440×90
   sigue pidiendo confirmación. Botones de editar/borrar de 44 px.
 - Con `prefers-reduced-motion: reduce` el menú lateral no se anima.
 
-**Pendiente de fases siguientes:** objetivos táctiles de `text-link`,
-`add-account` y `mini-btn` fuera de Movimientos (< 40 px), y la escala
-tipográfica de 7–10 px del resto de secciones.
+**Fase 5** (regresión y cierre)
+
+- **Contraste.** Un auditor que calcula la razón de cada texto contra su fondo
+  real encontró 29 clases por debajo de AA entre los dos temas. Causas: el gris
+  `--muted` (3,0:1 → `#66726a`, 5,0:1), los importes verde y rojo (`#1a7a41` y
+  `#c0392b`, con variantes claras en oscuro) y, sobre todo, **el verde de marca
+  usado como color de texto sobre fondo oscuro** (1,9–2,5:1). Para esto último
+  nace `--verde-texto` (`#1e6b3a` en claro, `#7bd89a` en oscuro); `--green`
+  sigue siendo el de los fondos. Quedan fuera los que van sobre un fondo fijo
+  claro (`.avatar`, `.top-avatar`).
+- **Un error mío de la fase 1.** Envolver «Mi espacio» en un `<span>` hizo que la
+  regla de la barra separadora lo pintara casi invisible. Detectado al ver la
+  captura del tablet; el auditor no lo vio porque se corrió solo a 390 px, donde
+  ese texto está oculto.
+- **Tipografía.** Lo que quedaba entre 7 y 10 px en planificación y patrimonio
+  pasa a 11–14 px; los botones de cabecera de panel a 44 px.
+- **PWA.** Manifiesto standalone con icono maskable; service worker activo; sin
+  red la aplicación abre, permite crear una cuenta y un movimiento y calcula el
+  balance; al volver la red no se pierde nada. Caché `fincontrol-v3`: las
+  anteriores se purgan al activarse.
+- **Tema.** Sigue al sistema la primera vez, guarda la elección y la respeta al
+  recargar; el botón de la cabecera y el de Ajustes lo cambian.
+- **`npm run revision:responsive`** deja la matriz como regresión del
+  repositorio. Contra `1de3287` (antes del rediseño) falla con 35 problemas;
+  contra esta rama pasa.
+
+**Decisiones que se apartan de la letra de la guía**
+
+- Calendario no repite el selector de mes (lleva el suyo).
+- «Nuevo movimiento» arriba no se muestra donde hay barra inferior (≤ 900 px).
+- No se implementó seleccionar un día del calendario: la guía lo marca como
+  mejora opcional.
+- Se añadió `inputMode="numeric"` al valor del movimiento: el campo ya rechazaba
+  decimales (`step` por defecto), así que el teclado sin coma evita el error.
+- `package.json` recibió un script nuevo (`revision:responsive`); nada más.
+
+**Nota sobre la rama.** El entorno de esta sesión fija la rama de desarrollo en
+`claude/quirky-mayer-3caadd`, y Railway despliega solo lo que se sube a ella; la
+guía pide no desplegar sin aprobación. Por eso el trabajo está en
+`feat/redisenio-movil` y **no se ha subido**.
+
+**Pendiente tras el rediseño:** verificar en un teléfono real (iOS Safari y
+Chrome Android), que es lo único que un navegador simulado no sustituye, sobre
+todo el comportamiento de las áreas seguras con la app instalada y el teclado
+en pantalla.
 
 > Este documento es un plan. Revisar siempre el código actual antes de editar.
