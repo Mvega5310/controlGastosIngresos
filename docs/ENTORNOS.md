@@ -10,7 +10,7 @@ autorizado por separado.
 | ------------------- | ------------------------------------------------ | ----------------------------------------------------- |
 | Proyecto de Railway | `fincontrol`                                     | `fincontrol-staging`                                  |
 | Servicio            | `fincontrol-web`                                 | `fincontrol-staging-web`                              |
-| Rama que despliega  | `claude/quirky-mayer-3caadd`                     | `feat/redisenio-movil`                                |
+| Rama que despliega  | `produccion`                                     | `feat/redisenio-movil`                                |
 | Dirección           | https://fincontrol-web-production.up.railway.app | https://fincontrol-staging-web-staging.up.railway.app |
 | Supabase            | **sí**: datos reales                             | **no**: modo local, no puede tocar datos reales       |
 | `ENTORNO`           | sin definir                                      | `staging`                                             |
@@ -18,7 +18,11 @@ autorizado por separado.
 | Indexable           | sí                                               | no (`X-Robots-Tag` y `robots.txt`)                    |
 
 Cada servicio despliega solo su rama, automáticamente, en cuanto se sube algo a
-ella. **Por eso subir a `claude/quirky-mayer-3caadd` es desplegar a producción.**
+ella. **Por eso subir a `produccion` es desplegar a producción**, y subir a
+cualquier otra rama no lo es.
+
+`claude/quirky-mayer-3caadd` fue la rama de producción hasta el 15 de noviembre de 2026. Ahora es una rama de trabajo más: **ya no despliega nada**. `produccion` es
+la única rama que alcanza a los usuarios, y casi nadie sube a ella a diario.
 
 ## Por qué un proyecto aparte y no otro servicio
 
@@ -43,33 +47,40 @@ Nunca reutilizar el de producción.
 
 ## Reglas
 
-1. **No se sube nada a `claude/quirky-mayer-3caadd`** sin una autorización
-   explícita, aparte, para desplegar a producción.
+1. **Producción solo cambia moviendo `produccion`**, y solo con una autorización
+   explícita y aparte. Es el único acto que despliega a producción.
 2. El trabajo vive en `feat/redisenio-movil`. Subir ahí despliega solo el staging.
-3. Antes de promover: la prueba en dispositivos reales
+3. `claude/quirky-mayer-3caadd` ya no está conectada a ningún servicio: producción
+   sigue `produccion` y el staging `feat/redisenio-movil` (comprobado en la
+   configuración de ambos, no empujando a ella). Aun así, hasta que se vea en un
+   despliegue real, conviene no usarla para probar eso.
+4. Antes de promover: la prueba en dispositivos reales
    (`docs/PRUEBA-EN-DISPOSITIVOS.md`) completa y sus fallos corregidos.
-4. Un push a la rama de producción puede revertirse en Railway con un clic
+5. Un despliegue de producción puede revertirse en Railway con un clic
    (`rollback` sobre el despliegue anterior), pero los usuarios ya habrían visto
    la versión nueva y la caché del service worker ya se habría actualizado.
 
-## Cómo se promueve a producción (cuando se autorice)
+## Cómo se lanza a producción (cuando se autorice)
 
-1. Revisar `git log 1de3287..feat/redisenio-movil` y la prueba en dispositivos.
+1. Revisar `git log produccion..feat/redisenio-movil` y la prueba en dispositivos.
 2. Autorización explícita y por separado.
-3. Llevar los commits a `claude/quirky-mayer-3caadd` (fusión o pull request).
+3. Mover `produccion` al commit aprobado:
+   `git push origin <commit>:produccion`. Si la rama ha avanzado, el push
+   normal rechaza lo que no sea un avance limpio, que es lo que se quiere.
 4. Railway despliega solo; comprobar el despliegue y que el service worker pasa a
    `fincontrol-v3`.
 
-## Protección adicional posible (no aplicada)
+## Qué se hizo para que no se despliegue por accidente
 
-Hoy la única barrera entre un push y producción es la disciplina. Si se quiere
-una barrera técnica, hay dos opciones que tocan la configuración de producción y
-por eso no se han aplicado sin pedirlo:
+Hasta el 15 de noviembre de 2026 producción desplegaba `claude/quirky-mayer-3caadd`,
+una rama en la que se sube a diario, así que la única barrera entre un push y los
+usuarios era la disciplina. Ahora el servicio `fincontrol-web` sigue `produccion`.
 
-- Que producción despliegue una rama dedicada (por ejemplo `produccion`) en la
-  que nadie sube a diario, en lugar de `claude/quirky-mayer-3caadd`.
-- Activar en Railway la aprobación manual de despliegues del entorno de
-  producción, de modo que cada push espere un visto bueno.
+Railway no ofrece, que se haya podido comprobar, un ajuste de «aprobación
+manual» para los push de GitHub. Lo que sí hay, y no se ha activado, es
+desactivar los despliegues automáticos o esperar a las comprobaciones de CI; la
+rama dedicada resuelve el problema sin depender de ellos y se puede verificar
+con `describe-service` (campo `source.branch`).
 
 ## Variables y secretos
 
