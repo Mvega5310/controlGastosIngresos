@@ -90,3 +90,25 @@ con `describe-service` (campo `source.branch`).
   Tokens.
 - Ninguna clave se versiona. `.env` está ignorado por git; en Railway las
   variables viven en el servicio.
+
+## Registro de lanzamientos
+
+| Fecha       | Commit    | Despliegue | Qué fue                                                                                | Cómo volver atrás                                                           |
+| ----------- | --------- | ---------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| 17 nov 2026 | `a3d74b8` | `bddb37d5` | Rediseño móvil completo: tarjetas, navegación, contraste AA, orientación libre, PWA v3 | Railway → `fincontrol-web` → despliegue `86004ec1` (`1de3287`) → _Rollback_ |
+| 15 nov 2026 | `1de3287` | `86004ec1` | Producción pasa a la rama `produccion` (mismo código)                                  | —                                                                           |
+
+Verificado tras el lanzamiento, sobre la dirección real: HTTP 200, service worker
+`fincontrol-v3`, nombre «FinControl — Finanzas personales», manifiesto sin
+orientación fija, sin `X-Robots-Tag`, Supabase incluido; el guardián responsive
+(11 formatos × 12 secciones) y la prueba de PWA sin conexión pasan, y el panel de
+cuenta ofrece entrar y crear cuenta.
+
+**No verificado:** iOS Safari y Chrome Android reales, ni el envío real del
+correo de acceso (solo se puede probar con una persona y una bandeja de entrada).
+
+Un _rollback_ en Railway devuelve el servicio al despliegue anterior, pero los
+navegadores que ya hayan descargado la versión nueva conservan su caché
+`fincontrol-v3` hasta que el service worker antiguo la sustituya; por eso, si hay
+que volver atrás, conviene subir la caché a `v4` en el commit de reversión en
+lugar de limitarse a un rollback.

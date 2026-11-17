@@ -135,16 +135,16 @@ Tamaños: 320×640, 360×800, 390×844, 430×932, 768×1024, 1366×768, 1440×90
 
 ## 9. Registro de continuidad
 
-| Campo          | Valor                                                                                                                                                                                   |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Fase actual    | 5 — regresión y cierre, hecha. **Rediseño completo.**                                                                                                                                   |
-| Rama           | `feat/redisenio-movil` → despliega el **staging** (`docs/ENTORNOS.md`); producción no se ha tocado                                                                                      |
-| Pruebas        | 208 unitarias en verde; `npm run verificar` limpio                                                                                                                                      |
-| Matriz         | 7 tamaños × 12 secciones × 2 temas: **0 desbordes** (línea base: 12/12 a 320 px)                                                                                                        |
-| Contraste      | **0 fallos AA** en claro y oscuro a 320, 390, 768, 1366 y 1440 px. Los días de otro mes del calendario y la «/» de la miga de pan pasaron de 3,07:1 a 5,0:1                             |
-| Reglas 1–3 y 5 | `src/core`, `src/datos`, sincronización y Supabase: **0 archivos modificados** (`git diff 1de3287`)                                                                                     |
-| Dependencias   | ninguna nueva                                                                                                                                                                           |
-| Próximo paso   | Probar en iPhone Safari y Chrome Android sobre el staging (`docs/PRUEBA-EN-DISPOSITIVOS.md`), corregir lo que salga y, solo entonces, autorizar por separado el despliegue a producción |
+| Campo          | Valor                                                                                                                                                       |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fase actual    | 5 — regresión y cierre, hecha. **Rediseño completo.**                                                                                                       |
+| Rama           | `feat/redisenio-movil`; **lanzado a producción el 17 nov 2026** (`produccion` = `a3d74b8`; ver `docs/ENTORNOS.md`)                                          |
+| Pruebas        | 208 unitarias en verde; `npm run verificar` limpio                                                                                                          |
+| Matriz         | 7 tamaños × 12 secciones × 2 temas: **0 desbordes** (línea base: 12/12 a 320 px)                                                                            |
+| Contraste      | **0 fallos AA** en claro y oscuro a 320, 390, 768, 1366 y 1440 px. Los días de otro mes del calendario y la «/» de la miga de pan pasaron de 3,07:1 a 5,0:1 |
+| Reglas 1–3 y 5 | `src/core`, `src/datos`, sincronización y Supabase: **0 archivos modificados** (`git diff 1de3287`)                                                         |
+| Dependencias   | ninguna nueva                                                                                                                                               |
+| Próximo paso   | Pruebas en iPhone Safari y Chrome Android con la app ya en producción (`docs/PRUEBA-EN-DISPOSITIVOS.md`) y corregir lo que salga                            |
 
 ### Decisiones
 
