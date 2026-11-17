@@ -376,6 +376,15 @@ export function PanelCuenta({
               </span>
             </div>
             {sync.error && <p className="aviso-campo">{sync.error}</p>}
+            {/* Sin esto no hay forma de saber qué ha hecho la sincronización: un
+                aparato con datos y otro sin ellos se ven igual de «al día». */}
+            {sync.resumen && !sync.error && (
+              <p className="pista-campo" data-resumen-sync>
+                Desde que abriste la aplicación: subió {sync.resumen.enviados} registro
+                {sync.resumen.enviados === 1 ? '' : 's'} y bajó {sync.resumen.recibidos} de tus otros
+                dispositivos.
+              </p>
+            )}
             {bloqueAviso}
             <div className="nota-cuenta">
               <p>

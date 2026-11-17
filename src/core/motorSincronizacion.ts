@@ -32,6 +32,37 @@ export interface Remoto {
   enviar(coleccion: string, registros: Registro[]): Promise<void>
 }
 
+/**
+ * Marca de los registros que ya estaban guardados antes de que existiera la
+ * sincronización. Es la fecha más antigua posible: así cualquier versión con
+ * una marca real les gana, y a la vez ya no cuentan como «sin marca».
+ */
+export const MARCA_DE_ANTES = '1970-01-01T00:00:00.000Z'
+
+/**
+ * Recoge los registros «de antes».
+ *
+ * Un registro sin marca de tiempo viene de una versión anterior de la
+ * aplicación. La cola de pendientes solo se llena al escribir, así que esos
+ * registros nunca estuvieron en ella y no se subían jamás: el aparato que los
+ * tenía los enseñaba, y el otro no los veía nunca. La pantalla de acceso
+ * promete lo contrario —que lo guardado en el navegador se sube en la primera
+ * sincronización—, de modo que se cumple.
+ *
+ * Se les pone la marca más antigua posible y se añaden a los pendientes. Con
+ * marca dejan de ser «de antes»: se suben una vez y no se reenvían en cada
+ * vuelta. Pura: no modifica lo que recibe.
+ */
+export function adoptarLosDeAntes<T extends Registro>(locales: T[], pendientes: string[]) {
+  const ids: string[] = []
+  const salida = locales.map(r => {
+    if (r.actualizadoEn) return r
+    ids.push(r.id)
+    return { ...r, actualizadoEn: MARCA_DE_ANTES }
+  })
+  return { locales: salida, pendientes: [...new Set([...pendientes, ...ids])], adoptados: ids.length }
+}
+
 export type ResultadoColeccion<T> = {
   registros: T[]
   corte: string
@@ -39,6 +70,12 @@ export type ResultadoColeccion<T> = {
   pendientes: string[]
   enviados: number
   recibidos: number
+  /**
+   * Lo que llegó y de verdad es nuevo aquí. Una vuelta devuelve los propios
+   * registros recién subidos (el corte se toma antes de subir), que cuentan en
+   * `recibidos` pero no son noticia para nadie.
+   */
+  novedades: number
 }
 
 /**
@@ -62,20 +99,28 @@ export async function sincronizarColeccion<T extends Registro>(
   // dispositivo escribiera entre la bajada y la subida; así, como mucho, en la
   // vuelta siguiente vuelve lo que acabamos de subir, que es inofensivo porque
   // la fusión es idempotente.
+  const antes = adoptarLosDeAntes(locales, pendientes)
   const { registros: remotos, servidorEn } = await remoto.traer(coleccion, corte)
-  const fusionados = fusionar(locales, remotos as T[])
+  const fusionados = fusionar(antes.locales, remotos as T[])
 
-  const porId = new Map(locales.map(r => [r.id, r]))
-  const aEnviar = fusionados.filter(f => pendientes.includes(f.id) && porId.get(f.id) === f)
+  const porId = new Map(antes.locales.map(r => [r.id, r]))
+  const aSubir = new Set(antes.pendientes)
+  const aEnviar = fusionados.filter(f => aSubir.has(f.id) && porId.get(f.id) === f)
 
   if (aEnviar.length) await remoto.enviar(coleccion, aEnviar)
+
+  const novedades = remotos.filter(r => {
+    const aqui = porId.get(r.id)
+    return !aqui || (aqui.actualizadoEn || '') !== (r.actualizadoEn || '')
+  }).length
 
   return {
     registros: fusionados,
     corte: servidorEn || corte,
     pendientes: [],
     enviados: aEnviar.length,
-    recibidos: remotos.length
+    recibidos: remotos.length,
+    novedades
   }
 }
 
@@ -92,6 +137,7 @@ export type ResultadoSync = {
   pendientes: Record<string, string[]>
   enviados: number
   recibidos: number
+  novedades: number
   fallos: Record<string, string>
 }
 
@@ -112,7 +158,8 @@ export async function sincronizarTodo(
   const pendientes = { ...estado.pendientes }
   const fallos: Record<string, string> = {}
   let enviados = 0,
-    recibidos = 0
+    recibidos = 0,
+    novedades = 0
 
   for (const [nombre, locales] of Object.entries(colecciones)) {
     try {
@@ -128,11 +175,12 @@ export async function sincronizarTodo(
       pendientes[nombre] = r.pendientes
       enviados += r.enviados
       recibidos += r.recibidos
+      novedades += r.novedades
     } catch (e) {
       fallos[nombre] = e instanceof Error ? e.message : String(e)
       porColeccion[nombre] = { registros: locales, enviados: 0, recibidos: 0 }
     }
   }
 
-  return { porColeccion, cortes, pendientes, enviados, recibidos, fallos }
+  return { porColeccion, cortes, pendientes, enviados, recibidos, novedades, fallos }
 }

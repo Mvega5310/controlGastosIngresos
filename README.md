@@ -79,16 +79,26 @@ Abre la dirección que muestre Vite, normalmente http://localhost:5173.
 
 ### Comandos
 
-| Comando                       | Qué hace                                             |
-| ----------------------------- | ---------------------------------------------------- |
-| `npm run dev`                 | Servidor de desarrollo con recarga en caliente       |
-| `npm test`                    | Las pruebas (208)                                    |
-| `npm run lint`                | ESLint                                               |
-| `npm run format`              | Prettier sobre todo el proyecto                      |
-| `npm run build`               | Compila a `dist/`                                    |
-| `npm start`                   | Sirve `dist/` en producción                          |
-| `npm run verificar`           | Formato, lint, pruebas y compilación de una vez      |
-| `npm run revision:responsive` | Revisión visual en 7 tamaños (necesita un navegador) |
+| Comando                           | Qué hace                                                                         |
+| --------------------------------- | -------------------------------------------------------------------------------- |
+| `npm run dev`                     | Servidor de desarrollo con recarga en caliente                                   |
+| `npm test`                        | Las pruebas (225)                                                                |
+| `npm run lint`                    | ESLint                                                                           |
+| `npm run format`                  | Prettier sobre todo el proyecto                                                  |
+| `npm run build`                   | Compila a `dist/`                                                                |
+| `npm start`                       | Sirve `dist/` en producción                                                      |
+| `npm run verificar`               | Formato, lint, pruebas y compilación de una vez                                  |
+| `npm run revision:responsive`     | Revisión visual en 7 tamaños (necesita un navegador)                             |
+| `npm run revision:sincronizacion` | Dos dispositivos simulados contra un Supabase de mentira (necesita un navegador) |
+
+### Revisión de la sincronización
+
+`npm run revision:sincronizacion` simula un móvil y un PC con la misma cuenta
+contra un Supabase de mentira (sin red y sin tocar datos reales) y comprueba, por
+la interfaz, que lo que crea un aparato aparece en el otro en los dos sentidos,
+que lo guardado **antes** de que hubiera sincronización se sube en la primera
+(ese caso no se subía nunca), que lo escrito sin sesión se sube al iniciarla, y
+que el panel de cuenta dice cuánto subió y cuánto bajó.
 
 ### Revisión responsive
 

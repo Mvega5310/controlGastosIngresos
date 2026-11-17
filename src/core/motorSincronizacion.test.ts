@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { Remoto, sincronizarColeccion, sincronizarTodo } from './motorSincronizacion'
+import {
+  MARCA_DE_ANTES,
+  Remoto,
+  adoptarLosDeAntes,
+  sincronizarColeccion,
+  sincronizarTodo
+} from './motorSincronizacion'
 import { Registro } from './sincronizacion'
 
 type Fila = Registro & { nombre: string }
@@ -259,5 +265,163 @@ describe('sincronizarTodo', () => {
     )
     expect(r.porColeccion.movimientos.enviados).toBe(0)
     expect(r.porColeccion.metas.enviados).toBe(1)
+  })
+})
+
+/**
+ * Registros "de antes".
+ *
+ * Los que ya estaban guardados cuando todavía no había sincronización llegan sin
+ * marca de tiempo y sin estar en la cola de pendientes, porque la cola solo se
+ * llena al escribir. El motor solo sube lo pendiente, así que no se subían nunca,
+ * aunque la pantalla de acceso promete que lo guardado en el navegador se sube en
+ * la primera sincronización. Con una sola cuenta y dos aparatos eso se ve así:
+ * un aparato tiene datos, el otro no, y no hay forma de que lleguen.
+ */
+const deAntes = (id: string, nombre: string) => ({ id, nombre }) as unknown as Fila
+
+describe('registros de antes de la sincronización', () => {
+  it('se suben aunque no estén en la cola de pendientes', async () => {
+    const s = servidorFalso()
+    const r = await sincronizarColeccion(s.remoto, 'movimientos', [deAntes('a', 'Viejo')], '', [])
+    expect(r.enviados).toBe(1)
+    expect(ids(s.contenido('movimientos'))).toEqual(['a'])
+  })
+
+  it('quedan marcados como los más antiguos posibles, sin dejar de tener marca', async () => {
+    const s = servidorFalso()
+    const r = await sincronizarColeccion(s.remoto, 'movimientos', [deAntes('a', 'Viejo')], '', [])
+    expect(r.registros[0].actualizadoEn).toBe(MARCA_DE_ANTES)
+    expect(s.contenido('movimientos')[0].actualizadoEn).toBe(MARCA_DE_ANTES)
+  })
+
+  it('una vez subidos no se vuelven a enviar en cada vuelta', async () => {
+    // Si siguieran contando como "sin marca", se reenviarían para siempre y cada
+    // reenvío haría que los demás aparatos los volvieran a bajar.
+    const s = servidorFalso()
+    const primera = await sincronizarColeccion(s.remoto, 'movimientos', [deAntes('a', 'Viejo')], '', [])
+    const segunda = await sincronizarColeccion(s.remoto, 'movimientos', primera.registros, primera.corte, [])
+    expect(segunda.enviados).toBe(0)
+    expect(s.envios).toHaveLength(1)
+  })
+
+  it('pierden contra una versión del servidor, que siempre es más reciente', async () => {
+    // El dato bueno gana; el de antes no puede revertirlo.
+    const s = servidorFalso({ movimientos: [fila('a', 'remoto', 'T5')] })
+    const r = await sincronizarColeccion(s.remoto, 'movimientos', [deAntes('a', 'Viejo')], '', [])
+    expect(r.registros[0].nombre).toBe('remoto')
+    expect(r.enviados).toBe(0)
+  })
+
+  it('una edición posterior les gana a ellos, no al revés', async () => {
+    const s = servidorFalso()
+    const primera = await sincronizarColeccion(s.remoto, 'movimientos', [deAntes('a', 'Viejo')], '', [])
+    const editado = { ...primera.registros[0], nombre: 'Editado', actualizadoEn: 'T9' }
+    await sincronizarColeccion(s.remoto, 'movimientos', [editado], primera.corte, ['a'])
+    expect(s.contenido('movimientos')[0].nombre).toBe('Editado')
+  })
+
+  it('lo que ya tiene marca y no está pendiente sigue sin subirse', async () => {
+    // El arreglo no puede volver a subirlo todo: solo lo que nunca tuvo marca.
+    const s = servidorFalso()
+    const r = await sincronizarColeccion(s.remoto, 'movimientos', [fila('a', 'Ya visto', 'T1')], '', [])
+    expect(r.enviados).toBe(0)
+  })
+
+  it('mezcla bien con lo pendiente de siempre', async () => {
+    const s = servidorFalso()
+    const r = await sincronizarColeccion(
+      s.remoto,
+      'movimientos',
+      [deAntes('viejo', 'Viejo'), fila('nuevo', 'Nuevo', 'T3'), fila('quieto', 'Quieto', 'T2')],
+      '',
+      ['nuevo']
+    )
+    expect(r.enviados).toBe(2)
+    expect(ids(s.contenido('movimientos'))).toEqual(['nuevo', 'viejo'])
+  })
+
+  it('si el servidor no responde no se pierde nada y se reintenta', async () => {
+    const s = servidorFalso()
+    s.romper('sin red')
+    await expect(
+      sincronizarColeccion(s.remoto, 'movimientos', [deAntes('a', 'Viejo')], '', [])
+    ).rejects.toThrow()
+    s.arreglar()
+    const r = await sincronizarColeccion(s.remoto, 'movimientos', [deAntes('a', 'Viejo')], '', [])
+    expect(r.enviados).toBe(1)
+  })
+
+  it('llegan al segundo dispositivo', async () => {
+    const s = servidorFalso()
+    await sincronizarColeccion(s.remoto, 'movimientos', [deAntes('a', 'Viejo')], '', [])
+    const pc = await sincronizarColeccion(s.remoto, 'movimientos', [] as Fila[], '', [])
+    expect(ids(pc.registros)).toEqual(['a'])
+  })
+
+  it('a través de sincronizarTodo, en cada colección', async () => {
+    const s = servidorFalso()
+    const r = await sincronizarTodo(
+      s.remoto,
+      { movimientos: [deAntes('m', 'M')], cuentas: [deAntes('c', 'C')] },
+      { cortes: {}, pendientes: {} }
+    )
+    expect(r.enviados).toBe(2)
+    expect(ids(s.contenido('cuentas'))).toEqual(['c'])
+  })
+})
+
+describe('adoptarLosDeAntes', () => {
+  it('no toca lo que ya tiene marca', () => {
+    const entrada = [fila('a', 'A', 'T1')]
+    const r = adoptarLosDeAntes(entrada, [])
+    expect(r.locales).toEqual(entrada)
+    expect(r.pendientes).toEqual([])
+    expect(r.adoptados).toBe(0)
+  })
+
+  it('cuenta los que adopta y no duplica un pendiente que ya estaba', () => {
+    const r = adoptarLosDeAntes([deAntes('a', 'A'), deAntes('b', 'B')], ['a'])
+    expect(r.adoptados).toBe(2)
+    expect([...r.pendientes].sort()).toEqual(['a', 'b'])
+  })
+
+  it('no modifica los registros originales', () => {
+    const original = deAntes('a', 'A')
+    adoptarLosDeAntes([original], [])
+    expect(original.actualizadoEn).toBeUndefined()
+  })
+})
+
+describe('novedades', () => {
+  it('lo que solo está en el servidor es una novedad', async () => {
+    const s = servidorFalso({ movimientos: [fila('z', 'Del otro aparato', 'T5')] })
+    const r = await sincronizarColeccion(s.remoto, 'movimientos', [] as Fila[], '', [])
+    expect(r.novedades).toBe(1)
+  })
+
+  it('el propio registro que acabamos de subir no lo es', async () => {
+    // La vuelta siguiente devuelve lo que se subió: cuenta como recibido, no como noticia.
+    const s = servidorFalso()
+    const primera = await sincronizarColeccion(s.remoto, 'movimientos', [fila('a', 'Mío', 'T1')], '', ['a'])
+    const segunda = await sincronizarColeccion(s.remoto, 'movimientos', primera.registros, '', [])
+    expect(segunda.recibidos).toBe(1)
+    expect(segunda.novedades).toBe(0)
+  })
+
+  it('una versión más nueva de algo que ya teníamos sí lo es', async () => {
+    const s = servidorFalso({ movimientos: [fila('a', 'Editado fuera', 'T9')] })
+    const r = await sincronizarColeccion(s.remoto, 'movimientos', [fila('a', 'Viejo', 'T1')], '', [])
+    expect(r.novedades).toBe(1)
+  })
+
+  it('sincronizarTodo las suma', async () => {
+    const s = servidorFalso({ movimientos: [fila('m', 'M', 'T1')], cuentas: [fila('c', 'C', 'T1')] })
+    const r = await sincronizarTodo(
+      s.remoto,
+      { movimientos: [], cuentas: [] },
+      { cortes: {}, pendientes: {} }
+    )
+    expect(r.novedades).toBe(2)
   })
 })
