@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Settings, Cloud, LogIn, LogOut, Trash2, KeyRound } from 'lucide-react'
 
 /**
@@ -23,6 +24,14 @@ export function MenuPerfil({
   onBorrarDatos: () => void
   onCerrarSesion: () => void
 }) {
+  useEffect(() => {
+    const alPulsar = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCerrar()
+    }
+    document.addEventListener('keydown', alPulsar)
+    return () => document.removeEventListener('keydown', alPulsar)
+  }, [onCerrar])
+
   const elegir = (accion: () => void) => () => {
     accion()
     onCerrar()

@@ -28,6 +28,8 @@ export type Sincronizacion = {
   estado: EstadoConexion
   correo: string | null
   ultima: string | null
+  /** Lo que ha subido y lo que ha bajado de nuevo desde que se abrió la aplicación. */
+  resumen: { enviados: number; recibidos: number } | null
   error: string | null
   /** Lo que Supabase devolvió al volver del enlace del correo, si algo falló. */
   avisoEnlace: string | null
@@ -55,6 +57,7 @@ export function useSincronizacion(): Sincronizacion {
     haySincronizacion() ? 'desconectado' : 'sin-configurar'
   )
   const [ultima, setUltima] = useState<string | null>(null)
+  const [resumen, setResumen] = useState<{ enviados: number; recibidos: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
   // Se lee una sola vez, al arrancar: el fragmento de la dirección llega con
   // la primera carga y se limpia al leerlo.
@@ -118,6 +121,12 @@ export function useSincronizacion(): Sincronizacion {
         setEstado('error')
       } else {
         setUltima(new Date().toISOString())
+        // Se acumula: si solo se enseñara la última vuelta, una segunda pulsación
+        // de «Sincronizar ahora» (que sube 0 y baja 0) taparía la que sí subió.
+        setResumen(previo => ({
+          enviados: (previo?.enviados ?? 0) + r.enviados,
+          recibidos: (previo?.recibidos ?? 0) + r.novedades
+        }))
         setEstado('listo')
       }
     } catch (e) {
@@ -154,6 +163,7 @@ export function useSincronizacion(): Sincronizacion {
     limpiarDatosSincronizados()
     avisarCambioDatos()
     setUltima(null)
+    setResumen(null)
     setRecuperandoClave(false)
   }, [sincronizar])
 
@@ -161,6 +171,7 @@ export function useSincronizacion(): Sincronizacion {
     estado,
     correo: sesion?.user?.email ?? null,
     ultima,
+    resumen,
     error,
     avisoEnlace,
     descartarAviso: () => setAvisoEnlace(null),

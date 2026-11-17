@@ -22,6 +22,22 @@
     <!-- "black-translucent" mete la pagina debajo de la barra de estado. -->
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="mobile-web-app-capable" content="yes" />
+    <!--
+      El tema oscuro solo pintaba el fondo de la aplicación, no el de la página: el
+      rebote al desplazar más allá del borde en iOS, y la franja de las áreas
+      seguras en la app instalada, enseñaban un fondo claro alrededor de una app
+      oscura. La clase se pone aquí, antes de que arranque React, para que
+      tampoco haya un destello claro al abrir.
+    -->
+    <script>
+      try {
+        var guardado = localStorage.getItem('fc-theme')
+        var oscuro = guardado ? guardado === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches
+        if (oscuro) document.documentElement.classList.add('tema-oscuro')
+      } catch (e) {
+        /* modo privado */
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

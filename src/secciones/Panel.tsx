@@ -45,7 +45,10 @@ export function Panel({
   const series = dailySeries(movements, period)
   const recent = apuntesVisibles(movements).sort(byDateDesc).slice(0, 5)
   return (
-    <>
+    // Un envoltorio solo para poder reordenar las secciones en el móvil con CSS:
+    // en escritorio no cambia nada, y en pantalla estrecha el orden pasa a ser el
+    // de lectura (balance, pagos que vienen, flujo, cuentas, recientes).
+    <div className="panel-flujo">
       <div className="stats-grid">
         <StatCard
           label="Balance total"
@@ -156,7 +159,7 @@ export function Panel({
           </div>
           <TablaMovimientos data={recent} />
         </section>
-        <section className="panel upcoming-panel">
+        <section className={`panel upcoming-panel ${pagos.length ? '' : 'sin-pagos'}`}>
           <div className="panel-heading">
             <div>
               <h2>Próximos pagos</h2>
@@ -205,6 +208,6 @@ export function Panel({
           Registrar gasto <ArrowRight size={15} />
         </button>
       </div>
-    </>
+    </div>
   )
 }

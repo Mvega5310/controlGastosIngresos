@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
 import { TriangleAlert } from 'lucide-react'
+import { useDialogo } from '../lib/useDialogo'
 
 /**
  * Preguntar antes de borrar.
@@ -24,14 +24,7 @@ export function Confirmar({
   onConfirmar: () => void
   onCancelar: () => void
 }) {
-  useEffect(() => {
-    if (!abierto) return
-    const alPulsar = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onCancelar()
-    }
-    window.addEventListener('keydown', alPulsar)
-    return () => window.removeEventListener('keydown', alPulsar)
-  }, [abierto, onCancelar])
+  const ref = useDialogo(abierto, onCancelar)
 
   if (!abierto) return null
 
@@ -42,7 +35,13 @@ export function Confirmar({
         if (e.target === e.currentTarget) onCancelar()
       }}
     >
-      <div className="modal modal-estrecho" role="alertdialog" aria-modal="true" aria-label={titulo}>
+      <div
+        ref={ref}
+        className="modal modal-estrecho"
+        role="alertdialog"
+        aria-modal="true"
+        aria-label={titulo}
+      >
         <div className="confirmar">
           <span className="confirmar-icono">
             <TriangleAlert size={20} />

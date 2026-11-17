@@ -12,12 +12,21 @@
   --bg: #f7f8f6;
   --panel: #fff;
   --text: #17231b;
-  --muted: #87928a;
+  --muted: #66726a;
   --line: #e9ede9;
   --green: #1e6b3a;
   --green2: #4cb873;
   --soft: #edf6ef;
   --shadow: 0 2px 12px rgba(25, 50, 32, 0.035);
+  /* Medidas del rediseño móvil. El objetivo táctil es el mínimo cómodo para un
+     pulgar; el margen lateral y el alto de la barra inferior se usan también
+     para reservar el sitio del contenido, de modo que viven en un solo lugar. */
+  --touch-target: 44px;
+  /* El verde de marca como COLOR DE TEXTO. Como fondo (botones) sigue siendo
+     --green; como texto sobre el fondo oscuro daba 1,9–2,5:1, que no se lee. */
+  --verde-texto: #1e6b3a;
+  --mobile-gutter: 16px;
+  --mobile-nav-height: 64px;
 }
 * {
   box-sizing: border-box;
@@ -26,6 +35,19 @@ body {
   margin: 0;
   min-width: 320px;
   background: var(--bg);
+}
+/* El tema oscuro pinta también la página, no solo la aplicación. Además,
+   color-scheme hace que lo que dibuja el navegador (barras de desplazamiento,
+   menús de los desplegables, autocompletado) también sea oscuro. */
+html {
+  color-scheme: light;
+}
+html.tema-oscuro {
+  color-scheme: dark;
+  background: #111914;
+}
+html.tema-oscuro body {
+  background: #111914;
 }
 button,
 input,
@@ -42,12 +64,13 @@ button {
   --bg: #f7f8f6;
   --panel: #fff;
   --text: #17231b;
-  --muted: #87928a;
+  --muted: #66726a;
   --line: #e9ede9;
   --soft: #edf6ef;
   --shadow: 0 2px 12px rgba(25, 50, 32, 0.035);
 }
 .app.dark {
+  --verde-texto: #7bd89a;
   --bg: #111914;
   --panel: #1a241e;
   --text: #edf5ef;
@@ -180,7 +203,7 @@ nav section {
 }
 .nav-item.active {
   background: var(--soft);
-  color: var(--green);
+  color: var(--verde-texto);
   font-weight: 700;
 }
 .nav-dot {
@@ -220,7 +243,7 @@ nav section {
 .upgrade button {
   border: 0;
   background: transparent;
-  color: var(--green);
+  color: var(--verde-texto);
   font-size: 10px;
   font-weight: 700;
   padding: 0;
@@ -268,7 +291,13 @@ nav section {
 }
 .breadcrumb span {
   padding: 0 9px;
-  color: #c3cbc5;
+  color: var(--muted);
+}
+/* El texto «Mi espacio» va dentro de un span propio: sin esto, la regla de la
+   barra separadora de arriba lo alcanzaba y lo pintaba casi invisible. */
+.breadcrumb .breadcrumb-raiz {
+  padding: 0;
+  color: var(--muted);
 }
 .breadcrumb b {
   color: var(--text);
@@ -334,7 +363,7 @@ nav section {
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 1.1px;
-  color: #98a49b;
+  color: var(--muted);
   margin-bottom: 9px;
 }
 .welcome-row h1 {
@@ -464,10 +493,17 @@ nav section {
   gap: 6px;
 }
 .positive {
-  color: #23904e !important;
+  color: #1a7a41 !important;
 }
 .negative {
-  color: #d35b50 !important;
+  color: #c0392b !important;
+}
+/* Sobre el fondo oscuro los mismos tonos no llegan a 4,5:1: versión clara. */
+.dark .positive {
+  color: #52c883 !important;
+}
+.dark .negative {
+  color: #ff8f85 !important;
 }
 .neutral {
   color: var(--muted) !important;
@@ -550,7 +586,7 @@ nav section {
   gap: 5px;
   border: 0;
   background: transparent;
-  color: var(--green);
+  color: var(--verde-texto);
   font-size: 9px;
   font-weight: 700;
   padding: 3px;
@@ -576,7 +612,7 @@ nav section {
 }
 .bank-icon.yellow {
   background: #fff4d6;
-  color: #b58b21;
+  color: #8a650a;
 }
 .bank-icon.purple {
   background: #f0eafb;
@@ -584,7 +620,7 @@ nav section {
 }
 .bank-icon.blue {
   background: #e8f1fb;
-  color: #3d78b4;
+  color: #2f66a0;
 }
 .bank-icon.green {
   background: #e6f4ea;
@@ -612,7 +648,7 @@ nav section {
   width: 100%;
   border: 1px dashed #cbd9ce;
   background: transparent;
-  color: var(--green);
+  color: var(--verde-texto);
   height: 34px;
   border-radius: 7px;
   margin-top: 12px;
@@ -644,7 +680,7 @@ th {
   text-align: left;
   font-size: 8px;
   letter-spacing: 0.6px;
-  color: #9aa59d;
+  color: var(--muted);
   font-weight: 600;
   padding: 0 10px 11px;
 }
@@ -696,7 +732,7 @@ td b {
   display: grid;
   align-content: center;
   justify-items: center;
-  color: var(--green);
+  color: var(--verde-texto);
 }
 .payment-date b {
   font-size: 13px;
@@ -737,6 +773,12 @@ td b {
   border-color: #314a38;
   color: #e2f0e5;
 }
+.dark .tip-banner p {
+  color: #b7cdbc;
+}
+.dark .status-pill {
+  color: #86d9a2;
+}
 .tip-icon {
   width: 32px;
   height: 32px;
@@ -751,14 +793,14 @@ td b {
 }
 .tip-banner p {
   font-size: 9px;
-  color: #79917e;
+  color: #4a6a52;
   margin: 4px 0 0;
 }
 .tip-banner button {
   margin-left: auto;
   border: 0;
   background: transparent;
-  color: var(--green);
+  color: var(--verde-texto);
   font-size: 9px;
   font-weight: 700;
   display: flex;
@@ -769,7 +811,7 @@ td b {
 .footer {
   display: flex;
   justify-content: space-between;
-  color: #a2aca4;
+  color: var(--muted);
   font-size: 8px;
   padding: 23px 2px 4px;
 }
@@ -841,7 +883,7 @@ td b {
 }
 .status-pill {
   font-size: 8px;
-  color: #398354;
+  color: #2c6f45;
   background: var(--soft);
   padding: 5px 8px;
   border-radius: 20px;
@@ -870,7 +912,7 @@ td b {
   border: 1px dashed #c6d4c9;
   border-radius: 12px;
   background: transparent;
-  color: var(--green);
+  color: var(--verde-texto);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -909,9 +951,9 @@ td b {
   font-size: 10px;
 }
 .calendar-day.muted {
-  color: #b7c0b9;
+  color: var(--muted);
 }
-.calendar-day.today span {
+.calendar-day.today > span:first-of-type {
   background: var(--green);
   color: white;
   border-radius: 50%;
@@ -958,7 +1000,7 @@ td b {
 .event-date {
   font-size: 9px;
   font-weight: 700;
-  color: var(--green);
+  color: var(--verde-texto);
   background: var(--soft);
   padding: 8px;
   border-radius: 7px;
@@ -993,7 +1035,7 @@ td b {
   width: 29px;
   height: 29px;
   background: var(--soft);
-  color: var(--green);
+  color: var(--verde-texto);
   border-radius: 8px;
   display: grid;
   place-items: center;
@@ -1030,7 +1072,7 @@ td b {
   height: 36px;
   border-radius: 10px;
   background: var(--soft);
-  color: var(--green);
+  color: var(--verde-texto);
   display: grid;
   place-items: center;
   margin-bottom: 14px;
@@ -1148,7 +1190,9 @@ td b {
 .modal {
   width: min(480px, 100%);
   max-height: 94vh;
+  max-height: 94dvh;
   overflow: auto;
+  overscroll-behavior: contain;
   background: var(--panel);
   border-radius: 15px;
   padding: 23px;
@@ -1198,7 +1242,7 @@ td b {
 .type-switch button.selected {
   background: var(--soft);
   border-color: #a7cdb0;
-  color: var(--green);
+  color: var(--verde-texto);
   font-weight: 700;
 }
 .form-grid {
@@ -1246,13 +1290,47 @@ td b {
   }
 }
 @media (max-width: 900px) {
+  /* Fuera de pantalla, el menú no debe poder recibir el foco: sin
+     «visibility» quedaba oculto a la vista pero cada uno de sus enlaces seguía
+     en el orden del tabulador. La visibilidad espera a que acabe la animación
+     al cerrarse y cambia al instante al abrirse. */
   .sidebar {
     transform: translateX(-100%);
-    transition: transform 0.25s;
-    width: 260px;
+    visibility: hidden;
+    transition:
+      transform 0.25s,
+      visibility 0s linear 0.25s;
+    width: min(86vw, 340px);
+    top: 0;
+    bottom: auto;
+    height: 100vh;
+    height: 100dvh;
+    overscroll-behavior: contain;
   }
   .sidebar.mobile-open {
     transform: translateX(0);
+    visibility: visible;
+    transition:
+      transform 0.25s,
+      visibility 0s;
+  }
+  .sidebar nav {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .nav-item {
+    height: var(--touch-target);
+    font-size: 14px;
+  }
+  .nav-label {
+    font-size: 11px;
+  }
+  .brand small {
+    font-size: 10px;
+  }
+  .profile small,
+  .workspace small {
+    font-size: 11px;
   }
   .sidebar-backdrop.show {
     display: block;
@@ -1262,13 +1340,45 @@ td b {
     z-index: 19;
   }
   .mobile-close {
-    display: block;
+    display: grid;
+    place-items: center;
+    width: var(--touch-target);
+    height: var(--touch-target);
+    border-radius: 10px;
   }
   .main-area {
     margin-left: 0;
   }
   .mobile-menu {
     display: grid;
+  }
+  .main-area {
+    min-width: 0;
+  }
+  .top-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+  }
+  .icon-button {
+    width: var(--touch-target);
+    height: var(--touch-target);
+  }
+  .top-actions {
+    flex: none;
+  }
+  /* Lo que se encoge es el título, no los botones: un botón de 35 px de ancho
+     en un cabecero táctil es un botón que se falla. */
+  .top-actions > *,
+  .mobile-menu {
+    flex: none;
+  }
+  .top-avatar {
+    width: var(--touch-target);
+    height: var(--touch-target);
+    font-size: 11px;
   }
   /* Instalada en el móvil, la página arranca por debajo de la barra de estado
      del sistema. Sin este hueco, la hora y la cobertura se comen la cabecera:
@@ -1302,13 +1412,13 @@ td b {
     bottom: 0;
     left: 0;
     right: 0;
-    min-height: 60px;
+    min-height: var(--mobile-nav-height);
     background: var(--panel);
     border-top: 1px solid var(--line);
     z-index: 15;
     align-items: center;
     justify-content: space-around;
-    padding: 7px 4px calc(9px + env(safe-area-inset-bottom));
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
   }
   .mobile-nav button {
     border: 0;
@@ -1319,13 +1429,17 @@ td b {
     align-items: center;
     justify-content: center;
     gap: 3px;
-    min-width: 48px;
+    min-width: var(--touch-target);
+    min-height: var(--touch-target);
+    padding: 2px 6px;
+    border-radius: 10px;
   }
   .mobile-nav button.selected {
-    color: var(--green);
+    color: var(--verde-texto);
   }
   .mobile-nav small {
-    font-size: 8px;
+    font-size: 11px;
+    font-weight: 500;
   }
   /* El de añadir sobresale por arriba, que es donde hay sitio, en vez de
      pelearse con el alto de la barra. El borde del color del fondo lo recorta
@@ -1346,72 +1460,62 @@ td b {
     transform: translateY(1px);
   }
   .content {
-    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--mobile-nav-height) + 36px + env(safe-area-inset-bottom));
   }
   .footer {
     padding-bottom: 12px;
   }
+  /* El botón del pie de la barra inferior ya es el alta rápida: repetirlo
+     arriba, con su texto, es lo que se comía el ancho a 320 px. */
+  .boton-nuevo,
+  .welcome-actions.solo-nuevo {
+    display: none;
+  }
 }
 @media (max-width: 600px) {
   .content {
-    padding: 23px 14px calc(96px + env(safe-area-inset-bottom));
+    padding: 20px var(--mobile-gutter) calc(var(--mobile-nav-height) + 36px + env(safe-area-inset-bottom));
   }
   .topbar {
-    padding: 0 14px;
+    padding: 0 var(--mobile-gutter);
   }
   .top-actions {
-    gap: 5px;
+    gap: 2px;
   }
   .search-button {
+    display: none;
+  }
+  .breadcrumb-raiz {
     display: none;
   }
   .welcome-row {
     display: block;
   }
   .welcome-row h1 {
-    font-size: 20px;
-    line-height: 1.3;
+    font-size: 22px;
+    line-height: 1.25;
   }
   .welcome-actions {
-    margin-top: 17px;
+    margin-top: 16px;
   }
-  .welcome-actions .date-btn {
+  /* El selector de mes ocupa todo el ancho, con las flechas en los extremos
+     donde caen los pulgares, y el mes en el centro. */
+  .period-picker {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .period-picker .btn-secondary {
+    width: var(--touch-target);
+    height: var(--touch-target);
+    font-size: 20px;
+  }
+  .period-current {
     flex: 1;
-  }
-  .welcome-actions .btn-primary {
-    flex: 1;
-  }
-  .stats-grid {
-    gap: 9px;
-  }
-  .stat-card {
-    min-height: 108px;
-    padding: 12px;
-  }
-  .stat-value {
-    font-size: 16px;
-  }
-  .stat-top {
-    font-size: 9px;
-  }
-  .stat-icon {
-    width: 27px;
-    height: 27px;
-  }
-  .stat-foot {
-    font-size: 8px;
+    justify-content: center;
+    font-size: 14px;
   }
   .panel {
     padding: 14px;
-  }
-  .chart {
-    height: 190px;
-  }
-  .chart-legend {
-    gap: 9px;
-  }
-  .chart-legend b {
-    display: none;
   }
   .panel-heading h2 {
     font-size: 12px;
@@ -1419,42 +1523,12 @@ td b {
   .lower-grid {
     gap: 10px;
   }
-  .tip-banner {
-    align-items: flex-start;
-    padding: 12px;
-  }
-  .tip-banner button {
-    font-size: 0;
-  }
-  .tip-banner button svg {
-    width: 18px;
-    height: 18px;
-  }
   .module-grid,
   .goal-grid {
     grid-template-columns: 1fr;
   }
   .calendar-layout {
     grid-template-columns: 1fr;
-  }
-  .calendar-day {
-    height: 47px;
-    padding: 7px;
-  }
-  .toolbar {
-    flex-wrap: wrap;
-  }
-  .search-input {
-    flex-basis: 100%;
-  }
-  .filter-select {
-    flex: 1;
-  }
-  .toolbar .btn-secondary {
-    flex: 1;
-  }
-  .toolbar .btn-primary {
-    flex: 1;
   }
   .simple-row {
     gap: 8px;
@@ -1464,14 +1538,6 @@ td b {
   }
   .simple-row .status-pill {
     display: none;
-  }
-  .welcome-actions .btn-primary {
-    padding: 0 8px;
-    font-size: 9px;
-  }
-  .date-btn {
-    padding: 0 8px;
-    font-size: 9px;
   }
   .footer {
     font-size: 7px;
@@ -1483,15 +1549,16 @@ td b {
      cerrar sesión no se podían abrir desde el teléfono. Se queda, más
      pequeño, y lo que cede sitio es la miga de pan. */
   .top-avatar {
-    width: 28px;
-    height: 28px;
-    font-size: 9px;
+    width: var(--touch-target);
+    height: var(--touch-target);
+    font-size: 11px;
   }
   .breadcrumb {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 38vw;
+    font-size: 13px;
+    min-width: 0;
   }
   .setting-row {
     gap: 10px;
@@ -1571,11 +1638,11 @@ td b {
 }
 .status-pill.warn {
   background: #fdf4de;
-  color: #a97d16;
+  color: #7a5a0c;
 }
 .status-pill.bad {
   background: #fbeae8;
-  color: #b4463c;
+  color: #a33a30;
 }
 .dark .status-pill.warn {
   background: #2c2616;
@@ -1695,7 +1762,7 @@ td b {
 }
 .traslado i {
   font-style: normal;
-  color: var(--green);
+  color: var(--verde-texto);
 }
 .movement-dot.transferencia {
   background: #8d73c7;
@@ -1717,13 +1784,13 @@ td .mini-btn {
 
 /* --- Cuenta y sincronizacion --------------------------------------------- */
 .estado-sync.listo {
-  color: var(--green);
+  color: var(--verde-texto);
 }
 .estado-sync.error {
   color: #d35b50;
 }
 .estado-sync.sincronizando {
-  color: var(--green);
+  color: var(--verde-texto);
 }
 @media (prefers-reduced-motion: no-preference) {
   .girando {
@@ -1933,7 +2000,7 @@ td .mini-btn {
   display: grid;
   place-items: center;
   background: var(--soft);
-  color: var(--green);
+  color: var(--verde-texto);
 }
 .aviso-icono.vencido {
   background: #fbeae8;
@@ -1989,12 +2056,6 @@ button.top-avatar:hover {
 .dark button.top-avatar:hover {
   background: #2c3930;
 }
-@media (max-width: 600px) {
-  .avisos-panel {
-    right: 14px;
-    top: calc(52px + env(safe-area-inset-top));
-  }
-}
 
 /* La barra lateral deja de tener adornos: estos dos son botones de verdad. */
 button.workspace,
@@ -2017,7 +2078,7 @@ button.profile {
   color: var(--text);
 }
 button.profile:hover b {
-  color: var(--green);
+  color: var(--verde-texto);
 }
 .workspace small {
   overflow: hidden;
@@ -2098,7 +2159,7 @@ button.enlace {
   padding: 2px 0;
   font-size: 11px;
   font-weight: 600;
-  color: var(--green);
+  color: var(--verde-texto);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -2195,12 +2256,6 @@ button.enlace:hover {
   position: fixed;
   inset: 0;
   z-index: 55;
-}
-@media (max-width: 600px) {
-  .menu-perfil {
-    right: 14px;
-    top: calc(52px + env(safe-area-inset-top));
-  }
 }
 .profile-ir {
   margin-left: auto;
@@ -2354,4 +2409,811 @@ button.enlace:disabled {
 }
 .confirmar + .modal-actions {
   justify-content: center;
+}
+
+/* =========================================================================
+   Rediseño móvil · fase 2 — Movimientos
+   Tabla en escritorio; tarjetas en pantallas estrechas. Son dos
+   representaciones de los mismos datos y el CSS enseña una u otra.
+   ========================================================================= */
+
+.lista-movil {
+  display: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tarjeta-mov {
+  display: grid;
+  gap: 5px;
+  padding: 14px 0 6px;
+  border-top: 1px solid var(--line);
+}
+.tarjeta-mov:first-child {
+  border-top: 0;
+  padding-top: 4px;
+}
+.tm-superior {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.tm-superior .movement-dot {
+  flex: none;
+  margin-top: 7px;
+}
+.tm-titulo {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.tm-importe {
+  flex: none;
+  font-size: 15px;
+  line-height: 1.35;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.tm-medio {
+  padding-left: 17px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+/* El nombre de una cuenta puede ser largo: en la tarjeta se parte en vez de
+   empujar el importe fuera de la pantalla. */
+.tarjeta-mov .traslado {
+  white-space: normal;
+  flex-wrap: wrap;
+}
+.tm-pie {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding-left: 17px;
+  min-height: var(--touch-target);
+}
+.tm-fecha {
+  font-size: 12px;
+  color: var(--muted);
+}
+.tm-tipo {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: var(--soft);
+  color: var(--verde-texto);
+}
+.tm-tipo.gasto {
+  background: #fbf3dc;
+  color: #8a6508;
+}
+.tm-tipo.transferencia {
+  background: #efe9fa;
+  color: #5d46a0;
+}
+.dark .tm-tipo {
+  color: #86d9a2;
+}
+.dark .tm-tipo.gasto {
+  background: #3a3216;
+  color: #e8c46a;
+}
+.dark .tm-tipo.transferencia {
+  background: #2f2849;
+  color: #c3b2ec;
+}
+/* El texto del tipo acompaña siempre al color: quien no distingue los tonos
+   lee igualmente si es ingreso, gasto o traslado. */
+.tm-borrar {
+  margin-left: auto;
+  width: var(--touch-target);
+  height: var(--touch-target);
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 10px;
+}
+.tm-borrar:hover,
+.tm-borrar:active {
+  background: #fdecea;
+  color: #b3261e;
+}
+.dark .tm-borrar:hover,
+.dark .tm-borrar:active {
+  background: #3a2220;
+  color: #f2938c;
+}
+
+@media (max-width: 767px) {
+  .tabla-escritorio {
+    display: none;
+  }
+  .lista-movil {
+    display: block;
+  }
+  .table-wrap {
+    overflow: visible;
+    margin-top: 6px;
+  }
+
+  /* Barra de búsqueda: la búsqueda ocupa todo el ancho; el filtro y, solo si
+     hay algo que limpiar, «Limpiar filtros» comparten la fila de debajo. */
+  .toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .search-input {
+    flex: 1 1 100%;
+    height: var(--touch-target);
+  }
+  .search-input input {
+    font-size: 16px;
+  }
+  .filter-select {
+    flex: 1 1 0;
+    min-width: 0;
+    height: var(--touch-target);
+    font-size: 14px;
+  }
+  .toolbar .btn-secondary {
+    flex: 1 1 0;
+    height: var(--touch-target);
+    font-size: 13px;
+  }
+
+  .paginacion {
+    font-size: 12px;
+    padding-top: 10px;
+  }
+  .paginacion-botones b {
+    font-size: 13px;
+  }
+  .boton-pagina {
+    width: var(--touch-target);
+    height: var(--touch-target);
+    font-size: 13px;
+  }
+}
+
+/* =========================================================================
+   Rediseño móvil · fase 3 — Dashboard y calendario
+   ========================================================================= */
+
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Orden de lectura en pantalla estrecha: el balance, lo que vence, el flujo,
+   las cuentas y lo reciente. Los dos contenedores en rejilla se disuelven para
+   que sus secciones se puedan ordenar entre sí, sin duplicar nada en el DOM. */
+@media (max-width: 900px) {
+  .panel-flujo {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .panel-flujo > .dashboard-grid,
+  .panel-flujo > .lower-grid {
+    display: contents;
+  }
+  .panel-flujo > .stats-grid {
+    order: 1;
+    margin-bottom: 0;
+  }
+  .panel-flujo .upcoming-panel {
+    order: 2;
+  }
+  .panel-flujo .chart-panel {
+    order: 3;
+  }
+  .panel-flujo .accounts-panel {
+    order: 4;
+  }
+  .panel-flujo .transactions-panel {
+    order: 5;
+  }
+  .panel-flujo > .tip-banner {
+    order: 6;
+    margin-top: 0;
+  }
+  /* Sin pagos a la vista no se reserva una tarjeta para decir que no hay. */
+  .panel-flujo .upcoming-panel.sin-pagos {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .stats-grid,
+  .stats-grid.three {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  /* Una tarjeta sola en su fila ocupa la fila entera. */
+  .stats-grid .stat-card:last-child {
+    grid-column: 1 / -1;
+  }
+  .stat-card {
+    min-height: 0;
+    padding: 14px;
+  }
+  .stat-top {
+    font-size: 12px;
+    gap: 8px;
+  }
+  .stat-icon {
+    width: 32px;
+    height: 32px;
+    flex: none;
+  }
+  .stat-value {
+    font-size: clamp(15px, 4.6vw, 22px);
+    line-height: 1.15;
+    margin: 10px 0 8px;
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-foot {
+    font-size: 11px;
+    flex-wrap: wrap;
+    gap: 2px 6px;
+  }
+
+  /* El balance es la cifra que se viene a mirar: ocupa el ancho y se destaca. */
+  .panel-flujo .stats-grid .stat-card:first-child {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, #1e6b3a, #25804a);
+    border-color: transparent;
+    color: #fff;
+  }
+  .panel-flujo .stats-grid .stat-card:first-child .stat-top,
+  .panel-flujo .stats-grid .stat-card:first-child .stat-foot {
+    /* Blanco pleno: al 86 % daba 4,09:1 en el extremo claro del degradado. */
+    color: #fff;
+  }
+  .panel-flujo .stats-grid .stat-card:first-child .stat-value {
+    font-size: clamp(26px, 8.2vw, 34px);
+    color: #fff;
+  }
+
+  .panel {
+    padding: 16px;
+  }
+  .panel-heading h2 {
+    font-size: 15px;
+  }
+  .panel-heading p,
+  .panel > p {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .text-link {
+    font-size: 12px;
+    min-height: var(--touch-target);
+    padding: 0 6px;
+    white-space: nowrap;
+    flex: none;
+  }
+  .panel-vacio {
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .chart-panel {
+    min-width: 0;
+  }
+  .chart {
+    height: 220px;
+  }
+  .chart-legend {
+    font-size: 12px;
+    gap: 14px;
+  }
+  .chart-legend b {
+    display: none;
+  }
+
+  .account-row,
+  .payment {
+    gap: 12px;
+    padding: 12px 0;
+  }
+  .bank-icon {
+    width: 36px;
+    height: 36px;
+    flex: none;
+  }
+  .account-info b,
+  .payment-info b {
+    font-size: 13px;
+    overflow-wrap: anywhere;
+  }
+  .account-info small,
+  .payment-info small {
+    font-size: 11px;
+    margin-top: 3px;
+  }
+  .account-row > strong,
+  .payment > strong {
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  .payment-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .payment-date {
+    width: 40px;
+    height: 44px;
+    flex: none;
+  }
+  .payment-date b {
+    font-size: 15px;
+  }
+  .payment-date small {
+    font-size: 9px;
+  }
+  .add-account {
+    height: var(--touch-target);
+    font-size: 13px;
+  }
+
+  .tip-banner {
+    align-items: flex-start;
+    padding: 14px;
+    gap: 12px;
+  }
+  .tip-banner b {
+    font-size: 13px;
+  }
+  .tip-banner p {
+    font-size: 12px;
+    line-height: 1.55;
+  }
+  .tip-banner button {
+    min-width: var(--touch-target);
+    min-height: var(--touch-target);
+    justify-content: center;
+    font-size: 0;
+  }
+  .tip-banner button svg {
+    width: 20px;
+    height: 20px;
+  }
+  .footer {
+    font-size: 11px;
+  }
+
+  /* Calendario: siete columnas que entran a 320 px, con celdas que se pueden
+     tocar, y el listado apilado. */
+  .calendar-panel .panel-heading {
+    align-items: center;
+  }
+  .calendar-nav {
+    display: flex;
+    gap: 8px;
+    flex: none;
+  }
+  .calendar-panel .btn-secondary {
+    width: var(--touch-target);
+    height: var(--touch-target);
+    font-size: 20px;
+    padding: 0;
+  }
+  .calendar-grid {
+    margin-top: 14px;
+  }
+  .weekday {
+    font-size: 11px;
+    padding-bottom: 6px;
+  }
+  .calendar-day {
+    height: 50px;
+    padding: 6px 4px;
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .calendar-day.today > span:first-of-type {
+    width: 26px;
+    height: 26px;
+  }
+  .calendar-day i {
+    bottom: 6px;
+  }
+  .calendar-legend {
+    font-size: 11px;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+  }
+  .muted-text {
+    font-size: 12px;
+  }
+  .event-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'fecha importe'
+      'detalle detalle';
+    gap: 4px 12px;
+    align-items: center;
+    padding: 12px 0;
+  }
+  .event-row .event-date {
+    grid-area: fecha;
+    justify-self: start;
+    font-size: 11px;
+  }
+  .event-row > div:nth-child(2) {
+    grid-area: detalle;
+    min-width: 0;
+  }
+  .event-row strong {
+    grid-area: importe;
+    font-size: 14px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .event-row b {
+    font-size: 13px;
+    overflow-wrap: anywhere;
+  }
+  .event-row small {
+    font-size: 11px;
+    margin-top: 3px;
+  }
+}
+
+/* A 320 px las tarjetas de ingresos y gastos, una al lado de la otra, dejarían
+   cifras de ocho o nueve dígitos sin sitio: aquí van de una en una. */
+@media (max-width: 359px) {
+  .stats-grid,
+  .stats-grid.three {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* El periodo ya está en el selector de arriba: repetirlo junto al título de la
+   gráfica solo le quitaba ancho. */
+@media (max-width: 600px) {
+  .chart-panel .select-like {
+    display: none;
+  }
+}
+
+/* =========================================================================
+   Rediseño móvil · fase 4 — formularios, paneles flotantes, cuentas y ajustes
+   ========================================================================= */
+
+/* Mientras hay un diálogo abierto el fondo no se desplaza. */
+body.dialogo-abierto {
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  /* Los paneles que cuelgan de la cabecera salen justo debajo de ella, sea cual
+     sea su alto: antes se calculaba a mano y se montaban sobre su borde. */
+  .avisos-panel,
+  .menu-perfil {
+    top: calc(100% + 6px);
+    right: var(--mobile-gutter);
+  }
+  .avisos-panel {
+    width: min(380px, calc(100vw - 2 * var(--mobile-gutter)));
+  }
+  .menu-perfil {
+    width: min(290px, calc(100vw - 2 * var(--mobile-gutter)));
+  }
+  .avisos-lista {
+    max-height: min(420px, 60vh);
+    max-height: min(420px, 60dvh);
+  }
+}
+
+@media (max-width: 767px) {
+  /* ---- Modales: caben en pantalla, desplazan por dentro y se alcanzan con el pulgar */
+  .modal-overlay {
+    padding: calc(12px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));
+  }
+  .modal {
+    max-height: calc(100vh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    padding: 18px;
+    border-radius: 16px;
+  }
+  .modal-head {
+    margin-bottom: 14px;
+  }
+  .modal-head h2 {
+    font-size: 19px;
+  }
+  .eyebrow {
+    font-size: 11px;
+  }
+  .modal form label {
+    font-size: 13px;
+    margin: 14px 0 7px;
+  }
+  .modal input,
+  .modal select {
+    height: var(--touch-target);
+    font-size: 16px;
+    padding: 0 12px;
+  }
+  .type-switch button {
+    height: var(--touch-target);
+    font-size: 13px;
+  }
+  .modal-actions {
+    gap: 10px;
+  }
+  .modal-actions .btn-primary,
+  .modal-actions .btn-secondary {
+    flex: 1;
+    height: var(--touch-target);
+    font-size: 14px;
+  }
+  .nota-cuenta p,
+  .pista-campo,
+  .aviso-campo,
+  .aviso-bloque,
+  .confirmar p {
+    font-size: 12px;
+  }
+  .confirmar h2 {
+    font-size: 16px;
+  }
+  .sin-cuentas p {
+    font-size: 14px;
+  }
+  .sin-cuentas small {
+    font-size: 12px;
+  }
+  button.enlace {
+    font-size: 13px;
+    min-height: var(--touch-target);
+    padding: 0 4px;
+  }
+  .btn-secondary.ancho {
+    height: var(--touch-target);
+    font-size: 14px;
+  }
+  .boton-google {
+    height: var(--touch-target);
+    font-size: 14px;
+  }
+  .separador-o {
+    font-size: 11px;
+  }
+  .ver-clave {
+    width: 40px;
+    height: 40px;
+    right: 2px;
+  }
+
+  /* ---- Avisos y menú de perfil */
+  .avisos-cabecera {
+    padding: 16px;
+  }
+  .avisos-cabecera b {
+    font-size: 15px;
+  }
+  .avisos-cabecera span {
+    font-size: 12px;
+  }
+  .avisos-lista button {
+    padding: 14px 16px;
+    min-height: var(--touch-target);
+  }
+  .aviso-texto b {
+    font-size: 13px;
+  }
+  .aviso-texto small {
+    font-size: 12px;
+    margin-top: 4px;
+  }
+  .avisos-vacio p {
+    font-size: 14px;
+  }
+  .avisos-vacio small {
+    font-size: 12px;
+  }
+  .menu-perfil .cabecera b {
+    font-size: 14px;
+  }
+  .menu-perfil .cabecera small {
+    font-size: 12px;
+  }
+  .menu-perfil button {
+    min-height: var(--touch-target);
+    font-size: 14px;
+  }
+
+  /* ---- Botones de editar y borrar de las filas */
+  .mini-btn {
+    min-width: var(--touch-target);
+    height: var(--touch-target);
+    font-size: 12px;
+  }
+  .row-actions {
+    gap: 4px;
+  }
+  .status-pill {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+
+  /* ---- Ajustes: cada fila en vertical, con el botón a ancho completo */
+  .settings-panel h2 {
+    font-size: 17px;
+  }
+  .settings-panel > p {
+    font-size: 13px;
+  }
+  .setting-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 16px 0;
+  }
+  .setting-row b {
+    font-size: 14px;
+  }
+  .setting-row small {
+    font-size: 12px;
+    line-height: 1.55;
+    margin-top: 4px;
+  }
+  .setting-row > strong {
+    font-size: 13px;
+    text-align: left;
+  }
+  .setting-row .status-pill {
+    align-self: flex-start;
+  }
+  .setting-row .btn-secondary,
+  .setting-row .btn-primary {
+    width: 100%;
+    height: var(--touch-target);
+    font-size: 14px;
+  }
+  .setting-row .row-actions {
+    width: 100%;
+    margin-left: 0;
+  }
+  .setting-row .row-actions > button {
+    flex: 1;
+  }
+  .zona-datos {
+    padding: 2px 14px 14px;
+  }
+}
+
+/* Quien pide menos movimiento no lo recibe tampoco al abrir el menú. */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .sidebar.mobile-open {
+    transition: none;
+  }
+}
+
+/* =========================================================================
+   Rediseño móvil · fase 5 — lo que quedaba en las secciones de planificación y
+   patrimonio: tipografía por debajo de 11 px y botones por debajo de 44 px.
+   ========================================================================= */
+@media (max-width: 767px) {
+  .panel-heading .btn-primary,
+  .panel-heading .btn-secondary {
+    height: var(--touch-target);
+    font-size: 14px;
+  }
+  /* Todo el recuadro de búsqueda se puede tocar, no solo la línea de texto. */
+  .search-input input {
+    height: 100%;
+  }
+
+  .simple-row b {
+    font-size: 13px;
+  }
+  .simple-row small {
+    font-size: 11px;
+    line-height: 1.45;
+  }
+  .simple-row > strong {
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  .simple-bullet {
+    font-size: 12px;
+  }
+  .budget-item > div:first-child {
+    font-size: 13px;
+  }
+  .budget-item span,
+  .budget-item small,
+  .budget-foot small {
+    font-size: 11px;
+  }
+  .goal-card > p {
+    font-size: 12px;
+  }
+  .goal-card > small,
+  .goal-values span {
+    font-size: 11px;
+  }
+  .doc-row {
+    font-size: 12px;
+  }
+  .doc-row b {
+    font-size: 13px;
+  }
+  .report-row {
+    font-size: 13px;
+  }
+  .report-row.total {
+    font-size: 14px;
+  }
+  .add-card b {
+    font-size: 13px;
+  }
+  .add-card span {
+    font-size: 12px;
+  }
+  .account-card h2 {
+    font-size: 15px;
+  }
+  .account-card p {
+    font-size: 12px;
+  }
+  .account-card > small {
+    font-size: 11px;
+  }
+  .payment-date {
+    width: 46px;
+    height: 48px;
+  }
+  .payment-date small {
+    font-size: 11px;
+  }
+}
+
+/* En un formulario largo los botones de guardar se quedan a la vista, en el borde
+   de abajo, en vez de esperar al final del desplazamiento. Vale tanto para una
+   pantalla estrecha como para una BAJA: un móvil girado mide 844 px de ancho y
+   390 de alto, y ahí lo que falta es altura, no anchura. */
+@media (max-width: 767px), (max-height: 520px) {
+  .modal form .modal-actions {
+    position: sticky;
+    bottom: -18px;
+    margin: 16px -18px -18px;
+    padding: 12px 18px 18px;
+    background: var(--panel);
+    border-top: 1px solid var(--line);
+  }
+}
+@media (max-height: 520px) {
+  .modal-overlay {
+    padding-top: calc(12px + env(safe-area-inset-top));
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+  .modal {
+    max-height: calc(100vh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    padding: 18px;
+  }
 }

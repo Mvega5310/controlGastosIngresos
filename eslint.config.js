@@ -61,6 +61,13 @@ export default tseslint.config(
     languageOptions: { globals: { ...globals.node } }
   },
 
+  // Los scripts de revisión son Node, pero las funciones que pasan a
+  // `page.evaluate` se ejecutan dentro del navegador: usan los dos entornos.
+  {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: { globals: { ...globals.node, ...globals.browser } }
+  },
+
   // El trabajador de servicio corre en su propio contexto: ni window ni Node.
   {
     files: ['public/sw.js'],

@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import { aCentavos, aPesos } from '../core/dinero'
+import { useDialogo } from '../lib/useDialogo'
 
 export type Campo = {
   nombre: string
@@ -64,14 +65,7 @@ export default function FormModal({
     }
   }, [abierto, valores, campos])
 
-  useEffect(() => {
-    if (!abierto) return
-    const alPulsar = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onCerrar()
-    }
-    window.addEventListener('keydown', alPulsar)
-    return () => window.removeEventListener('keydown', alPulsar)
-  }, [abierto, onCerrar])
+  const ref = useDialogo(abierto, onCerrar)
 
   if (!abierto) return null
 
@@ -132,13 +126,13 @@ export default function FormModal({
         if (e.target === e.currentTarget) onCerrar()
       }}
     >
-      <div className="modal" role="dialog" aria-modal="true" aria-label={titulo}>
+      <div ref={ref} className="modal" role="dialog" aria-modal="true" aria-label={titulo}>
         <div className="modal-head">
           <div>
             <span className="eyebrow">{eyebrow}</span>
             <h2>{titulo}</h2>
           </div>
-          <button className="icon-button" onClick={onCerrar} aria-label="Cerrar">
+          <button type="button" className="icon-button" onClick={onCerrar} aria-label="Cerrar">
             <X size={20} />
           </button>
         </div>

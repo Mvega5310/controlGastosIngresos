@@ -79,15 +79,41 @@ Abre la dirección que muestre Vite, normalmente http://localhost:5173.
 
 ### Comandos
 
-| Comando             | Qué hace                                        |
-| ------------------- | ----------------------------------------------- |
-| `npm run dev`       | Servidor de desarrollo con recarga en caliente  |
-| `npm test`          | Las pruebas (126)                               |
-| `npm run lint`      | ESLint                                          |
-| `npm run format`    | Prettier sobre todo el proyecto                 |
-| `npm run build`     | Compila a `dist/`                               |
-| `npm start`         | Sirve `dist/` en producción                     |
-| `npm run verificar` | Formato, lint, pruebas y compilación de una vez |
+| Comando                           | Qué hace                                                                         |
+| --------------------------------- | -------------------------------------------------------------------------------- |
+| `npm run dev`                     | Servidor de desarrollo con recarga en caliente                                   |
+| `npm test`                        | Las pruebas (225)                                                                |
+| `npm run lint`                    | ESLint                                                                           |
+| `npm run format`                  | Prettier sobre todo el proyecto                                                  |
+| `npm run build`                   | Compila a `dist/`                                                                |
+| `npm start`                       | Sirve `dist/` en producción                                                      |
+| `npm run verificar`               | Formato, lint, pruebas y compilación de una vez                                  |
+| `npm run revision:responsive`     | Revisión visual en 7 tamaños (necesita un navegador)                             |
+| `npm run revision:sincronizacion` | Dos dispositivos simulados contra un Supabase de mentira (necesita un navegador) |
+
+### Revisión de la sincronización
+
+`npm run revision:sincronizacion` simula un móvil y un PC con la misma cuenta
+contra un Supabase de mentira (sin red y sin tocar datos reales) y comprueba, por
+la interfaz, que lo que crea un aparato aparece en el otro en los dos sentidos,
+que lo guardado **antes** de que hubiera sincronización se sube en la primera
+(ese caso no se subía nunca), que lo escrito sin sesión se sube al iniciarla, y
+que el panel de cuenta dice cuánto subió y cuánto bajó.
+
+### Revisión responsive
+
+`npm run verificar` no abre un navegador, así que no ve un desborde ni un botón
+cortado. Para eso está `npm run revision:responsive`: recorre las 12 secciones
+en 320, 360, 390, 430, 768, 1366 y 1440 px, y falla si el documento se
+desplaza de lado, si algo se sale de la pantalla, si en móvil se ve la tabla de
+movimientos (o en escritorio las tarjetas), o si el botón `+` de la barra
+inferior queda cortado o por debajo de 44 px.
+
+Necesita Playwright (`npm i -D playwright && npx playwright install chromium`) y
+una compilación previa (`npm run build`); arranca su propio servidor con el
+mismo `server.mjs` de producción. Contra la versión anterior al rediseño móvil
+detecta 35 problemas, y contra la actual ninguno. El plan del rediseño y su
+registro de decisiones están en `docs/REDISENO-MOVIL.md`.
 
 ## Sincronizar entre dispositivos (opcional)
 
