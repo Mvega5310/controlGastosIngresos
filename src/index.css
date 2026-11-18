@@ -3217,3 +3217,254 @@ body.dialogo-abierto {
     padding: 18px;
   }
 }
+
+/* --- Espacios: Personal / Empresa ---------------------------------------- */
+.espacios {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin: 14px 0 12px;
+  padding: 4px;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 11px;
+}
+.espacios button {
+  min-height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.espacios button:hover {
+  color: var(--text);
+}
+.espacios button.activo {
+  background: var(--panel);
+  color: var(--verde-texto);
+  box-shadow: var(--shadow);
+}
+.espacios button:focus-visible {
+  outline: 2px solid var(--verde-texto);
+  outline-offset: 1px;
+}
+@media (max-width: 900px) {
+  .espacios button {
+    min-height: var(--touch-target);
+    font-size: 14px;
+  }
+}
+
+/* --- Nómina --------------------------------------------------------------- */
+.barra-pago {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+}
+.barra-pago label {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 0;
+}
+.barra-pago select {
+  width: auto;
+  min-width: 170px;
+}
+.aviso-bloque.info {
+  background: var(--soft);
+  border-color: #cfe4d6;
+  color: var(--text);
+}
+.aviso-bloque.info svg {
+  vertical-align: -2px;
+  color: var(--verde-texto);
+}
+.dark .aviso-bloque.info {
+  background: #1d2f24;
+  border-color: #2f4b39;
+  color: var(--text);
+}
+.fila-cargo > div:nth-child(2) {
+  min-width: 0;
+}
+.desglose {
+  margin-top: 6px;
+}
+.desglose summary {
+  display: inline-block;
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--verde-texto);
+  list-style: none;
+}
+.desglose summary::-webkit-details-marker {
+  display: none;
+}
+.desglose summary::before {
+  content: '▸ ';
+}
+.desglose[open] summary::before {
+  content: '▾ ';
+}
+.desglose ul {
+  margin: 8px 0 2px;
+  padding: 10px 12px;
+  list-style: none;
+  max-width: 420px;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+.desglose li {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 3px 0;
+  font-size: 9px;
+  color: var(--muted);
+}
+.desglose li span:last-child {
+  color: var(--text);
+  white-space: nowrap;
+}
+.desglose li.total {
+  margin-top: 4px;
+  padding-top: 7px;
+  border-top: 1px solid var(--line);
+  font-weight: 700;
+  color: var(--text);
+}
+.parametros-nomina {
+  margin-top: 18px;
+}
+.parametros-nomina h3 {
+  margin: 22px 0 10px;
+  font-size: 12px;
+}
+.rejilla-factor {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.nota-par {
+  margin: 10px 0 0;
+  font-size: 9px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.casilla {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 14px;
+  font-size: 10px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+.casilla input {
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+  flex: none;
+}
+/* Estos campos viven fuera del modal, así que no heredan su aspecto. */
+.parametros-nomina label:not(.casilla),
+.barra-pago label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  margin: 13px 0 7px;
+}
+.barra-pago label {
+  margin: 0;
+  color: var(--muted);
+}
+.parametros-nomina input:not([type='checkbox']),
+.parametros-nomina select,
+.barra-pago select {
+  height: 39px;
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 0 10px;
+  outline-color: #4cb873;
+  font-size: 11px;
+}
+.barra-pago select {
+  width: auto;
+}
+@media (pointer: coarse), (max-width: 900px) {
+  .parametros-nomina input:not([type='checkbox']),
+  .parametros-nomina select,
+  .barra-pago select {
+    height: var(--touch-target);
+    font-size: 16px;
+    padding: 0 12px;
+  }
+  .barra-pago .btn-secondary,
+  .parametros-nomina .btn-primary,
+  .parametros-nomina .btn-secondary {
+    height: var(--touch-target);
+  }
+  .casilla {
+    min-height: var(--touch-target);
+    align-items: center;
+  }
+}
+@media (max-width: 767px) {
+  .rejilla-factor {
+    grid-template-columns: 1fr 1fr;
+  }
+  .barra-pago select,
+  .barra-pago .btn-secondary {
+    width: 100%;
+  }
+  .parametros-nomina .modal-actions .btn-primary,
+  .parametros-nomina .modal-actions .btn-secondary {
+    flex: none;
+    width: 100%;
+  }
+  .parametros-nomina label:not(.casilla) {
+    font-size: 13px;
+  }
+  .parametros-nomina h3 {
+    font-size: 15px;
+  }
+  .desglose summary {
+    font-size: 12px;
+    padding: 8px 0;
+  }
+  .desglose li {
+    font-size: 12px;
+  }
+  .nota-par,
+  .casilla {
+    font-size: 12px;
+  }
+  .parametros-nomina .modal-actions {
+    flex-direction: column-reverse;
+  }
+}
+
+/* Con el cálculo desplegado la fila crece: lo demás se queda arriba, junto al nombre. */
+.fila-cargo {
+  align-items: flex-start;
+}
+.fila-cargo > strong,
+.fila-cargo > .status-pill,
+.fila-cargo > .row-actions {
+  margin-top: 2px;
+}
+.aviso-bloque.info svg {
+  display: inline-block;
+  margin-right: 4px;
+}

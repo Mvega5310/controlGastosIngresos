@@ -8,8 +8,10 @@ type Props = {
   onClose: () => void
   onSave: (m: Omit<Movement, 'id'> & { cuentaDestino?: string }) => void
   cuentas: Account[]
+  /** Categorías que se ofrecen. Por defecto las personales; la empresa usa sus rubros. */
+  categorias?: readonly string[]
 }
-export default function Modal({ open, onClose, onSave, cuentas }: Props) {
+export default function Modal({ open, onClose, onSave, cuentas, categorias = categories }: Props) {
   const accountNames = cuentas.map(c => c.name)
   // Clave estable: lo que importa es qué cuentas hay, no la identidad del array.
   const clavesCuentas = accountNames.join('|')
@@ -34,12 +36,12 @@ export default function Modal({ open, onClose, onSave, cuentas }: Props) {
     setTitle('')
     setAmount('')
     setType('Gasto')
-    setCategory('Otros')
+    setCategory(categorias[categorias.length - 1] ?? 'Otros')
     setDate(new Date().toISOString().slice(0, 10))
     setAccount(accountNames[0] ?? '')
     setCuentaDestino(accountNames[1] ?? accountNames[0] ?? '')
     // eslint-disable-next-line react-hooks/exhaustive-deps -- accountNames se sigue por clavesCuentas
-  }, [open, clavesCuentas])
+  }, [open, clavesCuentas, categorias])
 
   const ref = useDialogo(open, onClose)
 
@@ -126,7 +128,7 @@ export default function Modal({ open, onClose, onSave, cuentas }: Props) {
               <div>
                 <label htmlFor="mov-categoria">Categoría</label>
                 <select id="mov-categoria" value={category} onChange={e => setCategory(e.target.value)}>
-                  {categories.map(x => (
+                  {categorias.map(x => (
                     <option key={x}>{x}</option>
                   ))}
                 </select>

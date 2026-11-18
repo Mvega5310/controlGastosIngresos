@@ -8,9 +8,13 @@
  */
 import { newId } from '../core/finanzas'
 import { Registro, sellar, sellarBorrado } from '../core/sincronizacion'
+import { Espacio } from '../core/espacios'
+import { aCentavos } from '../core/dinero'
 import {
   COLECCIONES,
+  COLECCIONES_EMPRESA,
   avisarCambioDatos,
+  coleccionesDe,
   escribirLista,
   escribirPendientes,
   leerLista,
@@ -47,7 +51,11 @@ const escribirAnexando = (clave: string, filas: object[]) => {
  * Carga un juego de datos de ejemplo, añadiéndolo a lo que ya haya. Sirve para
  * ver cómo queda la aplicación llena sin tener que teclear veinte registros.
  */
-export function cargarEjemplos() {
+export function cargarEjemplos(espacio: Espacio = 'personal') {
+  if (espacio === 'empresa') {
+    cargarEjemplosDeEmpresa()
+    return
+  }
   escribirAnexando(COLECCIONES.cuentas, cuentasDeEjemplo)
   escribirAnexando(COLECCIONES.movimientos, movimientosDeEjemplo)
   escribirAnexando(COLECCIONES.suscripciones, suscripcionesDeEjemplo)
@@ -59,16 +67,50 @@ export function cargarEjemplos() {
   avisarCambioDatos()
 }
 
+/** Muestra mínima del espacio de la empresa: genérica, para que no se confunda con datos reales. */
+function cargarEjemplosDeEmpresa() {
+  escribirAnexando(COLECCIONES_EMPRESA.cuentas, [
+    {
+      name: 'Cuenta del proyecto',
+      bank: 'Bancolombia',
+      kind: 'Corriente',
+      color: 'blue',
+      openingBalance: aCentavos(50000000)
+    }
+  ])
+  escribirAnexando(COLECCIONES_EMPRESA.cargos, [
+    {
+      rol: 'Gerente general',
+      vinculacion: 'Prestación de servicios',
+      salario: aCentavos(6000000),
+      meses: 12
+    },
+    {
+      rol: 'Analista de operaciones',
+      vinculacion: 'Contrato laboral a término fijo',
+      salario: aCentavos(2500000),
+      meses: 12
+    },
+    {
+      rol: 'Auxiliar de mercadeo',
+      vinculacion: 'Contrato laboral a término fijo',
+      salario: aCentavos(3200000),
+      meses: 12
+    }
+  ])
+  avisarCambioDatos()
+}
+
 /**
- * Borra todo.
+ * Borra todo lo de un espacio, y solo de ese: el otro no se toca.
  *
  * Los registros no se quitan de golpe: se marcan como borrados y se dejan
  * pendientes de subir. Si se borraran sin dejar rastro, la siguiente
  * sincronización se los volvería a bajar del servidor y parecería que la
  * aplicación ignora lo que se le pide.
  */
-export function borrarTodosLosDatos() {
-  for (const clave of Object.values(COLECCIONES)) {
+export function borrarTodosLosDatos(espacio: Espacio = 'personal') {
+  for (const clave of Object.values(coleccionesDe(espacio))) {
     const filas = leerLista<Registro>(clave, [])
     const vivos = filas.filter(f => !f.eliminadoEn)
     if (!vivos.length) continue
@@ -85,9 +127,9 @@ export function borrarTodosLosDatos() {
 }
 
 /** Cuántos registros vivos hay en total, para saber si la aplicación está vacía. */
-export function contarDatos(): number {
+export function contarDatos(espacio: Espacio = 'personal'): number {
   let total = 0
-  for (const clave of Object.values(COLECCIONES)) {
+  for (const clave of Object.values(coleccionesDe(espacio))) {
     total += leerLista<Registro>(clave, []).filter(f => !f.eliminadoEn).length
   }
   return total

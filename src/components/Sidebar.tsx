@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { ESPACIOS, ETIQUETA_ESPACIO, Espacio } from '../core/espacios'
 import {
   LucideIcon,
   LayoutDashboard,
@@ -13,6 +14,7 @@ import {
   CarFront,
   ChartPie,
   Settings,
+  Users,
   ChevronRight,
   X
 } from 'lucide-react'
@@ -28,9 +30,12 @@ const icons: Record<string, LucideIcon> = {
   TrendingUp,
   CarFront,
   ChartPie,
-  Settings
+  Settings,
+  Users
 }
-const groups = [
+type Grupo = { label: string; items: string[][] }
+
+const gruposPersonal: Grupo[] = [
   {
     label: 'GENERAL',
     items: [
@@ -59,7 +64,26 @@ const groups = [
   },
   { label: 'CUENTA', items: [['Ajustes', 'Settings']] }
 ]
+
+/** Menú del espacio de la empresa. Crece con cada módulo que se añade. */
+const gruposEmpresa: Grupo[] = [
+  {
+    label: 'GENERAL',
+    items: [
+      ['Inicio', 'LayoutDashboard'],
+      ['Movimientos', 'ArrowLeftRight'],
+      ['Cuentas', 'Wallet'],
+      ['Calendario', 'CalendarDays']
+    ]
+  },
+  { label: 'EQUIPO', items: [['Nómina', 'Users']] },
+  { label: 'ANÁLISIS', items: [['Reportes', 'ChartPie']] },
+  { label: 'CUENTA', items: [['Ajustes', 'Settings']] }
+]
+
 type Props = {
+  espacio: Espacio
+  onCambiarEspacio: (e: Espacio) => void
   active: string
   onNavigate: (s: string) => void
   open: boolean
@@ -70,7 +94,17 @@ type Props = {
   seccionesConAviso: string[]
 }
 
-export default function Sidebar({ active, onNavigate, open, onClose, correo, seccionesConAviso }: Props) {
+export default function Sidebar({
+  espacio,
+  onCambiarEspacio,
+  active,
+  onNavigate,
+  open,
+  onClose,
+  correo,
+  seccionesConAviso
+}: Props) {
+  const groups = espacio === 'empresa' ? gruposEmpresa : gruposPersonal
   const cierre = useRef<HTMLButtonElement>(null)
   // Al abrirse, el foco pasa al menú; el botón de cierre es el primer elemento
   // y es donde cae quien llega con teclado.
@@ -97,10 +131,25 @@ export default function Sidebar({ active, onNavigate, open, onClose, correo, sec
             <X size={20} />
           </button>
         </div>
+        <div className="espacios" role="group" aria-label="Espacio de trabajo">
+          {ESPACIOS.map(e => (
+            <button
+              key={e}
+              className={espacio === e ? 'activo' : ''}
+              aria-pressed={espacio === e}
+              onClick={() => {
+                onCambiarEspacio(e)
+                onClose()
+              }}
+            >
+              {ETIQUETA_ESPACIO[e]}
+            </button>
+          ))}
+        </div>
         <button className="workspace" onClick={() => irA('Ajustes')} title="Cuenta y preferencias">
           <span className="avatar">{iniciales}</span>
           <div>
-            <b>{correo ? 'Tu cuenta' : 'Mi espacio'}</b>
+            <b>{correo ? 'Tu cuenta' : espacio === 'empresa' ? 'Empresa' : 'Mi espacio'}</b>
             <small>{correo || 'Solo en este dispositivo'}</small>
           </div>
         </button>

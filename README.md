@@ -82,7 +82,7 @@ Abre la dirección que muestre Vite, normalmente http://localhost:5173.
 | Comando                           | Qué hace                                                                         |
 | --------------------------------- | -------------------------------------------------------------------------------- |
 | `npm run dev`                     | Servidor de desarrollo con recarga en caliente                                   |
-| `npm test`                        | Las pruebas (225)                                                                |
+| `npm test`                        | Las pruebas (254)                                                                |
 | `npm run lint`                    | ESLint                                                                           |
 | `npm run format`                  | Prettier sobre todo el proyecto                                                  |
 | `npm run build`                   | Compila a `dist/`                                                                |
@@ -220,6 +220,7 @@ de ninguno de los dos, sino de una lista de pendientes.
 
 ## Documentación
 
+- `docs/ESPACIO-EMPRESA.md` — el espacio de la empresa: decisiones, nómina y hoja de ruta.
 - `docs/VALIDACION.md` — la auditoría inicial del proyecto, con los 14 defectos
   que se encontraron y en qué quedó cada uno.
 - `supabase/esquema.sql` — el esquema, comentado, incluidas las políticas que

@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { Sun, Moon, Cloud, CloudOff, TriangleAlert, Trash2, Sparkles } from 'lucide-react'
 import { borrarTodosLosDatos, cargarEjemplos, contarDatos } from '../datos/ejemplos'
 import { Sincronizacion } from '../lib/useSincronizacion'
+import { Espacio } from '../core/espacios'
 
 type Props = {
   dark: boolean
   setDark: (v: boolean) => void
   sync: Sincronizacion
+  espacio: Espacio
   onAbrirCuenta: () => void
   /** Cuando se llega buscando algo concreto, se lleva la vista hasta ahí. */
   foco?: string | null
@@ -51,12 +53,13 @@ function estadoDatos(sync: Sincronizacion) {
   }
 }
 
-export function Ajustes({ dark, setDark, sync, onAbrirCuenta, foco, onFocoAtendido }: Props) {
+export function Ajustes({ dark, setDark, sync, espacio, onAbrirCuenta, foco, onFocoAtendido }: Props) {
+  const deEmpresa = espacio === 'empresa'
   const datos = estadoDatos(sync)
   const [confirmando, setConfirmando] = useState(false)
   const [hecho, setHecho] = useState<string | null>(null)
   const zona = useRef<HTMLDivElement>(null)
-  const registros = contarDatos()
+  const registros = contarDatos(espacio)
 
   // Al venir del menú «borrar todos mis datos», la sección queda al final de
   // una página larga: sin esto habría que buscarla a ojo.
@@ -108,11 +111,12 @@ export function Ajustes({ dark, setDark, sync, onAbrirCuenta, foco, onFocoAtendi
         <strong>Español</strong>
       </div>
 
-      <h2 className="settings-subtitulo">Tus datos</h2>
+      <h2 className="settings-subtitulo">{deEmpresa ? 'Datos de la empresa' : 'Tus datos'}</h2>
       <p>
         {registros > 0
-          ? `Tienes ${registros} registro${registros === 1 ? '' : 's'} guardados.`
-          : 'Todavía no has guardado nada.'}
+          ? `Hay ${registros} registro${registros === 1 ? '' : 's'} guardados en el espacio ${deEmpresa ? 'de la empresa' : 'personal'}.`
+          : `Todavía no hay nada guardado en el espacio ${deEmpresa ? 'de la empresa' : 'personal'}.`}{' '}
+        Lo del otro espacio no se toca.
       </p>
 
       <div className="setting-row">
@@ -123,7 +127,7 @@ export function Ajustes({ dark, setDark, sync, onAbrirCuenta, foco, onFocoAtendi
         <button
           className="btn-secondary"
           onClick={() => {
-            cargarEjemplos()
+            cargarEjemplos(espacio)
             setHecho('Datos de ejemplo cargados. Puedes borrarlos cuando quieras desde aquí mismo.')
             setConfirmando(false)
           }}
@@ -135,7 +139,7 @@ export function Ajustes({ dark, setDark, sync, onAbrirCuenta, foco, onFocoAtendi
       <div className="zona-datos" ref={zona}>
         <div className="setting-row">
           <div>
-            <b>Borrar todos mis datos</b>
+            <b>{deEmpresa ? 'Borrar todos los datos de la empresa' : 'Borrar todos mis datos'}</b>
             <small>
               {sync.correo
                 ? 'Se borran aquí y en tu cuenta, en todos tus dispositivos. No se puede deshacer.'
@@ -150,7 +154,7 @@ export function Ajustes({ dark, setDark, sync, onAbrirCuenta, foco, onFocoAtendi
               <button
                 className="btn-primary peligro-fuerte"
                 onClick={() => {
-                  borrarTodosLosDatos()
+                  borrarTodosLosDatos(espacio)
                   setConfirmando(false)
                   setHecho('Listo, está todo vacío. Empieza creando una cuenta.')
                 }}

@@ -11,7 +11,7 @@ import {
   salir
 } from '../datos/supabase'
 import {
-  COLECCIONES,
+  COLECCIONES_SINCRONIZABLES,
   avisarCambioDatos,
   escribirCortes,
   escribirLista,
@@ -97,17 +97,17 @@ export function useSincronizacion(): Sincronizacion {
       const remoto = remotoSupabase(clienteSupabase, sesion.user.id)
 
       const locales: Record<string, Registro[]> = {}
-      for (const [nombre, clave] of Object.entries(COLECCIONES)) {
+      for (const [nombre, clave] of Object.entries(COLECCIONES_SINCRONIZABLES)) {
         locales[nombre] = leerLista<Registro>(clave, [])
       }
       const pendientes: Record<string, string[]> = {}
-      for (const [nombre, clave] of Object.entries(COLECCIONES)) {
+      for (const [nombre, clave] of Object.entries(COLECCIONES_SINCRONIZABLES)) {
         pendientes[nombre] = leerPendientes(clave)
       }
 
       const r = await sincronizarTodo(remoto, locales, { cortes: leerCortes(), pendientes })
 
-      for (const [nombre, clave] of Object.entries(COLECCIONES)) {
+      for (const [nombre, clave] of Object.entries(COLECCIONES_SINCRONIZABLES)) {
         const resultado = r.porColeccion[nombre]
         if (resultado) escribirLista(clave, resultado.registros)
         escribirPendientes(clave, r.pendientes[nombre] || [])

@@ -12,8 +12,13 @@ import {
   ArrowLeftRight
 } from 'lucide-react'
 import Sidebar from './components/Sidebar'
+import { Espacio, esEspacio } from './core/espacios'
+import { ID_PARAMETROS_NOMINA, RUBROS } from './datos/empresa'
+import { ParametrosNomina, parametrosDe } from './core/nomina'
+import { Nomina } from './secciones/Nomina'
 import Modal from './components/Modal'
 import { useDatos } from './lib/useDatos'
+import { useDatosEmpresa } from './lib/useDatosEmpresa'
 import { useSincronizacion } from './lib/useSincronizacion'
 import { BotonCuenta, PanelCuenta } from './components/Cuenta'
 import { BotonAvisos, PanelAvisos } from './components/Avisos'
@@ -51,11 +56,23 @@ import { Ajustes } from './secciones/Ajustes'
  * El calendario lleva sus propias flechas contra el mismo periodo, así que no
  * repite el selector.
  */
-const CON_PERIODO = ['Inicio', 'Reportes', 'Presupuestos']
+const CON_PERIODO = ['Inicio', 'Reportes', 'Presupuestos', 'Nómina']
 const CON_NUEVO_MOVIMIENTO = ['Inicio', 'Movimientos']
+
+/** Qué espacio se tenía abierto la última vez en este dispositivo. */
+const leerEspacio = (): Espacio => {
+  try {
+    const guardado = localStorage.getItem('fc-espacio')
+    return esEspacio(guardado) ? guardado : 'personal'
+  } catch {
+    return 'personal'
+  }
+}
 
 function App() {
   const sync = useSincronizacion()
+  const [espacio, setEspacio] = useState<Espacio>(leerEspacio)
+  const enEmpresa = espacio === 'empresa'
   // Si venimos de un enlace de correo que falló, se abre el panel: si no, la
   // persona se queda mirando una pantalla normal sin saber qué pasó.
   const [panelCuenta, setPanelCuenta] = useState(() => Boolean(sync.avisoEnlace))
@@ -123,10 +140,40 @@ function App() {
       escritorio.removeEventListener('change', alCambiar)
     }
   }, [sidebarOpen, cerrarMenu])
+  // Los dos espacios se montan siempre: la sincronización reescribe el
+  // almacenamiento de ambos y cada colección vuelve a leer lo suyo.
   const datos = useDatos()
-  const movs = datos.movimientos
+  const empresa = useDatosEmpresa()
+  const movs = enEmpresa ? empresa.movimientos : datos.movimientos
+  const cuentasCol = enEmpresa ? empresa.cuentas : datos.cuentas
   const movements = movs.items
-  const cuentas = datos.cuentas.items
+  const cuentas = cuentasCol.items
+  const parametrosNomina = useMemo(
+    () => parametrosDe(empresa.parametros.items.find(p => p.id === ID_PARAMETROS_NOMINA)),
+    [empresa.parametros.items]
+  )
+  const guardarParametrosNomina = (p: ParametrosNomina) => {
+    if (empresa.parametros.items.some(x => x.id === ID_PARAMETROS_NOMINA)) {
+      empresa.parametros.actualizar(ID_PARAMETROS_NOMINA, p)
+    } else {
+      empresa.parametros.agregarVarios([{ id: ID_PARAMETROS_NOMINA, ...p }])
+    }
+  }
+  const cambiarEspacio = (nuevo: Espacio) => {
+    if (nuevo === espacio) return
+    setEspacio(nuevo)
+    try {
+      localStorage.setItem('fc-espacio', nuevo)
+    } catch {
+      /* modo privado */
+    }
+    // Cada espacio tiene sus secciones: se vuelve al inicio, y se limpia lo
+    // que se estaba buscando para no arrastrarlo al otro lado.
+    setActive('Inicio')
+    setQuery('')
+    setFilter('Todos')
+    setModal(false)
+  }
   useEffect(() => {
     try {
       localStorage.setItem('fc-theme', dark ? 'dark' : 'light')
@@ -158,15 +205,18 @@ function App() {
     )
   const avisos = useMemo(
     () =>
-      calcularAvisos({
-        suscripciones: datos.suscripciones.items,
-        deudas: datos.deudas.items,
-        vehiculos: datos.vehiculos.items,
-        presupuestos: datos.presupuestos.items,
-        movimientos: movements,
-        periodo: period
-      }),
+      enEmpresa
+        ? []
+        : calcularAvisos({
+            suscripciones: datos.suscripciones.items,
+            deudas: datos.deudas.items,
+            vehiculos: datos.vehiculos.items,
+            presupuestos: datos.presupuestos.items,
+            movimientos: movements,
+            periodo: period
+          }),
     [
+      enEmpresa,
       datos.suscripciones.items,
       datos.deudas.items,
       datos.vehiculos.items,
@@ -191,14 +241,16 @@ function App() {
   }
 
   const pagos = useMemo(
-    () => proximosPagos(datos.suscripciones.items, datos.deudas.items),
-    [datos.suscripciones.items, datos.deudas.items]
+    () => (enEmpresa ? [] : proximosPagos(datos.suscripciones.items, datos.deudas.items)),
+    [enEmpresa, datos.suscripciones.items, datos.deudas.items]
   )
 
   const go = (s: string) => setActive(s)
   return (
     <div className={`app ${dark ? 'dark' : ''}`}>
       <Sidebar
+        espacio={espacio}
+        onCambiarEspacio={cambiarEspacio}
         active={active}
         onNavigate={go}
         open={sidebarOpen}
@@ -221,7 +273,7 @@ function App() {
             </button>
             <div className="breadcrumb">
               <span className="breadcrumb-raiz">
-                Mi espacio <span>/</span>{' '}
+                {enEmpresa ? 'Empresa' : 'Mi espacio'} <span>/</span>{' '}
               </span>
               <b>{active}</b>
             </div>
@@ -292,10 +344,18 @@ function App() {
           <div className="welcome-row">
             <div>
               <div className="eyebrow">{longDate(new Date())}</div>
-              <h1>{active === 'Inicio' ? '¡Hola! Este es tu resumen financiero.' : active}</h1>
+              <h1>
+                {active === 'Inicio'
+                  ? enEmpresa
+                    ? 'Resumen financiero de la empresa.'
+                    : '¡Hola! Este es tu resumen financiero.'
+                  : active}
+              </h1>
               <p className="subtitle">
                 {active === 'Inicio'
-                  ? 'Aquí tienes una visión clara de cómo se mueve tu dinero.'
+                  ? enEmpresa
+                    ? 'El dinero del proyecto, separado de tus finanzas personales.'
+                    : 'Aquí tienes una visión clara de cómo se mueve tu dinero.'
                   : `Gestiona y consulta tu información de ${active.toLowerCase()}.`}
               </p>
             </div>
@@ -352,7 +412,7 @@ function App() {
               onEliminar={eliminarMovimiento}
             />
           ) : active === 'Cuentas' ? (
-            <Cuentas movements={movements} coleccion={datos.cuentas} onRenombrar={renombrarCuenta} />
+            <Cuentas movements={movements} coleccion={cuentasCol} onRenombrar={renombrarCuenta} />
           ) : active === 'Calendario' ? (
             <Calendario movements={movements} period={period} setPeriod={setPeriod} />
           ) : active === 'Suscripciones' ? (
@@ -367,6 +427,16 @@ function App() {
             <Inversiones col={datos.inversiones} />
           ) : active === 'Transporte' ? (
             <Transporte col={datos.vehiculos} />
+          ) : active === 'Nómina' ? (
+            <Nomina
+              cargos={empresa.cargos}
+              parametros={parametrosNomina}
+              onGuardarParametros={guardarParametrosNomina}
+              movimientos={movements}
+              agregarMovimientos={movs.agregarVarios}
+              cuentas={cuentas}
+              periodo={period}
+            />
           ) : active === 'Reportes' ? (
             <Reportes movimientos={movements} totales={totals} periodo={period} />
           ) : (
@@ -374,6 +444,7 @@ function App() {
               dark={dark}
               setDark={setDark}
               sync={sync}
+              espacio={espacio}
               onAbrirCuenta={() => setPanelCuenta(true)}
               foco={focoAjustes}
               onFocoAtendido={() => setFocoAjustes(null)}
@@ -406,7 +477,13 @@ function App() {
           </button>
         ))}
       </nav>
-      <Modal open={modal} onClose={() => setModal(false)} onSave={addMovement} cuentas={cuentas} />
+      <Modal
+        open={modal}
+        onClose={() => setModal(false)}
+        onSave={addMovement}
+        cuentas={cuentas}
+        categorias={enEmpresa ? RUBROS : undefined}
+      />
       <PanelCuenta sync={sync} abierto={panelCuenta} onCerrar={() => setPanelCuenta(false)} />
     </div>
   )

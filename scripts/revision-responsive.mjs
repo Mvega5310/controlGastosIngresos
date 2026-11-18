@@ -1,7 +1,8 @@
 /**
  * Revisión responsive de FinControl.
  *
- * Recorre las 12 secciones en los siete tamaños de docs/REDISENO-MOVIL.md, más
+ * Recorre las 12 secciones del espacio personal y las 7 del de la empresa en los
+ * siete tamaños de docs/REDISENO-MOVIL.md, más
  * cuatro formatos horizontales y un plegable, y
  * falla si encuentra lo que el rediseño móvil quiso quitar:
  *
@@ -68,6 +69,8 @@ const SECCIONES = [
   'Reportes',
   'Ajustes'
 ]
+/** Secciones del espacio de la empresa. */
+const SECCIONES_EMPRESA = ['Inicio', 'Movimientos', 'Cuentas', 'Calendario', 'Nómina', 'Reportes', 'Ajustes']
 /** Hasta este ancho los movimientos se muestran como tarjetas. */
 const ANCHO_TARJETAS = 767
 /** Hasta este ancho hay barra inferior y menú lateral desplegable. */
@@ -203,6 +206,66 @@ try {
       if (!m.guardar) anotar(tam, 'modal', 'el botón de guardar no está a la vista sin desplazar')
       await p.keyboard.press('Escape')
     }
+    // Espacio de la empresa: el selector, y sus secciones con datos de muestra.
+    if (barraInferior) await p.click('.mobile-menu')
+    const selector = await p.evaluate(() =>
+      [...document.querySelectorAll('.espacios button')].map(b => {
+        const r = b.getBoundingClientRect()
+        return { w: Math.round(r.width), h: Math.round(r.height) }
+      })
+    )
+    if (selector.length !== 2) anotar(tam, 'espacios', 'falta el selector Personal / Empresa')
+    if (barraInferior && selector.some(b => b.h < TACTIL))
+      anotar(tam, 'espacios', `el selector de espacio mide menos de ${TACTIL} px de alto`)
+    await p.click('.espacios button:has-text("Empresa")')
+    await p.waitForTimeout(250)
+    await ir('Ajustes')
+    await p.waitForTimeout(150)
+    await p.evaluate(() =>
+      [...document.querySelectorAll('button')].find(b => b.textContent.includes('Cargar ejemplos'))?.click()
+    )
+    await p.waitForTimeout(250)
+    for (const seccion of SECCIONES_EMPRESA) {
+      await ir(seccion)
+      await p.waitForTimeout(220)
+      if (seccion === 'Nómina') {
+        // Con el cálculo de cada cargo y los parámetros desplegados, que es lo más ancho.
+        await p.evaluate(() => {
+          document.querySelectorAll('.desglose').forEach(d => (d.open = true))
+          ;[...document.querySelectorAll('button')].find(b => b.textContent.includes('Ver y editar'))?.click()
+        })
+        await p.waitForTimeout(200)
+      }
+      const r = await p.evaluate(() => {
+        const W = document.documentElement.clientWidth
+        const fuera = []
+        for (const e of document.querySelectorAll('.content *')) {
+          if (e.closest('.table-wrap') || e.closest('.recharts-wrapper')) continue
+          const c = e.getBoundingClientRect()
+          if (c.width && c.height && (c.right > W + 1 || c.left < -1))
+            fuera.push(String(e.className).split(' ')[0] || e.tagName)
+        }
+        return { desborde: document.documentElement.scrollWidth - W, fuera: [...new Set(fuera)].slice(0, 3) }
+      })
+      const nombre = `Empresa › ${seccion}`
+      if (r.desborde > 0) anotar(tam, nombre, `desborde horizontal de ${r.desborde} px`)
+      if (r.fuera.length) anotar(tam, nombre, `se sale de la pantalla: ${r.fuera.join(', ')}`)
+      if (seccion === 'Nómina' && barraInferior) {
+        // Lo propio de esta sección (los campos de parámetros y la barra de pago)
+        // tiene que ser tan fácil de tocar como el resto de formularios.
+        const pequenos = await p.evaluate(
+          () =>
+            [
+              ...document.querySelectorAll(
+                ".barra-pago select, .barra-pago button, .parametros-nomina input:not([type='checkbox']), .parametros-nomina select, .parametros-nomina button, .casilla"
+              )
+            ]
+              .map(e => e.getBoundingClientRect())
+              .filter(r => r.width && r.height < 44).length
+        )
+        if (pequenos) anotar(tam, nombre, `${pequenos} controles por debajo de ${TACTIL} px de alto`)
+      }
+    }
     for (const e of errores) anotar(tam, 'consola', e)
     await ctx.close()
   }
@@ -216,4 +279,6 @@ if (fallos.length) {
   for (const f of fallos) console.error('  ✗ ' + f)
   process.exit(1)
 }
-console.log(`Revisión responsive: ${TAMANOS.length} tamaños × ${SECCIONES.length} secciones, sin problemas.`)
+console.log(
+  `Revisión responsive: ${TAMANOS.length} tamaños × ${SECCIONES.length + SECCIONES_EMPRESA.length} secciones, sin problemas.`
+)

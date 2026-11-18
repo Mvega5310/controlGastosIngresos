@@ -7,6 +7,7 @@
  * cada colección vuelve a leer lo suyo y la pantalla se actualiza.
  */
 import { CLAVES } from '../datos/entidades'
+import { Espacio, nombreRemoto } from '../core/espacios'
 
 /** Todas las colecciones que viajan entre dispositivos. */
 export const COLECCIONES = {
@@ -20,11 +21,37 @@ export const COLECCIONES = {
   vehiculos: CLAVES.vehiculos
 } as const
 
+/**
+ * Colecciones del espacio de la empresa. Guardan aparte de las personales, con
+ * otras claves: «Borrar todo» en un espacio no puede tocar el otro.
+ */
+export const COLECCIONES_EMPRESA = {
+  movimientos: 'fc-emp-movements',
+  cuentas: 'fc-emp-cuentas',
+  cargos: 'fc-emp-cargos',
+  parametros: 'fc-emp-parametros'
+} as const
+
 export type NombreColeccion = keyof typeof COLECCIONES
 
-/** Nombre de la colección a partir de su clave de almacenamiento. */
-export const nombreDe = (clave: string): string =>
-  Object.entries(COLECCIONES).find(([, v]) => v === clave)?.[0] || clave
+/** Las colecciones de un espacio: nombre -> clave de almacenamiento. */
+export const coleccionesDe = (espacio: Espacio): Record<string, string> =>
+  espacio === 'empresa' ? COLECCIONES_EMPRESA : COLECCIONES
+
+/**
+ * Todo lo que se sincroniza, de los dos espacios, con el nombre con que viaja
+ * al servidor -> clave local. La sincronización recorre esto y no necesita
+ * saber qué espacio está a la vista: se sube y se baja todo.
+ */
+export const COLECCIONES_SINCRONIZABLES: Record<string, string> = (() => {
+  const salida: Record<string, string> = {}
+  for (const espacio of ['personal', 'empresa'] as const) {
+    for (const [nombre, clave] of Object.entries(coleccionesDe(espacio))) {
+      salida[nombreRemoto(espacio, nombre)] = clave
+    }
+  }
+  return salida
+})()
 
 export function leerLista<T>(clave: string, porDefecto: T[]): T[] {
   try {
@@ -73,7 +100,7 @@ export const escribirCortes = (cortes: Record<string, string>) => {
  */
 export function limpiarDatosSincronizados() {
   try {
-    for (const clave of Object.values(COLECCIONES)) {
+    for (const clave of Object.values(COLECCIONES_SINCRONIZABLES)) {
       localStorage.removeItem(clave)
       localStorage.removeItem(clavePendientes(clave))
     }

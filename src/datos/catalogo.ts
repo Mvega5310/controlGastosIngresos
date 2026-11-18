@@ -17,6 +17,11 @@ export type Movement = {
   flujo?: 'sale' | 'entra'
   /** Transferencias: la otra cuenta del traslado. */
   contraparte?: string
+  /**
+   * De dónde salió el apunte cuando no lo escribió una persona, p. ej. el pago
+   * de nómina de un cargo en un mes. Permite no registrarlo dos veces.
+   */
+  origen?: string
 }
 
 export type Account = {

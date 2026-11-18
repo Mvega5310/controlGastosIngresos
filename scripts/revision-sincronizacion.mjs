@@ -5,14 +5,16 @@
  * compartido (PostgREST: filtros eq./gt., upsert con on_conflict, hora del
  * servidor). No toca datos reales ni crea cuentas, y no necesita red.
  *
- * Comprueba lo que los 225 tests unitarios del motor no ven, porque pasa por la
+ * Comprueba lo que los tests unitarios del motor no ven, porque pasa por la
  * interfaz y por el almacenamiento del navegador:
  *
  *   1. lo que crea un aparato aparece en el otro, en los dos sentidos;
  *   2. lo que ya estaba guardado antes de que hubiera sincronización (sin marca
  *      de tiempo ni cola de pendientes) se sube en la primera sincronización;
  *   3. lo escrito sin sesión se sube al iniciarla;
- *   4. el panel de cuenta dice cuánto subió y cuánto bajó.
+ *   4. el panel de cuenta dice cuánto subió y cuánto bajó;
+ *   5. el espacio de la empresa viaja aparte del personal, nunca se mezclan y
+ *      «Borrar todo» en uno no toca el otro.
  *
  * El caso 2 era un fallo real: esos registros no se subían nunca.
  *
@@ -349,6 +351,131 @@ filas.clear()
     'lo escrito sin sesión se sube al iniciar sesión'
   )
   await A.ctx.close()
+}
+
+// =============================================================== ESCENARIO 4
+console.log('\n== 4. Espacio de la empresa: separado del personal, con nómina, y sincronizado ==')
+filas.clear()
+{
+  const abrirMenu = p => p.click('.mobile-menu')
+  const aEspacio = async (p, nombre) => {
+    await abrirMenu(p)
+    await p.click(`.espacios button:has-text("${nombre}")`)
+    await p.waitForTimeout(250)
+  }
+  const nuevaCuenta = async (p, nombre) => {
+    await ir(p, 'Cuentas')
+    await p.waitForTimeout(250)
+    await p.evaluate(() =>
+      [...document.querySelectorAll('button')]
+        .find(b => /Agregar cuenta|Nueva cuenta|Crear/.test(b.textContent))
+        ?.click()
+    )
+    await p.waitForSelector('.modal form')
+    await p.fill('#campo-name', nombre)
+    await p.fill('#campo-bank', 'Banco')
+    await p.click('.modal form .btn-primary')
+    await p.waitForTimeout(300)
+  }
+  const nuevoCargo = async (p, rol, vinculacion, salario) => {
+    await p.click('button:has-text("Nuevo cargo")')
+    await p.waitForSelector('.modal form')
+    await p.fill('#campo-rol', rol)
+    await p.selectOption('#campo-vinculacion', vinculacion)
+    await p.fill('#campo-salario', String(salario))
+    await p.fill('#campo-meses', '12')
+    await p.click('.modal form .btn-primary')
+    await p.waitForTimeout(300)
+  }
+  const texto = p => p.evaluate(() => document.body.textContent)
+
+  const A = await dispositivo('A-empresa', { conSesion: true })
+  // Algo personal, para comprobar que no se mezcla ni se borra.
+  await nuevaCuenta(A.p, 'Cuenta personal')
+
+  await aEspacio(A.p, 'Empresa')
+  ok(
+    !(await texto(A.p)).includes('Cuenta personal'),
+    'al pasar a Empresa no aparece nada del espacio personal'
+  )
+  await nuevaCuenta(A.p, 'Cuenta de la empresa')
+  await ir(A.p, 'Nómina')
+  await A.p.waitForTimeout(300)
+  await nuevoCargo(A.p, 'Analista', 'Contrato laboral a término fijo', 3200000)
+  await nuevoCargo(A.p, 'Gerente', 'Prestación de servicios', 7000000)
+  let t = await texto(A.p)
+  ok(/4\.920\.320/.test(t), 'el cargo laboral de 3.200.000 cuesta 4.920.320 (con el factor del 53,76 %)')
+  ok(
+    /11\.920\.320/.test(t),
+    'el costo mensual del equipo suma 11.920.320 (4.920.320 + 7.000.000 sin prestaciones)'
+  )
+  ok(/auxilio de transporte/.test(t), 'avisa del auxilio de transporte que el formato no incluye')
+
+  await A.p.click('button:has-text("Registrar los 2 pagos")')
+  await A.p.waitForTimeout(300)
+  t = await texto(A.p)
+  ok(/Todo pagado este mes/.test(t), 'registra los pagos del mes y ya no ofrece registrarlos otra vez')
+  await ir(A.p, 'Movimientos')
+  await A.p.waitForTimeout(300)
+  t = await texto(A.p)
+  ok(
+    /Nómina · Analista/.test(t) && /Nómina · Gerente/.test(t),
+    'los pagos aparecen como movimientos de la empresa'
+  )
+
+  await sincronizar(A.p)
+  const personal = enServidor('cuentas'),
+    deEmpresa = enServidor('empresa:cuentas')
+  console.log(
+    `    servidor: ${personal} cuenta personal, ${deEmpresa} de empresa, ${enServidor('empresa:cargos')} cargos, ${enServidor('empresa:movimientos')} movimientos de empresa`
+  )
+  ok(personal === 1 && deEmpresa === 1, 'cada espacio sube a su propia colección, sin mezclarse')
+  ok(
+    enServidor('empresa:cargos') === 2 && enServidor('empresa:movimientos') === 2,
+    'cargos y pagos de la empresa suben'
+  )
+  ok(enServidor('movimientos') === 0, 'los pagos de nómina no caen en los movimientos personales')
+
+  // El otro dispositivo
+  const B = await dispositivo('B-empresa', { conSesion: true })
+  await B.p.waitForTimeout(1500)
+  await aEspacio(B.p, 'Empresa')
+  await ir(B.p, 'Nómina')
+  await B.p.waitForTimeout(300)
+  t = await texto(B.p)
+  ok(
+    /Analista/.test(t) && /Gerente/.test(t) && /4\.920\.320/.test(t),
+    'B recibe el equipo de la empresa con el mismo costo'
+  )
+  await aEspacio(B.p, 'Personal')
+  await ir(B.p, 'Cuentas')
+  await B.p.waitForTimeout(250)
+  t = await texto(B.p)
+  ok(
+    /Cuenta personal/.test(t) && !/Cuenta de la empresa/.test(t),
+    'y en su espacio personal solo ve lo personal'
+  )
+
+  // Borrar todo en la empresa no toca lo personal
+  await ir(A.p, 'Ajustes')
+  await A.p.waitForTimeout(250)
+  await A.p.click('button:has-text("Borrar todo")')
+  await A.p.click('button:has-text("Sí, borrar todo")')
+  await A.p.waitForTimeout(300)
+  await sincronizar(A.p)
+  ok(
+    enServidor('empresa:cuentas') === 0 &&
+      enServidor('empresa:cargos') === 0 &&
+      enServidor('empresa:movimientos') === 0,
+    'Borrar todo en la empresa vacía la empresa, también en el servidor'
+  )
+  ok(enServidor('cuentas') === 1, 'y deja intacto lo personal')
+  await aEspacio(A.p, 'Personal')
+  await ir(A.p, 'Cuentas')
+  await A.p.waitForTimeout(250)
+  ok((await texto(A.p)).includes('Cuenta personal'), 'la cuenta personal sigue ahí')
+  await A.ctx.close()
+  await B.ctx.close()
 }
 
 console.log(`\nFALLOS: ${fallos}`)

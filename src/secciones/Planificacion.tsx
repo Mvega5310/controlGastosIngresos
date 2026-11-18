@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEdicion } from '../lib/useEdicion'
 import { Plus, RefreshCw, CreditCard, Target, Wallet, ArrowUpRight, CalendarClock } from 'lucide-react'
 import { Acciones } from '../components/Acciones'
 import { Account, Movement, money, categories } from '../datos/catalogo'
@@ -26,7 +26,7 @@ const enDias = (d: number) =>
   isNaN(d) ? '' : d < 0 ? `vencido hace ${Math.abs(d)} d` : d === 0 ? 'hoy' : `en ${d} d`
 
 /** Cabecera común: título, explicación y el botón de alta. */
-function Cabecera({
+export function Cabecera({
   titulo,
   nota,
   accion,
@@ -50,7 +50,7 @@ function Cabecera({
   )
 }
 
-function Vacio({ texto, accion, onAccion }: { texto: string; accion: string; onAccion: () => void }) {
+export function Vacio({ texto, accion, onAccion }: { texto: string; accion: string; onAccion: () => void }) {
   return (
     <div className="empty">
       <p>{texto}</p>
@@ -59,22 +59,6 @@ function Vacio({ texto, accion, onAccion }: { texto: string; accion: string; onA
       </button>
     </div>
   )
-}
-
-/** Estado compartido por las cuatro secciones: qué modal está abierto y sobre qué registro. */
-function useEdicion<T extends { id: string }>() {
-  const [abierto, setAbierto] = useState(false)
-  const [editando, setEditando] = useState<T | null>(null)
-  const nuevo = () => {
-    setEditando(null)
-    setAbierto(true)
-  }
-  const editar = (x: T) => {
-    setEditando(x)
-    setAbierto(true)
-  }
-  const cerrar = () => setAbierto(false)
-  return { abierto, editando, nuevo, editar, cerrar }
 }
 
 // --- Presupuestos -----------------------------------------------------------
