@@ -5,13 +5,15 @@
  * viven solo las entidades que no existen allí.
  */
 import { Cargo, ParametrosNomina } from '../core/nomina'
+import { ParametrosProyecto, PlanItem } from '../core/plan'
 
-export type { Cargo, ParametrosNomina }
+export type { Cargo, ParametrosNomina, ParametrosProyecto, PlanItem }
 
-/** Los parámetros se guardan como un único registro, con identificador fijo. */
+/** Cada grupo de parámetros se guarda como un único registro, con identificador fijo. */
 export const ID_PARAMETROS_NOMINA = 'nomina'
+export const ID_PARAMETROS_PROYECTO = 'proyecto'
 
-export type RegistroParametros = { id: string } & Partial<ParametrosNomina>
+export type RegistroParametros = { id: string } & Partial<ParametrosNomina> & Partial<ParametrosProyecto>
 
 /**
  * Rubros financiables del Fondo Emprender, tal y como los lista el formato.

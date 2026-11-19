@@ -14,7 +14,8 @@
  *   3. lo escrito sin sesión se sube al iniciarla;
  *   4. el panel de cuenta dice cuánto subió y cuánto bajó;
  *   5. el espacio de la empresa viaja aparte del personal, nunca se mezclan y
- *      «Borrar todo» en uno no toca el otro.
+ *      «Borrar todo» en uno no toca el otro;
+ *   6. el plan por rubro se escribe, sincroniza y sobrevive a «Borrar todo».
  *
  * El caso 2 era un fallo real: esos registros no se subían nunca.
  *
@@ -474,6 +475,88 @@ filas.clear()
   await ir(A.p, 'Cuentas')
   await A.p.waitForTimeout(250)
   ok((await texto(A.p)).includes('Cuenta personal'), 'la cuenta personal sigue ahí')
+  await A.ctx.close()
+  await B.ctx.close()
+}
+
+// =============================================================== ESCENARIO 5
+console.log('\n== 5. Plan por rubro: se escribe, se sincroniza y sobrevive a «Borrar todo» ==')
+filas.clear()
+{
+  const aEspacio = async (p, nombre) => {
+    await p.click('.mobile-menu')
+    await p.click(`.espacios button:has-text("${nombre}")`)
+    await p.waitForTimeout(250)
+  }
+  const texto = p => p.evaluate(() => document.body.textContent)
+  const ponerValor = async (p, cifras) => {
+    await p.waitForSelector('#pro-valor')
+    await p.fill('#pro-valor', cifras)
+    await p.click('.form-proyecto .btn-primary')
+    await p.waitForTimeout(250)
+  }
+
+  const A = await dispositivo('A-plan', { conSesion: true })
+  await aEspacio(A.p, 'Empresa')
+  await ir(A.p, 'Plan')
+  await A.p.waitForTimeout(300)
+  await ponerValor(A.p, '100000000')
+  await A.p.click('.rubro-plan summary')
+  await A.p.fill('.celda-plan input', '5000000')
+  await A.p.keyboard.press('Tab')
+  await A.p.waitForTimeout(300)
+  let t = await texto(A.p)
+  ok(
+    /5\.000\.000/.test(t) && /100\.000\.000/.test(t),
+    'el plan muestra lo escrito, con puntos de mil, y el valor solicitado'
+  )
+  ok(/faltan \$\s?95\.000\.000/.test(t), 'avisa de cuánto falta por repartir para llegar al valor solicitado')
+
+  await sincronizar(A.p)
+  ok(
+    enServidor('empresa:plan') === 1 && enServidor('empresa:parametros') === 1,
+    'el plan y los datos del proyecto suben a la nube'
+  )
+
+  const B = await dispositivo('B-plan', { conSesion: true })
+  await B.p.waitForTimeout(1500)
+  await aEspacio(B.p, 'Empresa')
+  await ir(B.p, 'Plan')
+  await B.p.waitForTimeout(300)
+  t = await texto(B.p)
+  ok(
+    /5\.000\.000/.test(t) && /100\.000\.000/.test(t),
+    'el otro dispositivo recibe el plan y el valor solicitado'
+  )
+
+  // Borrar todo y volver a escribir: lo nuevo no puede perderse tras sincronizar.
+  await ir(A.p, 'Ajustes')
+  await A.p.waitForTimeout(250)
+  await A.p.click('button:has-text("Borrar todo")')
+  await A.p.click('button:has-text("Sí, borrar todo")')
+  await A.p.waitForTimeout(300)
+  await sincronizar(A.p)
+  ok(
+    enServidor('empresa:plan') === 0 && enServidor('empresa:parametros') === 0,
+    'Borrar todo vacía el plan en la nube'
+  )
+  await ir(A.p, 'Plan')
+  await A.p.waitForTimeout(300)
+  await ponerValor(A.p, '200000000')
+  await A.p.click('.rubro-plan summary')
+  await A.p.fill('.celda-plan input', '7000000')
+  await A.p.keyboard.press('Tab')
+  await A.p.waitForTimeout(300)
+  await sincronizar(A.p)
+  await sincronizar(A.p)
+  ok(
+    enServidor('empresa:parametros') === 1 && enServidor('empresa:plan') === 1,
+    'lo escrito después de «Borrar todo» sube y no lo borra el registro antiguo'
+  )
+  await ir(A.p, 'Plan')
+  await A.p.waitForTimeout(300)
+  t = await texto(A.p)
+  ok(/7\.000\.000/.test(t) && /200\.000\.000/.test(t), 'y sigue a la vista tras sincronizar')
   await A.ctx.close()
   await B.ctx.close()
 }

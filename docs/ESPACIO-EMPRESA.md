@@ -60,12 +60,45 @@ propio formato, suman **$3.064.320 al mes**. El plan operativo destina **$2.450.
 al mes** a ese concepto (fila 435 de la hoja «Proyecto»). La diferencia es de
 $614.320 al mes, unos $5,5 M en 9 meses.
 
+## Plan por rubro
+
+Equivale a la sección 15 del formato («Plan operativo»): el valor solicitado
+repartido por rubro y por mes.
+
+- **Datos del proyecto:** valor solicitado, mes de inicio y meses del plan (9 en el
+  formato). El mes de inicio ancla «Mes 1…» a meses reales, que es lo que permite
+  compararlos con lo gastado.
+- **Planeado frente a gastado**, por rubro y mes. Los pagos de nómina caen solos en
+  «Pago de salarios u honorarios». Solo cuentan los gastos: ni ingresos ni traslados.
+- **El plan debe sumar el valor solicitado**, como exige el formato; la pantalla dice
+  cuánto falta o sobra.
+- **Topes** del formato: muebles y vehículos 15 %, adecuaciones estructurales 20 %,
+  técnicas 50 %, tasas de propiedad intelectual 20 %, medidos sobre el valor
+  solicitado. Se marca el rubro que los pasa. No son editables: son una regla del fondo.
+- Los gastos de meses fuera del plan se anotan aparte; los de un rubro sin plan se avisan.
+- Probado con el plan del formato: suma 508.000.000, el mes 1 suma 117.176.800 y los
+  pesos de los rubros con tope (10,04 %, 2,36 %, 1,97 %, 0,59 %) coinciden con su
+  columna «Registrado».
+
+### Dos decisiones de diseño
+
+- **Cada celda rubro × mes tiene un identificador fijo** (`plan-<mes>-<rubro>`). Si
+  dos dispositivos escriben la misma celda, es el mismo registro y gana el último;
+  con identificadores nuevos quedarían dos registros que sumarían el doble. Una
+  celda no se borra: un cero es un registro con importe cero.
+- **`fijarRegistro`** (en `core/sincronizacion.ts`) crea o actualiza un registro de
+  identificador conocido y **revive uno borrado**. Antes, guardar parámetros tras
+  «Borrar todo» creaba otro registro con el mismo identificador junto al borrado, y
+  al fusionar ganaba el borrado: lo recién guardado desaparecía. Corregido también
+  en los parámetros de nómina y cubierto por pruebas y por la revisión de
+  sincronización.
+
 ## Hoja de ruta
 
 | Fase | Contenido                                                                  | Estado    |
 | ---- | -------------------------------------------------------------------------- | --------- |
 | 1    | Espacios separados, selector, sincronización de ambos, **nómina**          | hecha     |
-| 2    | Rubros con tope y plan operativo por mes (planeado frente a ejecutado)     | pendiente |
+| 2    | Rubros con tope y plan operativo por mes (planeado frente a ejecutado)     | hecha     |
 | 3    | Compras de equipos (cotizado / comprado, proveedor), mercadeo, trámites    | pendiente |
 | 4    | Facturas y soportes (foto o PDF) en almacenamiento de Supabase             | pendiente |
 | 5    | Importador del formato del SENA y exportación para el informe de ejecución | pendiente |
@@ -87,7 +120,7 @@ lee) antes de escribir el SQL.
 ```bash
 npm run verificar               # formato, lint, pruebas y compilación
 npm run revision:sincronizacion # dos dispositivos contra un Supabase de mentira
-npm run revision:responsive     # 11 tamaños × 19 secciones
+npm run revision:responsive     # 11 tamaños × 20 secciones
 ```
 
 Para las revisiones locales **no** hay que definir `REVISION_PROXY`: salir por el

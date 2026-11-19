@@ -29,6 +29,7 @@ export const COLECCIONES_EMPRESA = {
   movimientos: 'fc-emp-movements',
   cuentas: 'fc-emp-cuentas',
   cargos: 'fc-emp-cargos',
+  plan: 'fc-emp-plan',
   parametros: 'fc-emp-parametros'
 } as const
 

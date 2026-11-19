@@ -288,7 +288,7 @@ export function Nomina({
         )}
       </section>
 
-      <section className="panel full-panel">
+      <section className="panel full-panel compacto">
         <div className="panel-heading seccion-head">
           <div>
             <h2>Parámetros del cálculo</h2>

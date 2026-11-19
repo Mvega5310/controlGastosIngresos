@@ -7,6 +7,7 @@ import {
   fusionar,
   purgar,
   retroceder,
+  fijarRegistro,
   Registro
 } from './sincronizacion'
 
@@ -119,5 +120,38 @@ describe('purgar', () => {
   it('retroceder calcula el corte en días', () => {
     expect(retroceder(30, '2026-11-12T00:00:00.000Z')).toBe('2026-10-13T00:00:00.000Z')
     expect(retroceder(1, '2026-01-01T00:00:00.000Z')).toBe('2025-12-31T00:00:00.000Z')
+  })
+})
+
+describe('fijarRegistro', () => {
+  type Dato = { id: string; valor: number }
+
+  it('crea el registro si no existe, sellado', () => {
+    const r = fijarRegistro<Dato>([], 'a', { valor: 1 }, T1)
+    expect(r).toEqual([{ id: 'a', valor: 1, actualizadoEn: T1 }])
+  })
+
+  it('actualiza el que ya existe sin duplicarlo ni tocar los demás', () => {
+    const previos = [fila('a', 'uno', T1), fila('b', 'dos', T1)] as unknown as (Dato & Partial<Registro>)[]
+    const r = fijarRegistro<Dato>(previos, 'a', { valor: 9 }, T2)
+    expect(r).toHaveLength(2)
+    expect(r.find(x => x.id === 'a')).toMatchObject({ valor: 9, actualizadoEn: T2 })
+    expect(r.find(x => x.id === 'b')).toBe(previos[1])
+  })
+
+  it('revive uno borrado en vez de dejar dos filas con el mismo identificador', () => {
+    const borrado = { id: 'a', valor: 1, actualizadoEn: T1, eliminadoEn: T1 }
+    const r = fijarRegistro<Dato>([borrado], 'a', { valor: 5 }, T2)
+    expect(r).toHaveLength(1)
+    expect(r[0]).toEqual({ id: 'a', valor: 5, actualizadoEn: T2 })
+    expect(estaBorrado(r[0])).toBe(false)
+  })
+
+  it('lo revivido gana al fusionar con la versión borrada que ya está en el servidor', () => {
+    const borradoRemoto = { id: 'a', valor: 1, actualizadoEn: T1, eliminadoEn: T1 }
+    const revivido = fijarRegistro<Dato>([borradoRemoto], 'a', { valor: 5 }, T2)
+    const fusion = fusionar(revivido as Registro[], [borradoRemoto])
+    expect(fusion).toHaveLength(1)
+    expect(estaBorrado(fusion[0])).toBe(false)
   })
 })

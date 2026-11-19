@@ -15,6 +15,7 @@ import {
   ChartPie,
   Settings,
   Users,
+  ClipboardList,
   ChevronRight,
   X
 } from 'lucide-react'
@@ -31,7 +32,8 @@ const icons: Record<string, LucideIcon> = {
   CarFront,
   ChartPie,
   Settings,
-  Users
+  Users,
+  ClipboardList
 }
 type Grupo = { label: string; items: string[][] }
 
@@ -76,6 +78,7 @@ const gruposEmpresa: Grupo[] = [
       ['Calendario', 'CalendarDays']
     ]
   },
+  { label: 'PROYECTO', items: [['Plan', 'ClipboardList']] },
   { label: 'EQUIPO', items: [['Nómina', 'Users']] },
   { label: 'ANÁLISIS', items: [['Reportes', 'ChartPie']] },
   { label: 'CUENTA', items: [['Ajustes', 'Settings']] }

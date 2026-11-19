@@ -1,7 +1,7 @@
 /**
  * Revisión responsive de FinControl.
  *
- * Recorre las 12 secciones del espacio personal y las 7 del de la empresa en los
+ * Recorre las 12 secciones del espacio personal y las 8 del de la empresa en los
  * siete tamaños de docs/REDISENO-MOVIL.md, más
  * cuatro formatos horizontales y un plegable, y
  * falla si encuentra lo que el rediseño móvil quiso quitar:
@@ -70,7 +70,16 @@ const SECCIONES = [
   'Ajustes'
 ]
 /** Secciones del espacio de la empresa. */
-const SECCIONES_EMPRESA = ['Inicio', 'Movimientos', 'Cuentas', 'Calendario', 'Nómina', 'Reportes', 'Ajustes']
+const SECCIONES_EMPRESA = [
+  'Inicio',
+  'Movimientos',
+  'Cuentas',
+  'Calendario',
+  'Plan',
+  'Nómina',
+  'Reportes',
+  'Ajustes'
+]
 /** Hasta este ancho los movimientos se muestran como tarjetas. */
 const ANCHO_TARJETAS = 767
 /** Hasta este ancho hay barra inferior y menú lateral desplegable. */
@@ -228,6 +237,14 @@ try {
     for (const seccion of SECCIONES_EMPRESA) {
       await ir(seccion)
       await p.waitForTimeout(220)
+      if (seccion === 'Plan') {
+        // Con todos los rubros desplegados y el formulario de datos abierto.
+        await p.evaluate(() => {
+          document.querySelectorAll('.rubro-plan').forEach(d => (d.open = true))
+          ;[...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Editar')?.click()
+        })
+        await p.waitForTimeout(200)
+      }
       if (seccion === 'Nómina') {
         // Con el cálculo de cada cargo y los parámetros desplegados, que es lo más ancho.
         await p.evaluate(() => {
@@ -250,6 +267,15 @@ try {
       const nombre = `Empresa › ${seccion}`
       if (r.desborde > 0) anotar(tam, nombre, `desborde horizontal de ${r.desborde} px`)
       if (r.fuera.length) anotar(tam, nombre, `se sale de la pantalla: ${r.fuera.join(', ')}`)
+      if (seccion === 'Plan' && barraInferior) {
+        const pequenos = await p.evaluate(
+          () =>
+            [...document.querySelectorAll('.celda-plan input, .form-proyecto input, .form-proyecto button')]
+              .map(e => e.getBoundingClientRect())
+              .filter(r => r.width && r.height < 44).length
+        )
+        if (pequenos) anotar(tam, nombre, `${pequenos} controles por debajo de ${TACTIL} px de alto`)
+      }
       if (seccion === 'Nómina' && barraInferior) {
         // Lo propio de esta sección (los campos de parámetros y la barra de pago)
         // tiene que ser tan fácil de tocar como el resto de formularios.

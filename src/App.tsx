@@ -13,9 +13,11 @@ import {
 } from 'lucide-react'
 import Sidebar from './components/Sidebar'
 import { Espacio, esEspacio } from './core/espacios'
-import { ID_PARAMETROS_NOMINA, RUBROS } from './datos/empresa'
+import { ID_PARAMETROS_NOMINA, ID_PARAMETROS_PROYECTO, RUBROS } from './datos/empresa'
 import { ParametrosNomina, parametrosDe } from './core/nomina'
 import { Nomina } from './secciones/Nomina'
+import { Plan } from './secciones/Plan'
+import { ParametrosProyecto, parametrosProyectoDe } from './core/plan'
 import Modal from './components/Modal'
 import { useDatos } from './lib/useDatos'
 import { useDatosEmpresa } from './lib/useDatosEmpresa'
@@ -58,6 +60,12 @@ import { Ajustes } from './secciones/Ajustes'
  */
 const CON_PERIODO = ['Inicio', 'Reportes', 'Presupuestos', 'Nómina']
 const CON_NUEVO_MOVIMIENTO = ['Inicio', 'Movimientos']
+
+/** Frases propias de las secciones donde la genérica no se lee bien. */
+const SUBTITULOS: Record<string, string> = {
+  Plan: 'Reparte lo solicitado por rubro y mes, y compáralo con lo que se gasta.',
+  Nómina: 'Lo que cuesta cada cargo con sus prestaciones, y el pago de cada mes.'
+}
 
 /** Qué espacio se tenía abierto la última vez en este dispositivo. */
 const leerEspacio = (): Espacio => {
@@ -152,13 +160,16 @@ function App() {
     () => parametrosDe(empresa.parametros.items.find(p => p.id === ID_PARAMETROS_NOMINA)),
     [empresa.parametros.items]
   )
-  const guardarParametrosNomina = (p: ParametrosNomina) => {
-    if (empresa.parametros.items.some(x => x.id === ID_PARAMETROS_NOMINA)) {
-      empresa.parametros.actualizar(ID_PARAMETROS_NOMINA, p)
-    } else {
-      empresa.parametros.agregarVarios([{ id: ID_PARAMETROS_NOMINA, ...p }])
-    }
-  }
+  // `fijar` crea el registro o actualiza el que haya, incluso si «Borrar todo»
+  // lo dejó marcado como borrado: crear otro con el mismo identificador haría
+  // que el borrado ganara al fusionar y lo recién guardado desapareciera.
+  const guardarParametrosNomina = (p: ParametrosNomina) => empresa.parametros.fijar(ID_PARAMETROS_NOMINA, p)
+  const parametrosProyecto = useMemo(
+    () => parametrosProyectoDe(empresa.parametros.items.find(p => p.id === ID_PARAMETROS_PROYECTO)),
+    [empresa.parametros.items]
+  )
+  const guardarParametrosProyecto = (p: ParametrosProyecto) =>
+    empresa.parametros.fijar(ID_PARAMETROS_PROYECTO, p)
   const cambiarEspacio = (nuevo: Espacio) => {
     if (nuevo === espacio) return
     setEspacio(nuevo)
@@ -356,7 +367,7 @@ function App() {
                   ? enEmpresa
                     ? 'El dinero del proyecto, separado de tus finanzas personales.'
                     : 'Aquí tienes una visión clara de cómo se mueve tu dinero.'
-                  : `Gestiona y consulta tu información de ${active.toLowerCase()}.`}
+                  : (SUBTITULOS[active] ?? `Gestiona y consulta tu información de ${active.toLowerCase()}.`)}
               </p>
             </div>
             {(CON_PERIODO.includes(active) || CON_NUEVO_MOVIMIENTO.includes(active)) && (
@@ -427,6 +438,13 @@ function App() {
             <Inversiones col={datos.inversiones} />
           ) : active === 'Transporte' ? (
             <Transporte col={datos.vehiculos} />
+          ) : active === 'Plan' ? (
+            <Plan
+              plan={empresa.plan}
+              parametros={parametrosProyecto}
+              onGuardarParametros={guardarParametrosProyecto}
+              movimientos={movements}
+            />
           ) : active === 'Nómina' ? (
             <Nomina
               cargos={empresa.cargos}

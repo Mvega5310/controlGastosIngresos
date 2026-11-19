@@ -3468,3 +3468,189 @@ body.dialogo-abierto {
   display: inline-block;
   margin-right: 4px;
 }
+
+/* --- Plan por rubro y mes ------------------------------------------------ */
+.panel.compacto {
+  min-height: 0;
+}
+.rubros-plan {
+  margin-top: 18px;
+}
+.rubro-plan {
+  border-top: 1px solid var(--line);
+}
+.rubro-plan summary {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 14px 3px;
+  cursor: pointer;
+  list-style: none;
+}
+.rubro-plan summary::-webkit-details-marker {
+  display: none;
+}
+.rubro-plan summary:focus-visible {
+  outline: 2px solid var(--verde-texto);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.rubro-nombre b {
+  display: block;
+  font-size: 10px;
+}
+.rubro-nombre b::before {
+  content: '▸ ';
+  color: var(--verde-texto);
+}
+.rubro-plan[open] .rubro-nombre b::before {
+  content: '▾ ';
+}
+.rubro-nombre small {
+  display: block;
+  margin-top: 4px;
+  font-size: 8px;
+  color: var(--muted);
+}
+.rubro-barra {
+  grid-column: 1 / -1;
+  display: block;
+  margin: 0;
+}
+.rubro-plan.vacio .rubro-nombre b {
+  color: var(--muted);
+  font-weight: 600;
+}
+.celdas-plan {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  padding: 4px 3px 18px;
+}
+.celda-plan {
+  display: block;
+}
+.celda-plan > span {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.celda-plan small {
+  display: block;
+  margin-top: 5px;
+  font-size: 8px;
+  color: var(--muted);
+}
+.celda-plan input,
+.form-proyecto input {
+  height: 39px;
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 0 10px;
+  outline-color: #4cb873;
+  font-size: 11px;
+}
+.form-proyecto {
+  margin-top: 16px;
+}
+.form-proyecto label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  margin: 13px 0 7px;
+}
+.meses-plan {
+  margin-top: 14px;
+}
+.mes-plan {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr 1fr;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 13px 3px;
+  border-top: 1px solid var(--line);
+}
+.mes-plan b {
+  font-size: 10px;
+}
+.mes-plan b::first-letter {
+  text-transform: uppercase;
+}
+.mes-plan b em {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--verde-texto);
+  text-transform: none;
+}
+.mes-plan span small {
+  display: block;
+  font-size: 8px;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+.mes-plan span strong {
+  font-size: 10px;
+}
+.mes-plan.actual {
+  background: var(--soft);
+  border-radius: 8px;
+}
+@media (pointer: coarse), (max-width: 900px) {
+  .celda-plan input,
+  .form-proyecto input {
+    height: var(--touch-target);
+    font-size: 16px;
+    padding: 0 12px;
+  }
+  .rubro-plan summary {
+    min-height: var(--touch-target);
+  }
+  .form-proyecto .btn-primary {
+    height: var(--touch-target);
+  }
+}
+@media (max-width: 767px) {
+  .rubro-nombre b {
+    font-size: 14px;
+  }
+  .rubro-nombre small {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .celda-plan > span {
+    font-size: 12px;
+  }
+  .celda-plan small {
+    font-size: 12px;
+  }
+  .celdas-plan {
+    grid-template-columns: 1fr 1fr;
+  }
+  .form-proyecto label {
+    font-size: 13px;
+  }
+  .form-proyecto .modal-actions .btn-primary {
+    flex: none;
+    width: 100%;
+    height: var(--touch-target);
+  }
+  .mes-plan {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  .mes-plan b {
+    grid-column: 1 / -1;
+    font-size: 14px;
+  }
+  .mes-plan span small {
+    font-size: 11px;
+  }
+  .mes-plan span strong {
+    font-size: 13px;
+  }
+}

@@ -83,3 +83,28 @@ export const purgar = <T extends Registro>(registros: T[], antesDe: string) =>
 /** Resta días a una marca ISO, para calcular el corte de la purga. */
 export const retroceder = (dias: number, desde = ahora()) =>
   new Date(new Date(desde).getTime() - dias * 86400000).toISOString()
+
+/**
+ * Escribe un registro de identificador conocido: lo crea, o actualiza el que ya
+ * haya, y si estaba borrado lo revive.
+ *
+ * Sirve para lo que tiene un identificador fijo (los parámetros de un módulo,
+ * una celda del plan). Crear otro registro con ese mismo identificador junto
+ * al borrado dejaría dos filas iguales en el almacenamiento, y al fusionar
+ * gana la última de la lista: la del borrado, que haría desaparecer lo recién
+ * escrito.
+ */
+export function fijarRegistro<T extends { id: string }>(
+  todos: (T & Partial<Registro>)[],
+  id: string,
+  datos: Omit<T, 'id'>,
+  momento = ahora()
+): (T & Partial<Registro>)[] {
+  if (!todos.some(x => x.id === id)) return [...todos, sellar({ ...datos, id } as unknown as T, momento)]
+  return todos.map(x => {
+    if (x.id !== id) return x
+    const { eliminadoEn: _borrado, ...vivo } = x
+    void _borrado
+    return sellar({ ...vivo, ...datos, id } as unknown as T, momento)
+  })
+}

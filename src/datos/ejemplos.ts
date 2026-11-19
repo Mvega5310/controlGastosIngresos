@@ -7,7 +7,9 @@
  * nada de lo que se veía.
  */
 import { newId } from '../core/finanzas'
-import { Registro, sellar, sellarBorrado } from '../core/sincronizacion'
+import { Registro, fijarRegistro, sellar, sellarBorrado } from '../core/sincronizacion'
+import { PlanItem, ParametrosProyecto, cambiaLaCelda, idDePlan, parametrosProyectoDe } from '../core/plan'
+import { ID_PARAMETROS_PROYECTO, RUBROS } from './empresa'
 import { Espacio } from '../core/espacios'
 import { aCentavos } from '../core/dinero'
 import {
@@ -67,6 +69,49 @@ export function cargarEjemplos(espacio: Espacio = 'personal') {
   avisarCambioDatos()
 }
 
+/**
+ * Un plan de muestra: tres rubros en tres meses. Las celdas tienen identificador
+ * fijo, así que pulsar «Cargar ejemplos» dos veces no las duplica.
+ */
+function cargarPlanDeEjemplo() {
+  const [salarios, equipos, publicidad] = [RUBROS[0], RUBROS[1], RUBROS[9]]
+  const celdas: [string, number, number][] = [
+    [salarios, 1, 12000000],
+    [salarios, 2, 12000000],
+    [salarios, 3, 12000000],
+    [equipos, 1, 18000000],
+    [publicidad, 1, 2000000],
+    [publicidad, 2, 3000000],
+    [publicidad, 3, 4000000]
+  ]
+  const previas = leerLista<Registro>(COLECCIONES_EMPRESA.plan, [])
+  let filas = previas as unknown as (PlanItem & Partial<Registro>)[]
+  const nuevos: string[] = []
+  for (const [rubro, mes, pesos] of celdas) {
+    if (!cambiaLaCelda(filas, rubro, mes, aCentavos(pesos))) continue
+    const id = idDePlan(rubro, mes)
+    filas = fijarRegistro<PlanItem>(filas, id, { rubro, mes, monto: aCentavos(pesos) })
+    nuevos.push(id)
+  }
+  escribirLista(COLECCIONES_EMPRESA.plan, filas)
+  anotarPendientes(COLECCIONES_EMPRESA.plan, nuevos)
+  const proyecto = leerLista<Registro>(COLECCIONES_EMPRESA.parametros, [])
+  if (!proyecto.some(p => p.id === ID_PARAMETROS_PROYECTO && !p.eliminadoEn)) {
+    escribirLista(
+      COLECCIONES_EMPRESA.parametros,
+      fijarRegistro<Registro & ParametrosProyecto>(
+        proyecto as unknown as (Registro & ParametrosProyecto)[],
+        ID_PARAMETROS_PROYECTO,
+        parametrosProyectoDe({ valorSolicitado: aCentavos(100000000), meses: 3 }) as unknown as Omit<
+          Registro & ParametrosProyecto,
+          'id'
+        >
+      )
+    )
+    anotarPendientes(COLECCIONES_EMPRESA.parametros, [ID_PARAMETROS_PROYECTO])
+  }
+}
+
 /** Muestra mínima del espacio de la empresa: genérica, para que no se confunda con datos reales. */
 function cargarEjemplosDeEmpresa() {
   escribirAnexando(COLECCIONES_EMPRESA.cuentas, [
@@ -78,6 +123,7 @@ function cargarEjemplosDeEmpresa() {
       openingBalance: aCentavos(50000000)
     }
   ])
+  cargarPlanDeEjemplo()
   escribirAnexando(COLECCIONES_EMPRESA.cargos, [
     {
       rol: 'Gerente general',

@@ -2,6 +2,7 @@ import { useColeccion } from './useColeccion'
 import { COLECCIONES_EMPRESA } from './almacenLocal'
 import { Account, Movement } from '../datos/catalogo'
 import { Cargo, RegistroParametros } from '../datos/empresa'
+import { PlanItem } from '../core/plan'
 
 /**
  * Las colecciones del espacio de la empresa.
@@ -14,6 +15,7 @@ export function useDatosEmpresa() {
     movimientos: useColeccion<Movement>(COLECCIONES_EMPRESA.movimientos),
     cuentas: useColeccion<Account>(COLECCIONES_EMPRESA.cuentas),
     cargos: useColeccion<Cargo>(COLECCIONES_EMPRESA.cargos),
+    plan: useColeccion<PlanItem>(COLECCIONES_EMPRESA.plan),
     parametros: useColeccion<RegistroParametros>(COLECCIONES_EMPRESA.parametros)
   }
 }

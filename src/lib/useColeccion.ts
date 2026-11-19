@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { newId } from '../core/finanzas'
-import { Registro, sellar, sellarBorrado, vivos } from '../core/sincronizacion'
+import { Registro, fijarRegistro, sellar, sellarBorrado, vivos } from '../core/sincronizacion'
 import { alCambiarDatos, escribirLista, escribirPendientes, leerLista, leerPendientes } from './almacenLocal'
 
 /**
@@ -88,6 +88,18 @@ export function useColeccion<T extends { id: string }>(clave: string, iniciales:
     [anotar]
   )
 
+  /**
+   * Escribe un registro de identificador fijo: lo crea, o actualiza el que haya
+   * aunque esté borrado. Ver `fijarRegistro`.
+   */
+  const fijar = useCallback(
+    (id: string, datos: Omit<T, 'id'>) => {
+      setTodos(previos => fijarRegistro<T>(previos, id, datos) as Fila[])
+      anotar([id])
+    },
+    [anotar]
+  )
+
   const eliminar = useCallback(
     (id: string) => {
       setTodos(previos => previos.map(x => (x.id === id ? darDeBaja(x) : x)))
@@ -106,5 +118,5 @@ export function useColeccion<T extends { id: string }>(clave: string, iniciales:
     [anotar]
   )
 
-  return { items, todos, pendientes, agregar, agregarVarios, actualizar, eliminar, eliminarVarios }
+  return { items, todos, pendientes, agregar, agregarVarios, actualizar, fijar, eliminar, eliminarVarios }
 }
