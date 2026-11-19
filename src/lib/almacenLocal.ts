@@ -30,6 +30,9 @@ export const COLECCIONES_EMPRESA = {
   cuentas: 'fc-emp-cuentas',
   cargos: 'fc-emp-cargos',
   plan: 'fc-emp-plan',
+  compras: 'fc-emp-compras',
+  mercadeo: 'fc-emp-mercadeo',
+  tramites: 'fc-emp-tramites',
   parametros: 'fc-emp-parametros'
 } as const
 

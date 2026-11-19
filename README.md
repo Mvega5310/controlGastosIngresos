@@ -82,7 +82,7 @@ Abre la dirección que muestre Vite, normalmente http://localhost:5173.
 | Comando                           | Qué hace                                                                         |
 | --------------------------------- | -------------------------------------------------------------------------------- |
 | `npm run dev`                     | Servidor de desarrollo con recarga en caliente                                   |
-| `npm test`                        | Las pruebas (284)                                                                |
+| `npm test`                        | Las pruebas (326)                                                                |
 | `npm run lint`                    | ESLint                                                                           |
 | `npm run format`                  | Prettier sobre todo el proyecto                                                  |
 | `npm run build`                   | Compila a `dist/`                                                                |

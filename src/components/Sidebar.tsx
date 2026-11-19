@@ -16,6 +16,9 @@ import {
   Settings,
   Users,
   ClipboardList,
+  ShoppingCart,
+  Megaphone,
+  FileCheck,
   ChevronRight,
   X
 } from 'lucide-react'
@@ -33,7 +36,10 @@ const icons: Record<string, LucideIcon> = {
   ChartPie,
   Settings,
   Users,
-  ClipboardList
+  ClipboardList,
+  ShoppingCart,
+  Megaphone,
+  FileCheck
 }
 type Grupo = { label: string; items: string[][] }
 
@@ -78,7 +84,15 @@ const gruposEmpresa: Grupo[] = [
       ['Calendario', 'CalendarDays']
     ]
   },
-  { label: 'PROYECTO', items: [['Plan', 'ClipboardList']] },
+  {
+    label: 'PROYECTO',
+    items: [
+      ['Plan', 'ClipboardList'],
+      ['Compras', 'ShoppingCart'],
+      ['Mercadeo', 'Megaphone'],
+      ['Trámites', 'FileCheck']
+    ]
+  },
   { label: 'EQUIPO', items: [['Nómina', 'Users']] },
   { label: 'ANÁLISIS', items: [['Reportes', 'ChartPie']] },
   { label: 'CUENTA', items: [['Ajustes', 'Settings']] }

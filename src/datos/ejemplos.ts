@@ -10,6 +10,7 @@ import { newId } from '../core/finanzas'
 import { Registro, fijarRegistro, sellar, sellarBorrado } from '../core/sincronizacion'
 import { PlanItem, ParametrosProyecto, cambiaLaCelda, idDePlan, parametrosProyectoDe } from '../core/plan'
 import { ID_PARAMETROS_PROYECTO, RUBROS } from './empresa'
+import { NO_FINANCIABLE } from '../core/tramites'
 import { Espacio } from '../core/espacios'
 import { aCentavos } from '../core/dinero'
 import {
@@ -124,6 +125,73 @@ function cargarEjemplosDeEmpresa() {
     }
   ])
   cargarPlanDeEjemplo()
+  escribirAnexando(COLECCIONES_EMPRESA.compras, [
+    {
+      descripcion: 'Portátil para el analista',
+      rubro: RUBROS[1],
+      cantidad: 1,
+      valorUnitario: aCentavos(3500000),
+      estado: 'Cotizado',
+      mes: 1
+    },
+    {
+      descripcion: 'Monitor de 27 pulgadas',
+      rubro: RUBROS[1],
+      cantidad: 2,
+      valorUnitario: aCentavos(1800000),
+      estado: 'Por cotizar',
+      mes: 1
+    },
+    {
+      descripcion: 'Escritorios y sillas',
+      rubro: RUBROS[2],
+      cantidad: 4,
+      valorUnitario: aCentavos(1500000),
+      estado: 'Por cotizar',
+      mes: 2
+    }
+  ])
+  escribirAnexando(COLECCIONES_EMPRESA.mercadeo, [
+    {
+      nombre: 'Pauta digital',
+      tipo: 'Estrategia de comunicación',
+      costo: aCentavos(2000000),
+      estado: 'Planeada',
+      mes: 1
+    },
+    {
+      nombre: 'Contenido en video',
+      tipo: 'Estrategia de comunicación',
+      costo: aCentavos(3000000),
+      estado: 'Planeada',
+      mes: 2
+    },
+    {
+      nombre: 'Activación local',
+      tipo: 'Estrategia de promoción',
+      costo: aCentavos(1000000),
+      estado: 'En curso',
+      mes: 3
+    }
+  ])
+  escribirAnexando(COLECCIONES_EMPRESA.tramites, [
+    {
+      nombre: 'Facturación electrónica',
+      rubro: RUBROS[6],
+      costo: aCentavos(3000000),
+      dias: 14,
+      estado: 'Por iniciar',
+      mes: 1
+    },
+    {
+      nombre: 'Constitución legal',
+      rubro: NO_FINANCIABLE,
+      costo: aCentavos(1500000),
+      dias: 14,
+      estado: 'En trámite',
+      inicio: new Date().toISOString().slice(0, 10)
+    }
+  ])
   escribirAnexando(COLECCIONES_EMPRESA.cargos, [
     {
       rol: 'Gerente general',

@@ -243,3 +243,68 @@ export function calcularPlan(
     cuadra: hayValor && diferencia === 0
   }
 }
+
+// --- Llenar el plan desde compras, mercadeo y trámites ------------------------
+
+/** Algo con un rubro, un importe y (si se sabe) el mes del plan en que se paga. */
+export type FuentePlan = {
+  rubro: string
+  /** Mes del plan, 1 = el primero. Sin mes, o fuera del plan, no se puede repartir. */
+  mes?: number
+  monto: number
+  /** De dónde viene, para decirlo en pantalla: «Compras», «Mercadeo», «Trámites». */
+  origen: string
+}
+
+export type SugerenciaRubro = {
+  /** Lo que suman las fuentes en cada mes del plan. */
+  porMes: number[]
+  /** Lo que tiene el rubro pero sin un mes del plan donde ponerlo. */
+  sinMes: number
+}
+
+/** Suma las fuentes por rubro y por mes del plan. */
+export function sugerenciasDelPlan(fuentes: FuentePlan[], meses: number): Map<string, SugerenciaRubro> {
+  const salida = new Map<string, SugerenciaRubro>()
+  for (const f of fuentes) {
+    const monto = Math.max(0, Math.round(f.monto || 0))
+    if (monto === 0) continue
+    let s = salida.get(f.rubro)
+    if (!s) salida.set(f.rubro, (s = { porMes: Array(Math.max(0, meses)).fill(0), sinMes: 0 }))
+    if (Number.isInteger(f.mes) && f.mes! >= 1 && f.mes! <= meses) s.porMes[f.mes! - 1] += monto
+    else s.sinMes += monto
+  }
+  return salida
+}
+
+export type CambioDeRelleno = {
+  rubro: string
+  mes: number
+  monto: number
+  /** Lo que hay hoy en la celda. */
+  actual: number
+  /** Escribirlo pisa un importe distinto que ya había. */
+  sustituye: boolean
+}
+
+/**
+ * Qué celdas cambiarían al llenar el plan desde las fuentes. Solo las celdas
+ * donde hay algo que poner: las demás se dejan como están, escritas a mano o no.
+ */
+export function cambiosDeRelleno(
+  todos: (PlanItem & Partial<Registro>)[],
+  sugerencias: Map<string, SugerenciaRubro>
+): CambioDeRelleno[] {
+  const cambios: CambioDeRelleno[] = []
+  for (const [rubro, s] of sugerencias) {
+    s.porMes.forEach((monto, i) => {
+      if (monto <= 0) return
+      const mes = i + 1
+      const existente = todos.find(x => x.id === idDePlan(rubro, mes))
+      const actual = existente && !existente.eliminadoEn ? existente.monto : 0
+      if (!cambiaLaCelda(todos, rubro, mes, monto)) return
+      cambios.push({ rubro, mes, monto, actual, sustituye: actual > 0 && actual !== monto })
+    })
+  }
+  return cambios
+}

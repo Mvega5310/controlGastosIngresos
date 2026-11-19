@@ -1,7 +1,7 @@
 /**
  * Revisión responsive de FinControl.
  *
- * Recorre las 12 secciones del espacio personal y las 8 del de la empresa en los
+ * Recorre las 12 secciones del espacio personal y las 11 del de la empresa en los
  * siete tamaños de docs/REDISENO-MOVIL.md, más
  * cuatro formatos horizontales y un plegable, y
  * falla si encuentra lo que el rediseño móvil quiso quitar:
@@ -76,6 +76,9 @@ const SECCIONES_EMPRESA = [
   'Cuentas',
   'Calendario',
   'Plan',
+  'Compras',
+  'Mercadeo',
+  'Trámites',
   'Nómina',
   'Reportes',
   'Ajustes'
@@ -270,7 +273,11 @@ try {
       if (seccion === 'Plan' && barraInferior) {
         const pequenos = await p.evaluate(
           () =>
-            [...document.querySelectorAll('.celda-plan input, .form-proyecto input, .form-proyecto button')]
+            [
+              ...document.querySelectorAll(
+                '.celda-plan input, .form-proyecto input, .form-proyecto button, .relleno-plan button'
+              )
+            ]
               .map(e => e.getBoundingClientRect())
               .filter(r => r.width && r.height < 44).length
         )

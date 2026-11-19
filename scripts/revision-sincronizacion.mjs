@@ -15,7 +15,9 @@
  *   4. el panel de cuenta dice cuánto subió y cuánto bajó;
  *   5. el espacio de la empresa viaja aparte del personal, nunca se mezclan y
  *      «Borrar todo» en uno no toca el otro;
- *   6. el plan por rubro se escribe, sincroniza y sobrevive a «Borrar todo».
+ *   6. el plan por rubro se escribe, sincroniza y sobrevive a «Borrar todo»;
+ *   7. compras, mercadeo y trámites se registran como gasto, llenan el plan y
+ *      se sincronizan sin duplicar el gasto en el otro dispositivo.
  *
  * El caso 2 era un fallo real: esos registros no se subían nunca.
  *
@@ -557,6 +559,158 @@ filas.clear()
   await A.p.waitForTimeout(300)
   t = await texto(A.p)
   ok(/7\.000\.000/.test(t) && /200\.000\.000/.test(t), 'y sigue a la vista tras sincronizar')
+  await A.ctx.close()
+  await B.ctx.close()
+}
+
+// =============================================================== ESCENARIO 6
+console.log(
+  '\n== 6. Compras, mercadeo y trámites: se registran como gasto, llenan el plan y se sincronizan =='
+)
+filas.clear()
+{
+  const aEspacio = async (p, nombre) => {
+    await p.click('.mobile-menu')
+    await p.click(`.espacios button:has-text("${nombre}")`)
+    await p.waitForTimeout(250)
+  }
+  const texto = p => p.evaluate(() => document.body.textContent)
+  const guardar = async p => {
+    await p.click('.modal form .btn-primary')
+    await p.waitForTimeout(300)
+  }
+
+  const A = await dispositivo('A-listas', { conSesion: true })
+  await aEspacio(A.p, 'Empresa')
+  await ir(A.p, 'Cuentas')
+  await A.p.waitForTimeout(250)
+  await A.p.evaluate(() =>
+    [...document.querySelectorAll('button')]
+      .find(b => /Agregar cuenta|Nueva cuenta|Crear/.test(b.textContent))
+      ?.click()
+  )
+  await A.p.waitForSelector('.modal form')
+  await A.p.fill('#campo-name', 'Cuenta de la empresa')
+  await A.p.fill('#campo-bank', 'Banco')
+  await guardar(A.p)
+
+  // Compras
+  await ir(A.p, 'Compras')
+  await A.p.waitForTimeout(300)
+  await A.p.click('button:has-text("Nueva compra")')
+  await A.p.waitForSelector('.modal form')
+  await A.p.fill('#campo-descripcion', 'Portátil')
+  await A.p.selectOption('#campo-rubro', 'Adquisición de maquinaria, equipos y software')
+  await A.p.fill('#campo-cantidad', '2')
+  await A.p.fill('#campo-valorUnitario', '3500000')
+  await A.p.fill('#campo-mes', '1')
+  await guardar(A.p)
+  let t = await texto(A.p)
+  ok(
+    /7\.000\.000/.test(t) && /Por cotizar/.test(t),
+    'la compra de 2 × 3.500.000 suma 7.000.000 y queda por cotizar'
+  )
+
+  await A.p.click('.fila-compra button:has-text("Registrar compra")')
+  await A.p.waitForSelector('.modal form')
+  ok(
+    (await A.p.inputValue('#campo-valor')).replace(/\D/g, '') === '7000000',
+    'registrar la compra propone lo planeado como valor pagado'
+  )
+  await A.p.fill('#campo-valor', '6800000')
+  await guardar(A.p)
+  t = await texto(A.p)
+  ok(/Gasto registrado/.test(t) && /Comprado/.test(t), 'la compra queda comprada y con su gasto registrado')
+  ok(
+    /6\.800\.000/.test(t) && !/Registrar compra/.test(t),
+    'cuenta lo pagado de verdad y no ofrece registrarla otra vez'
+  )
+  await ir(A.p, 'Movimientos')
+  await A.p.waitForTimeout(300)
+  ok(/Compra · Portátil/.test(await texto(A.p)), 'el gasto aparece en los movimientos de la empresa')
+
+  // Mercadeo
+  await ir(A.p, 'Mercadeo')
+  await A.p.waitForTimeout(300)
+  await A.p.click('button:has-text("Nueva acción")')
+  await A.p.waitForSelector('.modal form')
+  await A.p.fill('#campo-nombre', 'Pauta digital')
+  await A.p.fill('#campo-costo', '2000000')
+  await A.p.fill('#campo-mes', '1')
+  await guardar(A.p)
+  t = await texto(A.p)
+  ok(
+    /0 de 1/.test(t) && /2\.000\.000/.test(t),
+    'una acción de mercadeo cuenta como 1 evento, aún sin realizar'
+  )
+
+  // Trámites
+  await ir(A.p, 'Trámites')
+  await A.p.waitForTimeout(300)
+  await A.p.click('button:has-text("Nuevo trámite")')
+  await A.p.waitForSelector('.modal form')
+  await A.p.fill('#campo-nombre', 'Facturación electrónica')
+  await A.p.fill('#campo-costo', '3000000')
+  await A.p.fill('#campo-dias', '14')
+  await A.p.fill('#campo-mes', '1')
+  await guardar(A.p)
+  t = await texto(A.p)
+  ok(/3\.000\.000/.test(t) && /14d/.test(t), 'el trámite guarda su costo y los días que toma')
+
+  // Plan desde las listas
+  await ir(A.p, 'Plan')
+  await A.p.waitForTimeout(300)
+  await A.p.waitForSelector('#pro-valor')
+  await A.p.fill('#pro-valor', '100000000')
+  await A.p.click('.form-proyecto .btn-primary')
+  await A.p.waitForTimeout(250)
+  t = await texto(A.p)
+  ok(
+    /Completar 3 casillas desde las listas/.test(t),
+    'el plan ofrece completar las 3 casillas que dicen las listas'
+  )
+  await A.p.click('button:has-text("Completar 3 casillas")')
+  await A.p.waitForTimeout(300)
+  t = await texto(A.p)
+  ok(
+    /12\.000\.000/.test(t),
+    'tras completar, el plan suma 12.000.000 (7 M de equipos + 2 M de mercadeo + 3 M de trámites)'
+  )
+  ok(/El plan ya refleja las listas/.test(t), 'y ya no ofrece completar nada más')
+
+  await sincronizar(A.p)
+  console.log(
+    `    servidor: ${enServidor('empresa:compras')} compras, ${enServidor('empresa:mercadeo')} acciones, ${enServidor('empresa:tramites')} trámites, ${enServidor('empresa:plan')} celdas del plan, ${enServidor('empresa:movimientos')} movimientos`
+  )
+  ok(
+    enServidor('empresa:compras') === 1 &&
+      enServidor('empresa:mercadeo') === 1 &&
+      enServidor('empresa:tramites') === 1,
+    'compras, acciones y trámites suben a la nube'
+  )
+  ok(
+    enServidor('empresa:plan') === 3 && enServidor('empresa:movimientos') === 1,
+    'las 3 celdas del plan y el gasto de la compra suben también'
+  )
+  ok(
+    enServidor('movimientos') === 0 && enServidor('cuentas') === 0,
+    'y nada de esto cae en el espacio personal'
+  )
+
+  // El otro dispositivo
+  const B = await dispositivo('B-listas', { conSesion: true })
+  await B.p.waitForTimeout(1500)
+  await aEspacio(B.p, 'Empresa')
+  await ir(B.p, 'Compras')
+  await B.p.waitForTimeout(300)
+  t = await texto(B.p)
+  ok(
+    /Portátil/.test(t) && /Comprado/.test(t) && /Gasto registrado/.test(t),
+    'B ve la compra ya comprada y con su gasto registrado (no la ofrece registrar de nuevo)'
+  )
+  await ir(B.p, 'Plan')
+  await B.p.waitForTimeout(300)
+  ok(/12\.000\.000/.test(await texto(B.p)), 'y el plan completado')
   await A.ctx.close()
   await B.ctx.close()
 }

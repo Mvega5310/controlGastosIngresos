@@ -93,13 +93,46 @@ repartido por rubro y por mes.
   en los parámetros de nómina y cubierto por pruebas y por la revisión de
   sincronización.
 
+## Compras, mercadeo y trámites
+
+Tres listas que parten de las secciones 7, 8 y 12 del formato, y que alimentan el plan.
+
+- **Compras** (las «inversiones fijas» del formato): qué se compra, rubro, cantidad,
+  valor unitario, proveedor, estado (por cotizar, cotizado, comprado) y mes del plan.
+  «Registrar compra» crea el gasto real con lo que se pagó de verdad, que puede ser
+  distinto de lo planeado.
+- **Mercadeo:** las acciones de comunicación, promoción y distribución. El fondo
+  exige cumplir un número de «eventos de mercadeo», que el formato cuenta como las
+  acciones descritas (7 en el ejemplo); aquí se ve cuántas van realizadas y cuáles
+  no tienen evidencia. El gasto cae en «Publicidad y comunicación».
+- **Trámites:** costo, días que toma, fecha de inicio y fecha estimada de
+  finalización, con aviso de los atrasados. **La constitución legal es un rubro no
+  financiable** (la asume el emprendedor) y no entra al plan.
+- **Un gasto registrado no se puede registrar dos veces:** lleva una marca de origen
+  (`compra:<id>`, `mercadeo:<id>`, `tramite:<id>`, `nomina:<cargo>:<mes>`), y la
+  marca viaja con el movimiento, así que otro dispositivo tampoco lo ofrece de nuevo.
+
+### Llenar el plan desde las listas
+
+Cada compra, acción y trámite tiene un mes del plan. En «Plan por rubro» aparece lo
+que suman las listas por rubro y mes, con un botón para completar las casillas:
+
+- Solo toca las casillas donde las listas tienen algo que poner; las demás se dejan.
+- Si va a **sustituir un importe distinto que ya estaba escrito**, pregunta antes.
+- Lo que no tiene mes del plan (o lo tiene fuera de los meses del plan) no se puede
+  repartir: se avisa, no se esconde.
+
+Verificado con las cifras del formato: 133.050.000 de inversiones (equipos 60,05 M,
+muebles y arriendo 51 M, adecuaciones 12 M y 10 M), 7 eventos de mercadeo que suman
+56.200.000, y 3.000.000 de permisos.
+
 ## Hoja de ruta
 
 | Fase | Contenido                                                                  | Estado    |
 | ---- | -------------------------------------------------------------------------- | --------- |
 | 1    | Espacios separados, selector, sincronización de ambos, **nómina**          | hecha     |
 | 2    | Rubros con tope y plan operativo por mes (planeado frente a ejecutado)     | hecha     |
-| 3    | Compras de equipos (cotizado / comprado, proveedor), mercadeo, trámites    | pendiente |
+| 3    | Compras de equipos (cotizado / comprado, proveedor), mercadeo, trámites    | hecha     |
 | 4    | Facturas y soportes (foto o PDF) en almacenamiento de Supabase             | pendiente |
 | 5    | Importador del formato del SENA y exportación para el informe de ejecución | pendiente |
 | 6    | Espacio compartido con socios: miembros, roles y permisos                  | pendiente |
@@ -120,7 +153,7 @@ lee) antes de escribir el SQL.
 ```bash
 npm run verificar               # formato, lint, pruebas y compilación
 npm run revision:sincronizacion # dos dispositivos contra un Supabase de mentira
-npm run revision:responsive     # 11 tamaños × 20 secciones
+npm run revision:responsive     # 11 tamaños × 23 secciones
 ```
 
 Para las revisiones locales **no** hay que definir `REVISION_PROXY`: salir por el

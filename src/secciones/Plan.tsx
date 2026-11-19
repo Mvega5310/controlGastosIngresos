@@ -1,20 +1,25 @@
 import { FormEvent, useMemo, useState } from 'react'
-import { ClipboardList, Wallet, TrendingDown, Settings2, Info, TriangleAlert } from 'lucide-react'
+import { ClipboardList, Wallet, TrendingDown, Settings2, Info, TriangleAlert, Link2 } from 'lucide-react'
 import { Movement, money } from '../datos/catalogo'
 import { aCentavos, aPesos } from '../core/dinero'
 import { verPorcentaje } from '../core/nomina'
 import {
   FilaRubro,
+  FuentePlan,
   ParametrosProyecto,
   PlanItem,
+  SugerenciaRubro,
   calcularPlan,
   cambiaLaCelda,
+  cambiosDeRelleno,
   claveDeMes,
   idDePlan,
-  mesesDelPlan
+  mesesDelPlan,
+  sugerenciasDelPlan
 } from '../core/plan'
 import { Registro } from '../core/sincronizacion'
 import { RUBROS } from '../datos/empresa'
+import { Confirmar } from '../components/Confirmar'
 import StatCard from '../components/StatCard'
 
 /** Lo que Plan necesita de la colección del plan: leer las celdas y escribir una. */
@@ -36,12 +41,15 @@ export function Plan({
   plan,
   parametros,
   onGuardarParametros,
-  movimientos
+  movimientos,
+  fuentes
 }: {
   plan: ColeccionPlan
   parametros: ParametrosProyecto
   onGuardarParametros: (p: ParametrosProyecto) => void
   movimientos: Movement[]
+  /** Lo que dicen las compras, el mercadeo y los trámites: sirve para llenar el plan. */
+  fuentes: FuentePlan[]
 }) {
   // Sin valor solicitado todavía, lo primero que hay que hacer es ponerlo.
   const [editando, setEditando] = useState(parametros.valorSolicitado === 0)
@@ -59,6 +67,26 @@ export function Plan({
   const excedidos = r.filas.filter(f => f.tope.excedido)
   const sinPlan = r.filas.filter(f => f.estado === 'sin-plan')
   const porEjecutar = Math.max(0, r.totalPlaneado - r.totalEjecutado)
+
+  const sugerencias = useMemo(
+    () => sugerenciasDelPlan(fuentes, parametros.meses),
+    [fuentes, parametros.meses]
+  )
+  const cambios = useMemo(() => cambiosDeRelleno(plan.todos, sugerencias), [plan.todos, sugerencias])
+  const sinMes = [...sugerencias.values()].reduce((s, x) => s + x.sinMes, 0)
+  const porOrigen = useMemo(() => {
+    const total = new Map<string, number>()
+    for (const f of fuentes) total.set(f.origen, (total.get(f.origen) ?? 0) + (f.monto || 0))
+    return [...total].filter(([, monto]) => monto > 0)
+  }, [fuentes])
+  const [confirmando, setConfirmando] = useState(false)
+
+  const rellenar = () => {
+    for (const c of cambios)
+      plan.fijar(idDePlan(c.rubro, c.mes), { rubro: c.rubro, mes: c.mes, monto: c.monto })
+    setAviso(`Plan completado: ${cambios.length} casilla${cambios.length === 1 ? '' : 's'} desde las listas.`)
+    setConfirmando(false)
+  }
 
   const escribir = (rubro: string, mes: number, centavos: number) => {
     if (!cambiaLaCelda(plan.todos, rubro, mes, centavos)) return
@@ -165,12 +193,46 @@ export function Plan({
             <p>Lo planeado cada mes, frente a lo gastado. Escribe el importe y pasa al siguiente campo.</p>
           </div>
         </div>
+        {porOrigen.length > 0 && (
+          <div className="relleno-plan">
+            <p>
+              <Link2 size={14} /> Según tus listas:{' '}
+              {porOrigen.map(([origen, monto]) => `${origen} ${money(monto)}`).join(' · ')}
+              {sinMes > 0 && ` · ${money(sinMes)} sin mes del plan, que no se puede repartir`}.
+            </p>
+            <button
+              className="btn-secondary"
+              disabled={cambios.length === 0}
+              onClick={() => (cambios.some(c => c.sustituye) ? setConfirmando(true) : rellenar())}
+            >
+              {cambios.length === 0
+                ? 'El plan ya refleja las listas'
+                : `Completar ${cambios.length} casilla${cambios.length === 1 ? '' : 's'} desde las listas`}
+            </button>
+          </div>
+        )}
         <div className="rubros-plan">
           {r.filas.map(f => (
-            <RubroPlan key={f.rubro} fila={f} onEscribir={(mes, c) => escribir(f.rubro, mes, c)} />
+            <RubroPlan
+              key={f.rubro}
+              fila={f}
+              sugerencia={sugerencias.get(f.rubro)}
+              onEscribir={(mes, c) => escribir(f.rubro, mes, c)}
+            />
           ))}
         </div>
       </section>
+
+      <Confirmar
+        abierto={confirmando}
+        titulo="¿Cambiar importes que ya escribiste?"
+        detalle={`${cambios.filter(c => c.sustituye).length} casilla${
+          cambios.filter(c => c.sustituye).length === 1 ? '' : 's'
+        } ya tienen un importe distinto y se sustituirán por lo que suman tus listas. Las demás casillas no se tocan.`}
+        textoConfirmar="Sí, completar"
+        onCancelar={() => setConfirmando(false)}
+        onConfirmar={rellenar}
+      />
 
       <section className="panel full-panel compacto">
         <div className="panel-heading seccion-head">
@@ -211,9 +273,11 @@ export function Plan({
 
 function RubroPlan({
   fila: f,
+  sugerencia,
   onEscribir
 }: {
   fila: FilaRubro
+  sugerencia?: SugerenciaRubro
   onEscribir: (mes: number, centavos: number) => void
 }) {
   const pastilla =
@@ -271,8 +335,16 @@ function RubroPlan({
                 gastado {money(m.ejecutado)}
               </small>
             )}
+            {(sugerencia?.porMes[i] ?? 0) > 0 && sugerencia!.porMes[i] !== m.planeado && (
+              <small className="sugerencia">en tus listas {money(sugerencia!.porMes[i])}</small>
+            )}
           </label>
         ))}
+        {(sugerencia?.sinMes ?? 0) > 0 && (
+          <p className="nota-par celdas-nota">
+            Hay {money(sugerencia!.sinMes)} de este rubro en tus listas sin un mes del plan asignado.
+          </p>
+        )}
       </div>
     </details>
   )

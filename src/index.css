@@ -3654,3 +3654,62 @@ body.dialogo-abierto {
     font-size: 13px;
   }
 }
+
+/* --- Compras, mercadeo y trámites; y llenar el plan desde ellos ---------- */
+.nota-registrada {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--verde-texto);
+  white-space: nowrap;
+}
+.relleno-plan {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 14px;
+  margin-top: 14px;
+  padding: 11px 13px;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+.relleno-plan p {
+  margin: 0;
+  flex: 1 1 260px;
+  font-size: 10px;
+  line-height: 1.6;
+}
+.relleno-plan svg {
+  vertical-align: -2px;
+  color: var(--verde-texto);
+}
+.celda-plan small.sugerencia {
+  color: var(--verde-texto);
+  font-weight: 600;
+}
+.celdas-nota {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.fila-compra .simple-bullet {
+  font-size: 9px;
+}
+@media (max-width: 767px) {
+  .nota-registrada {
+    font-size: 12px;
+    align-self: center;
+  }
+  .relleno-plan p {
+    font-size: 12px;
+  }
+  .relleno-plan .btn-secondary {
+    width: 100%;
+    height: var(--touch-target);
+  }
+}
+@media (pointer: coarse), (max-width: 900px) {
+  .relleno-plan .btn-secondary {
+    min-height: var(--touch-target);
+  }
+}

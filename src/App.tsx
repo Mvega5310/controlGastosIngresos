@@ -17,6 +17,13 @@ import { ID_PARAMETROS_NOMINA, ID_PARAMETROS_PROYECTO, RUBROS } from './datos/em
 import { ParametrosNomina, parametrosDe } from './core/nomina'
 import { Nomina } from './secciones/Nomina'
 import { Plan } from './secciones/Plan'
+import { Compras } from './secciones/Compras'
+import { Mercadeo } from './secciones/Mercadeo'
+import { Tramites } from './secciones/Tramites'
+import { FuentePlan } from './core/plan'
+import { totalDeCompra } from './core/compras'
+import { RUBRO_MERCADEO } from './core/mercadeo'
+import { esFinanciable } from './core/tramites'
 import { ParametrosProyecto, parametrosProyectoDe } from './core/plan'
 import Modal from './components/Modal'
 import { useDatos } from './lib/useDatos'
@@ -64,7 +71,10 @@ const CON_NUEVO_MOVIMIENTO = ['Inicio', 'Movimientos']
 /** Frases propias de las secciones donde la genérica no se lee bien. */
 const SUBTITULOS: Record<string, string> = {
   Plan: 'Reparte lo solicitado por rubro y mes, y compáralo con lo que se gasta.',
-  Nómina: 'Lo que cuesta cada cargo con sus prestaciones, y el pago de cada mes.'
+  Nómina: 'Lo que cuesta cada cargo con sus prestaciones, y el pago de cada mes.',
+  Compras: 'Equipos, muebles y software: lo que se planea, se cotiza y se compra.',
+  Mercadeo: 'Las acciones de mercadeo que exige el fondo, con su costo y su evidencia.',
+  Trámites: 'Permisos, licencias y registros: costo, tiempo y fecha en que deben estar listos.'
 }
 
 /** Qué espacio se tenía abierto la última vez en este dispositivo. */
@@ -170,6 +180,31 @@ function App() {
   )
   const guardarParametrosProyecto = (p: ParametrosProyecto) =>
     empresa.parametros.fijar(ID_PARAMETROS_PROYECTO, p)
+  // Lo que dicen las compras, el mercadeo y los trámites, para llenar el plan.
+  // Los trámites no financiables (la constitución legal) no entran: no se piden al fondo.
+  const fuentesDelPlan = useMemo<FuentePlan[]>(
+    () => [
+      ...empresa.compras.items.map(c => ({
+        rubro: c.rubro,
+        mes: c.mes,
+        monto: totalDeCompra(c),
+        origen: 'Compras'
+      })),
+      ...empresa.mercadeo.items.map(a => ({
+        rubro: RUBRO_MERCADEO,
+        mes: a.mes,
+        monto: a.costo,
+        origen: 'Mercadeo'
+      })),
+      ...empresa.tramites.items.filter(esFinanciable).map(t => ({
+        rubro: t.rubro,
+        mes: t.mes,
+        monto: t.costo,
+        origen: 'Trámites'
+      }))
+    ],
+    [empresa.compras.items, empresa.mercadeo.items, empresa.tramites.items]
+  )
   const cambiarEspacio = (nuevo: Espacio) => {
     if (nuevo === espacio) return
     setEspacio(nuevo)
@@ -444,6 +479,28 @@ function App() {
               parametros={parametrosProyecto}
               onGuardarParametros={guardarParametrosProyecto}
               movimientos={movements}
+              fuentes={fuentesDelPlan}
+            />
+          ) : active === 'Compras' ? (
+            <Compras
+              compras={empresa.compras}
+              movimientos={movements}
+              agregarMovimientos={movs.agregarVarios}
+              cuentas={cuentas}
+            />
+          ) : active === 'Mercadeo' ? (
+            <Mercadeo
+              acciones={empresa.mercadeo}
+              movimientos={movements}
+              agregarMovimientos={movs.agregarVarios}
+              cuentas={cuentas}
+            />
+          ) : active === 'Trámites' ? (
+            <Tramites
+              tramites={empresa.tramites}
+              movimientos={movements}
+              agregarMovimientos={movs.agregarVarios}
+              cuentas={cuentas}
             />
           ) : active === 'Nómina' ? (
             <Nomina

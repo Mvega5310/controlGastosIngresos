@@ -8,6 +8,8 @@ import {
   idDePlan,
   mesesDelPlan,
   cambiaLaCelda,
+  cambiosDeRelleno,
+  sugerenciasDelPlan,
   parametrosProyectoDe
 } from './plan'
 import { RUBROS } from '../datos/empresa'
@@ -275,5 +277,97 @@ describe('escribir una celda del plan', () => {
     }
     expect(cambiaLaCelda([borrada], SALARIOS, 1, 700)).toBe(true)
     expect(cambiaLaCelda([borrada], SALARIOS, 1, 0)).toBe(false)
+  })
+})
+
+describe('llenar el plan desde compras, mercadeo y trámites', () => {
+  const fuente = (rubro: string, mes: number | undefined, pesos: number, origen = 'Compras') => ({
+    rubro,
+    mes,
+    monto: aCentavos(pesos),
+    origen
+  })
+
+  it('suma las fuentes por rubro y mes del plan', () => {
+    const s = sugerenciasDelPlan(
+      [
+        fuente(MUEBLES, 1, 15000000),
+        fuente(MUEBLES, 1, 100),
+        fuente(MUEBLES, 2, 4500000),
+        fuente(EQUIPOS, 1, 1)
+      ],
+      9
+    )
+    expect(s.get(MUEBLES)!.porMes[0]).toBe(aCentavos(15000100))
+    expect(s.get(MUEBLES)!.porMes[1]).toBe(aCentavos(4500000))
+    expect(s.get(EQUIPOS)!.porMes[0]).toBe(aCentavos(1))
+    expect(s.get(MUEBLES)!.porMes).toHaveLength(9)
+  })
+
+  it('lo que no tiene mes, o lo tiene fuera del plan, queda aparte y no se reparte', () => {
+    const s = sugerenciasDelPlan(
+      [
+        fuente(MUEBLES, undefined, 100),
+        fuente(MUEBLES, 0, 200),
+        fuente(MUEBLES, 10, 300),
+        fuente(MUEBLES, 9, 400)
+      ],
+      9
+    )
+    const m = s.get(MUEBLES)!
+    expect(m.sinMes).toBe(aCentavos(600))
+    expect(m.porMes[8]).toBe(aCentavos(400))
+    expect(m.porMes.reduce((a, b) => a + b, 0)).toBe(aCentavos(400))
+  })
+
+  it('ignora lo que vale cero', () => {
+    expect(sugerenciasDelPlan([fuente(MUEBLES, 1, 0)], 9).size).toBe(0)
+  })
+
+  it('propone solo las celdas donde hay algo que poner', () => {
+    const s = sugerenciasDelPlan([fuente(MUEBLES, 1, 100), fuente(MUEBLES, 3, 300)], 9)
+    const cambios = cambiosDeRelleno([], s)
+    expect(cambios.map(c => [c.mes, c.monto, c.sustituye])).toEqual([
+      [1, aCentavos(100), false],
+      [3, aCentavos(300), false]
+    ])
+  })
+
+  it('avisa cuando pisaría un importe distinto que ya había', () => {
+    const existente = { id: idDePlan(MUEBLES, 1), rubro: MUEBLES, mes: 1, monto: aCentavos(50) }
+    const s = sugerenciasDelPlan([fuente(MUEBLES, 1, 100)], 9)
+    const [c] = cambiosDeRelleno([existente], s)
+    expect(c).toMatchObject({ mes: 1, actual: aCentavos(50), sustituye: true })
+  })
+
+  it('no propone nada si la celda ya tiene ese importe', () => {
+    const existente = { id: idDePlan(MUEBLES, 1), rubro: MUEBLES, mes: 1, monto: aCentavos(100) }
+    const s = sugerenciasDelPlan([fuente(MUEBLES, 1, 100)], 9)
+    expect(cambiosDeRelleno([existente], s)).toEqual([])
+  })
+
+  it('una celda borrada no cuenta como importe que se pisa', () => {
+    const borrada = {
+      id: idDePlan(MUEBLES, 1),
+      rubro: MUEBLES,
+      mes: 1,
+      monto: aCentavos(50),
+      eliminadoEn: '2026-11-01T00:00:00.000Z'
+    }
+    const s = sugerenciasDelPlan([fuente(MUEBLES, 1, 100)], 9)
+    expect(cambiosDeRelleno([borrada], s)[0]).toMatchObject({ actual: 0, sustituye: false })
+  })
+
+  it('con las compras del formato, llena el mes 1 de muebles con lo del formato', () => {
+    const s = sugerenciasDelPlan(
+      [
+        fuente(MUEBLES, 1, 10500000),
+        fuente(MUEBLES, 1, 4500000),
+        ...Array.from({ length: 8 }, (_, i) => fuente(MUEBLES, i + 2, 4500000))
+      ],
+      9
+    )
+    expect(s.get(MUEBLES)!.porMes[0]).toBe(aCentavos(15000000))
+    expect(s.get(MUEBLES)!.porMes.reduce((a, b) => a + b, 0)).toBe(aCentavos(51000000))
   })
 })
