@@ -24,7 +24,8 @@ import { FuentePlan } from './core/plan'
 import { totalDeCompra } from './core/compras'
 import { RUBRO_MERCADEO } from './core/mercadeo'
 import { esFinanciable } from './core/tramites'
-import { ParametrosProyecto, parametrosProyectoDe } from './core/plan'
+import { ParametrosProyecto, calcularPlan, parametrosProyectoDe } from './core/plan'
+import { calcularAvisosEmpresa } from './core/avisosEmpresa'
 import Modal from './components/Modal'
 import { useDatos } from './lib/useDatos'
 import { useDatosEmpresa } from './lib/useDatosEmpresa'
@@ -77,6 +78,25 @@ const SUBTITULOS: Record<string, string> = {
   Trámites: 'Permisos, licencias y registros: costo, tiempo y fecha en que deben estar listos.'
 }
 
+/**
+ * Dónde se guardan los avisos ya vistos de cada espacio. Van aparte: al abrir la
+ * campana se olvidan los vistos que ya no existen, y si los dos espacios
+ * compartieran lista, mirar uno haría olvidar los del otro.
+ */
+const CLAVE_VISTOS: Record<Espacio, string> = {
+  personal: 'fc-avisos-vistos',
+  empresa: 'fc-avisos-vistos-empresa'
+}
+
+const leerVistos = (clave: string): string[] => {
+  try {
+    const guardado = JSON.parse(localStorage.getItem(clave) || '[]')
+    return Array.isArray(guardado) ? guardado : []
+  } catch {
+    return []
+  }
+}
+
 /** Qué espacio se tenía abierto la última vez en este dispositivo. */
 const leerEspacio = (): Espacio => {
   try {
@@ -104,14 +124,11 @@ function App() {
   const [menuPerfil, setMenuPerfil] = useState(false)
   // Qué avisos se han mirado ya, para que la campana cuente lo nuevo en vez
   // de repetir un número que no bajaba hasta que venciera el pago.
-  const [avisosVistos, setAvisosVistos] = useState<string[]>(() => {
-    try {
-      const guardado = JSON.parse(localStorage.getItem('fc-avisos-vistos') || '[]')
-      return Array.isArray(guardado) ? guardado : []
-    } catch {
-      return []
-    }
-  })
+  const [vistosPorEspacio, setVistosPorEspacio] = useState<Record<Espacio, string[]>>(() => ({
+    personal: leerVistos(CLAVE_VISTOS.personal),
+    empresa: leerVistos(CLAVE_VISTOS.empresa)
+  }))
+  const avisosVistos = vistosPorEspacio[espacio]
   // Qué venía buscando quien llega a Ajustes, para llevarle hasta ahí.
   const [focoAjustes, setFocoAjustes] = useState<string | null>(null)
   const [period, setPeriod] = useState<Period>(() => periodOf(new Date()))
@@ -249,10 +266,24 @@ function App() {
         (filter === 'Todos' || m.type === filter) &&
         `${m.title} ${m.category} ${m.account}`.toLowerCase().includes(query.toLowerCase())
     )
+  // El plan se calcula con los movimientos de la empresa aunque se esté mirando
+  // el espacio personal: los avisos de cada espacio salen solo de sus datos.
+  const planEmpresa = useMemo(
+    () => calcularPlan(empresa.plan.items, empresa.movimientos.items, parametrosProyecto, RUBROS),
+    [empresa.plan.items, empresa.movimientos.items, parametrosProyecto]
+  )
   const avisos = useMemo(
     () =>
       enEmpresa
-        ? []
+        ? calcularAvisosEmpresa({
+            tramites: empresa.tramites.items,
+            compras: empresa.compras.items,
+            acciones: empresa.mercadeo.items,
+            cargos: empresa.cargos.items,
+            parametrosNomina,
+            plan: planEmpresa,
+            movimientos: empresa.movimientos.items
+          })
         : calcularAvisos({
             suscripciones: datos.suscripciones.items,
             deudas: datos.deudas.items,
@@ -263,6 +294,13 @@ function App() {
           }),
     [
       enEmpresa,
+      empresa.tramites.items,
+      empresa.compras.items,
+      empresa.mercadeo.items,
+      empresa.cargos.items,
+      empresa.movimientos.items,
+      parametrosNomina,
+      planEmpresa,
       datos.suscripciones.items,
       datos.deudas.items,
       datos.vehiculos.items,
@@ -278,9 +316,9 @@ function App() {
   // podados: si no, la lista crecería con los cobros de todos los meses.
   const marcarVistos = () => {
     const vistos = podarVistos([...new Set([...avisosVistos, ...avisos.map(a => a.id)])], avisos)
-    setAvisosVistos(vistos)
+    setVistosPorEspacio(previos => ({ ...previos, [espacio]: vistos }))
     try {
-      localStorage.setItem('fc-avisos-vistos', JSON.stringify(vistos))
+      localStorage.setItem(CLAVE_VISTOS[espacio], JSON.stringify(vistos))
     } catch {
       /* modo privado */
     }
@@ -380,6 +418,11 @@ function App() {
             )}
             <PanelAvisos
               avisos={avisos}
+              ayudaVacio={
+                enEmpresa
+                  ? 'Aquí aparecerán los trámites que se atrasan, los rubros que pasan su tope o su plan, la nómina del mes sin registrar y lo que falte para que el plan sume lo solicitado.'
+                  : undefined
+              }
               abierto={panelAvisos}
               onCerrar={() => setPanelAvisos(false)}
               onIr={go}

@@ -17,7 +17,9 @@
  *      «Borrar todo» en uno no toca el otro;
  *   6. el plan por rubro se escribe, sincroniza y sobrevive a «Borrar todo»;
  *   7. compras, mercadeo y trámites se registran como gasto, llenan el plan y
- *      se sincronizan sin duplicar el gasto en el otro dispositivo.
+ *      se sincronizan sin duplicar el gasto en el otro dispositivo;
+ *   8. los avisos de la empresa salen en la campana, se cuentan una vez y no
+ *      se mezclan con los personales.
  *
  * El caso 2 era un fallo real: esos registros no se subían nunca.
  *
@@ -713,6 +715,66 @@ filas.clear()
   ok(/12\.000\.000/.test(await texto(B.p)), 'y el plan completado')
   await A.ctx.close()
   await B.ctx.close()
+}
+
+// =============================================================== ESCENARIO 7
+console.log(
+  '\n== 7. Avisos de la empresa: aparecen en la campana, se cuentan una vez y no se mezclan con los personales =='
+)
+filas.clear()
+{
+  const aEspacio = async (p, nombre) => {
+    await p.click('.mobile-menu')
+    await p.click(`.espacios button:has-text("${nombre}")`)
+    await p.waitForTimeout(250)
+  }
+  const insignia = p =>
+    p.evaluate(() => document.querySelector('.icon-button.notification i')?.textContent?.trim() ?? '')
+
+  const A = await dispositivo('A-avisos', { conSesion: true })
+  await aEspacio(A.p, 'Empresa')
+  ok((await insignia(A.p)) === '', 'una empresa nueva no tiene avisos: la campana no muestra número')
+
+  await ir(A.p, 'Trámites')
+  await A.p.waitForTimeout(300)
+  await A.p.click('button:has-text("Nuevo trámite")')
+  await A.p.waitForSelector('.modal form')
+  await A.p.fill('#campo-nombre', 'Registro de marca')
+  await A.p.fill('#campo-dias', '10')
+  await A.p.fill('#campo-inicio', '2026-01-01')
+  await A.p.selectOption('#campo-estado', 'En trámite')
+  await A.p.click('.modal form .btn-primary')
+  await A.p.waitForTimeout(400)
+  ok((await insignia(A.p)) === '1', 'un trámite que pasó su fecha estimada pone un 1 en la campana')
+
+  await A.p.click('.icon-button.notification')
+  await A.p.waitForSelector('.avisos-panel')
+  const panel = await A.p.evaluate(() => document.querySelector('.avisos-panel').textContent)
+  ok(
+    /Registro de marca/.test(panel) && /atrasado/.test(panel),
+    'la campana dice qué trámite y cuánto se atrasó'
+  )
+  await A.p.click('.avisos-lista button')
+  await A.p.waitForTimeout(300)
+  ok(
+    (await A.p.evaluate(() => document.querySelector('.breadcrumb b')?.textContent)) === 'Trámites',
+    'pulsar el aviso lleva a la sección del trámite'
+  )
+  ok((await insignia(A.p)) === '', 'ya visto, el número baja a cero (el aviso sigue en la lista)')
+
+  await aEspacio(A.p, 'Personal')
+  ok((await insignia(A.p)) === '', 'el espacio personal no hereda los avisos de la empresa')
+  await aEspacio(A.p, 'Empresa')
+  ok((await insignia(A.p)) === '', 'y al volver a la empresa lo visto sigue visto')
+  const guardado = await A.p.evaluate(() => ({
+    empresa: JSON.parse(localStorage.getItem('fc-avisos-vistos-empresa') || '[]').length,
+    personal: JSON.parse(localStorage.getItem('fc-avisos-vistos') || '[]').length
+  }))
+  ok(
+    guardado.empresa === 1 && guardado.personal === 0,
+    'los avisos vistos se guardan por separado en cada espacio'
+  )
+  await A.ctx.close()
 }
 
 console.log(`\nFALLOS: ${fallos}`)

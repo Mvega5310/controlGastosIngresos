@@ -126,6 +126,41 @@ Verificado con las cifras del formato: 133.050.000 de inversiones (equipos 60,05
 muebles y arriendo 51 M, adecuaciones 12 M y 10 M), 7 eventos de mercadeo que suman
 56.200.000, y 3.000.000 de permisos.
 
+## Avisos de la empresa
+
+La campana del espacio de la empresa avisa de lo que sale de los datos del proyecto:
+
+- **Trámites** que pasaron su fecha estimada (vencido) o están a una semana o menos.
+- **Nómina del mes** sin registrar, desde cinco días antes de fin de mes.
+- **Rubros** que pasan su tope, que gastaron más de lo planeado o que gastan sin plan.
+- **El plan** no suma el valor solicitado (falta o sobra).
+- **Compras** sin mes del plan, y **mercadeo** realizado sin evidencia.
+
+Los avisos ya vistos se guardan **por espacio**: al abrir la campana se olvidan los
+vistos que ya no existen, y con una lista compartida mirar un espacio haría olvidar
+los del otro.
+
+## Estado de la sincronización
+
+Funciona hoy en producción: iniciar sesión, subir y bajar entre dispositivos, cada 2
+minutos, al volver a la pestaña, al recuperar la conexión y con el botón.
+
+**Aún no está en producción:** la corrección `e36d174` (los datos guardados antes de
+que existiera la sincronización no se subían) y todo el espacio de la empresa. La
+sincronización del espacio de la empresa solo se ha probado contra un Supabase de
+mentira, nunca contra el real: el staging no tiene Supabase.
+
+**Límites del diseño actual:**
+
+- No se sube al guardar: un cambio sale en el siguiente ciclo (hasta 2 minutos). Si se
+  cierra la aplicación antes, queda en la cola local y sale la próxima vez que se abra.
+- No hay envío en tiempo real: el otro dispositivo se entera en su siguiente ciclo.
+- Gana la última escritura **de todo el registro**, comparando la hora del dispositivo.
+  Un reloj mal puesto puede ganar cuando no debe.
+- Los borrados dejan una marca que nunca se limpia (`purgar` existe y no se usa).
+- Los adjuntos (facturas) no existen todavía.
+- Compartir con socios exige tablas nuevas y permisos por pertenencia (fase 6).
+
 ## Hoja de ruta
 
 | Fase | Contenido                                                                  | Estado    |

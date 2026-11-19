@@ -56,11 +56,14 @@ export function BotonAvisos({
 /** Lista desplegable con los avisos; cada uno lleva a su sección. */
 export function PanelAvisos({
   avisos,
+  ayudaVacio,
   abierto,
   onCerrar,
   onIr
 }: {
   avisos: Aviso[]
+  /** Lo que se explica cuando no hay avisos. Por defecto, lo del espacio personal. */
+  ayudaVacio?: string
   abierto: boolean
   onCerrar: () => void
   onIr: (seccion: string) => void
@@ -91,8 +94,8 @@ export function PanelAvisos({
             <CheckCheck size={20} />
             <p>Nada que mirar ahora mismo.</p>
             <small>
-              Aquí aparecerán los cobros que se acercan, las cuotas, los documentos del vehículo por vencer y
-              los presupuestos pasados de la raya.
+              {ayudaVacio ??
+                'Aquí aparecerán los cobros que se acercan, las cuotas, los documentos del vehículo por vencer y los presupuestos pasados de la raya.'}
             </small>
           </div>
         ) : (
