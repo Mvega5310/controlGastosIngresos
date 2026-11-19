@@ -17,6 +17,7 @@ import {
   COLECCIONES,
   COLECCIONES_EMPRESA,
   avisarCambioDatos,
+  avisarEscrituraLocal,
   coleccionesDe,
   escribirLista,
   escribirPendientes,
@@ -68,6 +69,7 @@ export function cargarEjemplos(espacio: Espacio = 'personal') {
   escribirAnexando(COLECCIONES.inversiones, inversionesDeEjemplo)
   escribirAnexando(COLECCIONES.vehiculos, vehiculosDeEjemplo)
   avisarCambioDatos()
+  avisarEscrituraLocal()
 }
 
 /**
@@ -213,6 +215,7 @@ function cargarEjemplosDeEmpresa() {
     }
   ])
   avisarCambioDatos()
+  avisarEscrituraLocal()
 }
 
 /**
@@ -238,6 +241,7 @@ export function borrarTodosLosDatos(espacio: Espacio = 'personal') {
     )
   }
   avisarCambioDatos()
+  avisarEscrituraLocal()
 }
 
 /** Cuántos registros vivos hay en total, para saber si la aplicación está vacía. */

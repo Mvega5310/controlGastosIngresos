@@ -142,21 +142,51 @@ los del otro.
 
 ## Estado de la sincronización
 
-Funciona hoy en producción: iniciar sesión, subir y bajar entre dispositivos, cada 2
+Funciona en producción: iniciar sesión, subir y bajar entre dispositivos, cada 2
 minutos, al volver a la pestaña, al recuperar la conexión y con el botón.
 
-**Aún no está en producción:** la corrección `e36d174` (los datos guardados antes de
-que existiera la sincronización no se subían) y todo el espacio de la empresa. La
-sincronización del espacio de la empresa solo se ha probado contra un Supabase de
-mentira, nunca contra el real: el staging no tiene Supabase.
+**Subida rápida (en esta rama, aún no en producción).** Lo guardado sale a los 3
+segundos, y al ocultar o cerrar la pestaña sale en seguida. La vuelta rápida solo
+recorre las colecciones con algo pendiente y no enseña «sincronizando», para que
+el icono no parpadee en cada guardado. Sin conexión no se intenta: queda en la
+cola local y sale al volver. El plazo de 3 segundos lo fija el primer cambio y no
+se reinicia con cada tecla, para que quien escribe sin parar no deje de subir
+nunca. Al ocultar o cerrar, el navegador no garantiza que la petición termine; lo
+que no salga queda en la cola local y sale la próxima vez que se abra.
+
+**Dos defectos que esto sacó a la luz, ya corregidos:**
+
+- **Una sincronización pisaba lo guardado mientras ella corría.** Leía las
+  colecciones al empezar y, al terminar, escribía ese resultado encima de lo que
+  hubiera: lo escrito mientras el servidor contestaba desaparecía, con su marca de
+  pendiente. Era una ventana rara con un ciclo cada 2 minutos, y habría sido
+  frecuente subiendo a los 3 segundos. Ahora, al terminar, se parte de lo guardado
+  en ese instante (`reconciliarTrasSync`): gana la versión más reciente y siguen
+  pendientes los registros escritos o modificados durante la vuelta.
+- **El almacenamiento se escribía en un efecto, después de pintar.** Ahora cada
+  guardado lo escribe en el acto, y el estado de React es solo su reflejo. Así una
+  sincronización no puede leer lo guardado sin el cambio recién hecho ni escribir
+  un estado viejo encima de lo que bajó del servidor.
+- **La hora del servidor, que fija el corte de la siguiente vuelta, se pedía
+  después de leer.** Lo que otro dispositivo escribiera en ese intervalo quedaba
+  con una marca anterior al corte sin haber llegado: no se bajaba nunca. Ahora se
+  pide antes de leer; como mucho, vuelve a bajar lo ya recibido, y la fusión es
+  idempotente.
+
+La revisión de dos dispositivos reproduce la escritura durante una vuelta con un
+servidor lento. Se comprobó con una mutación: sin la reconciliación la prueba falla.
+
+**Aún no está en producción:** la corrección `e36d174` (los datos guardados antes
+de que existiera la sincronización no se subían), la subida rápida y todo el
+espacio de la empresa. La sincronización de la empresa solo se ha probado contra
+un Supabase de mentira, nunca contra el real: el staging no tiene Supabase.
 
 **Límites del diseño actual:**
 
-- No se sube al guardar: un cambio sale en el siguiente ciclo (hasta 2 minutos). Si se
-  cierra la aplicación antes, queda en la cola local y sale la próxima vez que se abra.
-- No hay envío en tiempo real: el otro dispositivo se entera en su siguiente ciclo.
-- Gana la última escritura **de todo el registro**, comparando la hora del dispositivo.
-  Un reloj mal puesto puede ganar cuando no debe.
+- No hay envío en tiempo real: el otro dispositivo se entera en su siguiente ciclo
+  (hasta 2 minutos) o al volver a su pestaña.
+- Gana la última escritura **de todo el registro**, comparando la hora del
+  dispositivo. Un reloj mal puesto puede ganar cuando no debe.
 - Los borrados dejan una marca que nunca se limpia (`purgar` existe y no se usa).
 - Los adjuntos (facturas) no existen todavía.
 - Compartir con socios exige tablas nuevas y permisos por pertenencia (fase 6).

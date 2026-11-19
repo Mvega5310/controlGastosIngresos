@@ -129,3 +129,23 @@ export function alCambiarDatos(fn: () => void) {
 export function avisarCambioDatos() {
   for (const fn of [...oyentes]) fn()
 }
+
+// --- Aviso de escrituras locales -------------------------------------------
+
+const escuchasDeEscritura = new Set<() => void>()
+
+/**
+ * Avisa cuando alguien guarda algo en este dispositivo. La sincronización lo
+ * usa para subirlo enseguida en vez de esperar al siguiente ciclo. No salta
+ * cuando es la propia sincronización la que escribe: eso es `alCambiarDatos`.
+ */
+export function alEscribirLocal(fn: () => void) {
+  escuchasDeEscritura.add(fn)
+  return () => {
+    escuchasDeEscritura.delete(fn)
+  }
+}
+
+export function avisarEscrituraLocal() {
+  for (const fn of [...escuchasDeEscritura]) fn()
+}

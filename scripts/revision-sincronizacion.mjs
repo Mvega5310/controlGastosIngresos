@@ -19,7 +19,9 @@
  *   7. compras, mercadeo y trámites se registran como gasto, llenan el plan y
  *      se sincronizan sin duplicar el gasto en el otro dispositivo;
  *   8. los avisos de la empresa salen en la campana, se cuentan una vez y no
- *      se mezclan con los personales.
+ *      se mezclan con los personales;
+ *   9. lo guardado sube solo a los pocos segundos, sin pisar lo escrito mientras
+ *      otra subida estaba en marcha, al ocultar la pestaña y al volver la conexión.
  *
  * El caso 2 era un fallo real: esos registros no se subían nunca.
  *
@@ -81,6 +83,8 @@ const filas = new Map() // "usuario|coleccion|id" -> fila
 let relojFalso = Date.now()
 const ahora = () => new Date((relojFalso += 5)).toISOString().replace('Z', '+00:00')
 const registro = { escrituras: 0, lecturas: 0 }
+/** Milisegundos que tarda el servidor de mentira en contestar a una lectura. */
+let retardoLectura = 0
 
 async function servidor(ruta) {
   const url = new URL(ruta.request().url())
@@ -96,6 +100,7 @@ async function servidor(ruta) {
   if (url.pathname.endsWith('/rest/v1/registros')) {
     if (m === 'GET') {
       registro.lecturas++
+      if (retardoLectura) await new Promise(r => setTimeout(r, retardoLectura))
       const col = (url.searchParams.get('coleccion') || '').replace('eq.', '')
       const gt = url.searchParams.get('servidor_en')
       const desde = gt ? new Date(gt.replace('gt.', '')).getTime() : -Infinity
@@ -775,6 +780,104 @@ filas.clear()
     'los avisos vistos se guardan por separado en cada espacio'
   )
   await A.ctx.close()
+}
+
+// =============================================================== ESCENARIO 8
+console.log(
+  '\n== 8. Subida rápida: sin pulsar nada, sin pisar lo escrito durante una vuelta, al ocultar y sin conexión =='
+)
+filas.clear()
+{
+  const esperar = async (cond, ms = 20000) => {
+    const fin = Date.now() + ms
+    while (Date.now() < fin) {
+      if (await cond()) return true
+      await new Promise(r => setTimeout(r, 200))
+    }
+    return false
+  }
+  const nuevoMovimiento = async (p, titulo, valor) => {
+    await p.click('.mobile-nav button:nth-child(3)')
+    await p.waitForSelector('.modal form')
+    await p.fill('#mov-titulo', titulo)
+    await p.fill('#mov-valor', String(valor))
+    await p.click('.modal form .btn-primary')
+    await p.waitForTimeout(150)
+  }
+  const pendientesLocales = p =>
+    p.evaluate(() => JSON.parse(localStorage.getItem('fc-movements:pendientes') || '[]').length)
+
+  const A = await dispositivo('A-rapida', { conSesion: true })
+  await ir(A.p, 'Cuentas')
+  await A.p.waitForTimeout(250)
+  await A.p.evaluate(() =>
+    [...document.querySelectorAll('button')]
+      .find(b => /Agregar cuenta|Nueva cuenta|Crear/.test(b.textContent))
+      ?.click()
+  )
+  await A.p.waitForSelector('.modal form')
+  await A.p.fill('#campo-name', 'Cuenta rápida')
+  await A.p.fill('#campo-bank', 'Banco')
+  await A.p.click('.modal form .btn-primary')
+
+  ok(
+    await esperar(() => enServidor('cuentas') === 1, 8000),
+    'lo guardado sube solo, a los pocos segundos, sin pulsar «Sincronizar ahora»'
+  )
+
+  // Una escritura mientras el servidor aún contesta a la vuelta anterior.
+  retardoLectura = 2500
+  await ir(A.p, 'Movimientos')
+  await nuevoMovimiento(A.p, 'Uno', 1000)
+  await A.p.waitForTimeout(3600) // la subida rápida ya salió y espera la respuesta del servidor
+  await nuevoMovimiento(A.p, 'Dos', 2000)
+  ok(
+    await esperar(() => enServidor('movimientos') === 2, 25000),
+    'lo escrito mientras otra subida estaba en marcha no se pierde: sube en la vuelta siguiente'
+  )
+  retardoLectura = 0
+  await A.p.waitForTimeout(400)
+  const visto = await A.p.evaluate(() => document.body.textContent)
+  ok(/Uno/.test(visto) && /Dos/.test(visto), 'y los dos siguen a la vista en la pantalla')
+  ok((await pendientesLocales(A.p)) === 0, 'sin nada pendiente al terminar')
+
+  // Al ocultar la pestaña sale enseguida, sin esperar el plazo de unos segundos.
+  await nuevoMovimiento(A.p, 'Tres', 3000)
+  await A.p.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' })
+    document.dispatchEvent(new Event('visibilitychange'))
+  })
+  ok(
+    await esperar(() => enServidor('movimientos') === 3, 1500),
+    'al ocultar la pestaña lo pendiente sale en seguida'
+  )
+  await A.p.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' })
+    document.dispatchEvent(new Event('visibilitychange'))
+  })
+  await A.p.waitForTimeout(800)
+
+  // Sin conexión no se intenta, no se pierde, y al volver sale.
+  await A.ctx.setOffline(true)
+  await nuevoMovimiento(A.p, 'Cuatro', 4000)
+  await A.p.waitForTimeout(4500)
+  ok(enServidor('movimientos') === 3, 'sin conexión no sube nada (y no se queja en cada guardado)')
+  ok((await pendientesLocales(A.p)) === 1, 'lo guardado sin conexión queda en la cola local')
+  await A.ctx.setOffline(false)
+  ok(await esperar(() => enServidor('movimientos') === 4, 8000), 'al volver la conexión sale solo')
+
+  // Y el otro dispositivo lo ve todo.
+  const B = await dispositivo('B-rapida', { conSesion: true })
+  await B.p.waitForTimeout(1500)
+  await ir(B.p, 'Movimientos')
+  await B.p.waitForTimeout(400)
+  const enB = await B.p.evaluate(() => document.body.textContent)
+  ok(
+    /Uno/.test(enB) && /Dos/.test(enB) && /Tres/.test(enB) && /Cuatro/.test(enB),
+    'el otro dispositivo recibe los cuatro movimientos'
+  )
+  await A.ctx.close()
+  await B.ctx.close()
 }
 
 console.log(`\nFALLOS: ${fallos}`)

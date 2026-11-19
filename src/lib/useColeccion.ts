@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { newId } from '../core/finanzas'
 import { Registro, fijarRegistro, sellar, sellarBorrado, vivos } from '../core/sincronizacion'
-import { alCambiarDatos, escribirLista, escribirPendientes, leerLista, leerPendientes } from './almacenLocal'
+import {
+  alCambiarDatos,
+  avisarEscrituraLocal,
+  escribirLista,
+  escribirPendientes,
+  leerLista,
+  leerPendientes
+} from './almacenLocal'
 
 /**
  * Colección guardada en el navegador, con alta, edición y baja.
@@ -13,6 +20,12 @@ import { alCambiarDatos, escribirLista, escribirPendientes, leerLista, leerPendi
  *
  * Los registros de ejemplo no se sellan a propósito: sin marca cuentan como lo
  * más antiguo posible, así que cualquier edición real les gana.
+ *
+ * **El almacenamiento manda, el estado de React es su reflejo.** Cada operación
+ * parte de lo que hay guardado, lo cambia y lo escribe en el acto, antes de
+ * devolver el control. Antes la escritura se hacía en un efecto, un instante
+ * después de pintar: en ese instante una sincronización podía leer el
+ * almacenamiento sin el cambio recién hecho, o escribir encima de él.
  */
 /** Marca un registro como dado de baja. Puro, y fuera del hook para que las
  *  funciones que lo usan no cambien en cada render. */
@@ -24,21 +37,6 @@ export function useColeccion<T extends { id: string }>(clave: string, iniciales:
 
   const [todos, setTodos] = useState<Fila[]>(() => leerLista<Fila>(clave, iniciales as Fila[]))
   const [pendientes, setPendientes] = useState<string[]>(() => leerPendientes(clave))
-
-  // La primera escritura no debe pisar lo leído, ni marcar nada como pendiente
-  // solo por haberse montado el componente.
-  const montado = useRef(false)
-  useEffect(() => {
-    if (!montado.current) {
-      montado.current = true
-      return
-    }
-    escribirLista(clave, todos)
-  }, [clave, todos])
-
-  useEffect(() => {
-    escribirPendientes(clave, pendientes)
-  }, [clave, pendientes])
 
   // Las semillas no cambian durante la vida del componente, pero el efecto no
   // debe volver a suscribirse si llegara otra referencia del mismo array.
@@ -58,34 +56,48 @@ export function useColeccion<T extends { id: string }>(clave: string, iniciales:
   /** Lo que ven las vistas: sin los borrados. */
   const items = useMemo(() => vivos(todos) as T[], [todos])
 
-  const anotar = useCallback((ids: string[]) => {
-    setPendientes(previos => [...new Set([...previos, ...ids])])
-  }, [])
+  /**
+   * Aplica un cambio a lo guardado y lo deja escrito, junto con la marca de
+   * pendiente de los registros tocados. Síncrono de principio a fin.
+   */
+  const escribir = useCallback(
+    (cambiar: (guardados: Fila[]) => Fila[], ids: string[]) => {
+      const nuevos = cambiar(leerLista<Fila>(clave, semillas.current as Fila[]))
+      const pend = [...new Set([...leerPendientes(clave), ...ids])]
+      escribirLista(clave, nuevos)
+      escribirPendientes(clave, pend)
+      setTodos(nuevos)
+      setPendientes(pend)
+      avisarEscrituraLocal()
+    },
+    [clave]
+  )
 
   const agregar = useCallback(
     (datos: Omit<T, 'id'>) => {
       const nuevo = sellar({ ...datos, id: newId() } as T)
-      setTodos(previos => [...previos, nuevo])
-      anotar([nuevo.id])
+      escribir(guardados => [...guardados, nuevo], [nuevo.id])
     },
-    [anotar]
+    [escribir]
   )
 
   /** Alta de varios registros ya formados, como los dos apuntes de un traslado. */
   const agregarVarios = useCallback(
     (registros: T[]) => {
-      setTodos(previos => [...registros.map(r => sellar(r)), ...previos])
-      anotar(registros.map(r => r.id))
+      const nuevos = registros.map(r => sellar(r))
+      escribir(
+        guardados => [...nuevos, ...guardados],
+        registros.map(r => r.id)
+      )
     },
-    [anotar]
+    [escribir]
   )
 
   const actualizar = useCallback(
     (id: string, cambios: Partial<T>) => {
-      setTodos(previos => previos.map(x => (x.id === id ? sellar({ ...x, ...cambios }) : x)))
-      anotar([id])
+      escribir(guardados => guardados.map(x => (x.id === id ? sellar({ ...x, ...cambios }) : x)), [id])
     },
-    [anotar]
+    [escribir]
   )
 
   /**
@@ -94,28 +106,25 @@ export function useColeccion<T extends { id: string }>(clave: string, iniciales:
    */
   const fijar = useCallback(
     (id: string, datos: Omit<T, 'id'>) => {
-      setTodos(previos => fijarRegistro<T>(previos, id, datos) as Fila[])
-      anotar([id])
+      escribir(guardados => fijarRegistro<T>(guardados, id, datos) as Fila[], [id])
     },
-    [anotar]
+    [escribir]
   )
 
   const eliminar = useCallback(
     (id: string) => {
-      setTodos(previos => previos.map(x => (x.id === id ? darDeBaja(x) : x)))
-      anotar([id])
+      escribir(guardados => guardados.map(x => (x.id === id ? darDeBaja(x) : x)), [id])
     },
-    [anotar]
+    [escribir]
   )
 
   const eliminarVarios = useCallback(
     (ids: string[]) => {
       if (!ids.length) return
       const fuera = new Set(ids)
-      setTodos(previos => previos.map(x => (fuera.has(x.id) ? darDeBaja(x) : x)))
-      anotar(ids)
+      escribir(guardados => guardados.map(x => (fuera.has(x.id) ? darDeBaja(x) : x)), ids)
     },
-    [anotar]
+    [escribir]
   )
 
   return { items, todos, pendientes, agregar, agregarVarios, actualizar, fijar, eliminar, eliminarVarios }

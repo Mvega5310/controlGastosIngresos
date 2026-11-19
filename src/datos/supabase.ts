@@ -64,13 +64,19 @@ const aFila = (usuarioId: string, coleccion: string, r: Registro): Fila => ({
 export function remotoSupabase(cliente: SupabaseClient, usuarioId: string): Remoto {
   return {
     async traer(coleccion, desde): Promise<RespuestaRemota> {
+      // La hora del servidor se pide ANTES de leer, no después. Será el corte de
+      // la próxima vuelta: si se tomara después, lo que otro dispositivo
+      // escribiera en el intervalo entre la lectura y esta consulta tendría una
+      // marca anterior al corte sin haber llegado aquí, y no se bajaría nunca.
+      // Pedida antes, lo escrito durante la lectura, como mucho, vuelve a bajar
+      // en la vuelta siguiente, que es inofensivo porque la fusión es idempotente.
+      const { data: ahora, error: errorHora } = await cliente.rpc('ahora_servidor')
+      if (errorHora) throw new Error(errorHora.message)
+
       let consulta = cliente.from(TABLA).select('*').eq('coleccion', coleccion)
       if (desde) consulta = consulta.gt('servidor_en', desde)
       const { data, error } = await consulta
       if (error) throw new Error(error.message)
-
-      const { data: ahora, error: errorHora } = await cliente.rpc('ahora_servidor')
-      if (errorHora) throw new Error(errorHora.message)
 
       return {
         registros: (data as Fila[]).map(aRegistro),

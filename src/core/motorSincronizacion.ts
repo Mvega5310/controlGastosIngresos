@@ -184,3 +184,43 @@ export async function sincronizarTodo(
 
   return { porColeccion, cortes, pendientes, enviados, recibidos, novedades, fallos }
 }
+
+/**
+ * Lo que hay que dejar guardado cuando una sincronización termina, teniendo en
+ * cuenta lo que se escribió mientras estaba en marcha.
+ *
+ * Una sincronización lee las colecciones al empezar y habla con el servidor,
+ * que tarda. Si en ese rato alguien guarda algo, escribir al final el resultado
+ * tal cual pisaría ese cambio: el registro nuevo desaparecería y su marca de
+ * pendiente también. Aquí se parte de lo que hay guardado **ahora**, no de lo
+ * que había al empezar:
+ *
+ * - Los registros se fusionan con el resultado: gana la versión más reciente,
+ *   así que lo escrito durante la vuelta se conserva y lo llegado del servidor
+ *   también.
+ * - Siguen pendientes los que falló subir, los escritos durante la vuelta y los
+ *   que ya estaban pendientes pero se modificaron de nuevo después de leerlos
+ *   (se subió la versión vieja y la nueva aún no).
+ *
+ * Pura y sin esperas: quien la usa debe leer, llamarla y escribir sin ceder el
+ * control entre medias, para que nada pueda colarse.
+ */
+export function reconciliarTrasSync<T extends Registro>(
+  alEmpezar: { locales: T[]; pendientes: string[] },
+  ahora: { locales: T[]; pendientes: string[] },
+  resultado: { registros: T[]; pendientes: string[] }
+): { registros: T[]; pendientes: string[] } {
+  const marcas = (filas: T[]) => new Map(filas.map(r => [r.id, r.actualizadoEn || '']))
+  const antes = marcas(alEmpezar.locales)
+  const despues = marcas(ahora.locales)
+  const yaEstaban = new Set(alEmpezar.pendientes)
+
+  const escritosDespues = ahora.pendientes.filter(
+    id => !yaEstaban.has(id) || antes.get(id) !== despues.get(id)
+  )
+
+  return {
+    registros: fusionar(ahora.locales, resultado.registros),
+    pendientes: [...new Set([...resultado.pendientes, ...escritosDespues])]
+  }
+}

@@ -3,6 +3,7 @@ import {
   MARCA_DE_ANTES,
   Remoto,
   adoptarLosDeAntes,
+  reconciliarTrasSync,
   sincronizarColeccion,
   sincronizarTodo
 } from './motorSincronizacion'
@@ -423,5 +424,138 @@ describe('novedades', () => {
       { cortes: {}, pendientes: {} }
     )
     expect(r.novedades).toBe(2)
+  })
+})
+
+describe('reconciliarTrasSync: lo escrito mientras la sincronización estaba en marcha', () => {
+  const T1 = '2026-11-12T10:00:00.000Z'
+  const T2 = '2026-11-12T10:00:05.000Z'
+  const T3 = '2026-11-12T10:00:09.000Z'
+
+  /** Una vuelta normal: no había nada pendiente que se escribiera durante ella. */
+  it('si no se escribió nada, deja el resultado tal cual', () => {
+    const a = fila('a', 'uno', T1)
+    const r = reconciliarTrasSync(
+      { locales: [a], pendientes: ['a'] },
+      { locales: [a], pendientes: ['a'] },
+      { registros: [a], pendientes: [] }
+    )
+    expect(r.registros).toEqual([a])
+    expect(r.pendientes).toEqual([])
+  })
+
+  it('conserva un registro nuevo escrito durante la vuelta, y sigue pendiente', () => {
+    const a = fila('a', 'uno', T1)
+    const b = fila('b', 'nuevo', T2)
+    const r = reconciliarTrasSync(
+      { locales: [a], pendientes: ['a'] },
+      { locales: [a, b], pendientes: ['a', 'b'] },
+      { registros: [a], pendientes: [] }
+    )
+    expect(ids(r.registros)).toEqual(['a', 'b'])
+    expect(r.pendientes).toEqual(['b'])
+  })
+
+  it('conserva la edición hecha durante la vuelta: se subió la versión vieja, la nueva sigue pendiente', () => {
+    const vieja = fila('a', 'viejo', T1)
+    const editada = fila('a', 'editado', T2)
+    const r = reconciliarTrasSync(
+      { locales: [vieja], pendientes: ['a'] },
+      { locales: [editada], pendientes: ['a'] },
+      { registros: [vieja], pendientes: [] }
+    )
+    expect(r.registros).toEqual([editada])
+    expect(r.pendientes).toEqual(['a'])
+  })
+
+  it('una edición de algo que no estaba pendiente también queda pendiente', () => {
+    const vieja = fila('a', 'viejo', T1)
+    const editada = fila('a', 'editado', T2)
+    const r = reconciliarTrasSync(
+      { locales: [vieja], pendientes: [] },
+      { locales: [editada], pendientes: ['a'] },
+      { registros: [vieja], pendientes: [] }
+    )
+    expect(r.registros).toEqual([editada])
+    expect(r.pendientes).toEqual(['a'])
+  })
+
+  it('conserva un borrado hecho durante la vuelta', () => {
+    const viva = fila('a', 'uno', T1)
+    const borrada = fila('a', 'uno', T2, T2)
+    const r = reconciliarTrasSync(
+      { locales: [viva], pendientes: [] },
+      { locales: [borrada], pendientes: ['a'] },
+      { registros: [viva], pendientes: [] }
+    )
+    expect(r.registros).toEqual([borrada])
+    expect(r.pendientes).toEqual(['a'])
+  })
+
+  it('mantiene a la vez lo que llegó del servidor y lo escrito durante la vuelta', () => {
+    const remoto = fila('r', 'del servidor', T1)
+    const local = fila('l', 'escrito aquí', T2)
+    const r = reconciliarTrasSync(
+      { locales: [], pendientes: [] },
+      { locales: [local], pendientes: ['l'] },
+      { registros: [remoto], pendientes: [] }
+    )
+    expect(ids(r.registros)).toEqual(['l', 'r'])
+    expect(r.pendientes).toEqual(['l'])
+  })
+
+  it('si el servidor tiene una versión más reciente que la edición hecha durante la vuelta, gana la del servidor', () => {
+    const local = fila('a', 'editado aquí', T2)
+    const remota = fila('a', 'editado allí', T3)
+    const r = reconciliarTrasSync(
+      { locales: [fila('a', 'viejo', T1)], pendientes: [] },
+      { locales: [local], pendientes: ['a'] },
+      { registros: [remota], pendientes: [] }
+    )
+    expect(r.registros).toEqual([remota])
+  })
+
+  it('lo que ya estaba pendiente y no se tocó deja de estarlo', () => {
+    const a = fila('a', 'uno', T1)
+    const b = fila('b', 'dos', T1)
+    const r = reconciliarTrasSync(
+      { locales: [a, b], pendientes: ['a', 'b'] },
+      { locales: [a, b], pendientes: ['a', 'b'] },
+      { registros: [a, b], pendientes: [] }
+    )
+    expect(r.pendientes).toEqual([])
+  })
+
+  it('una colección que falló conserva sus pendientes y suma los nuevos', () => {
+    const a = fila('a', 'uno', T1)
+    const b = fila('b', 'nuevo', T2)
+    const r = reconciliarTrasSync(
+      { locales: [a], pendientes: ['a'] },
+      { locales: [a, b], pendientes: ['a', 'b'] },
+      { registros: [a], pendientes: ['a'] }
+    )
+    expect(r.pendientes.sort()).toEqual(['a', 'b'])
+  })
+
+  it('un registro de antes (sin marca) que la vuelta adoptó con la marca más antigua no queda pendiente', () => {
+    const sinMarca = { id: 'a', nombre: 'de antes' } as Fila
+    const adoptado = { ...sinMarca, actualizadoEn: MARCA_DE_ANTES }
+    const r = reconciliarTrasSync(
+      { locales: [sinMarca], pendientes: [] },
+      { locales: [sinMarca], pendientes: [] },
+      { registros: [adoptado], pendientes: [] }
+    )
+    expect(r.registros).toEqual([adoptado])
+    expect(r.pendientes).toEqual([])
+  })
+
+  it('no modifica lo que recibe', () => {
+    const a = fila('a', 'uno', T1)
+    const alEmpezar = { locales: [a], pendientes: ['a'] }
+    const ahora = { locales: [a, fila('b', 'dos', T2)], pendientes: ['a', 'b'] }
+    const resultado = { registros: [a], pendientes: [] as string[] }
+    const copia = JSON.stringify([alEmpezar, ahora, resultado])
+    reconciliarTrasSync(alEmpezar, ahora, resultado)
+    expect(JSON.stringify([alEmpezar, ahora, resultado])).toBe(copia)
   })
 })
