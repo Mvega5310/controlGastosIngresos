@@ -10,7 +10,7 @@ autorizado por separado.
 | ------------------- | ------------------------------------------------ | ----------------------------------------------------- |
 | Proyecto de Railway | `fincontrol`                                     | `fincontrol-staging`                                  |
 | Servicio            | `fincontrol-web`                                 | `fincontrol-staging-web`                              |
-| Rama que despliega  | `produccion`                                     | `feat/redisenio-movil`                                |
+| Rama que despliega  | `produccion`                                     | `feat/espacio-empresa`                                |
 | Dirección           | https://fincontrol-web-production.up.railway.app | https://fincontrol-staging-web-staging.up.railway.app |
 | Supabase            | **sí**: datos reales                             | **no**: modo local, no puede tocar datos reales       |
 | `ENTORNO`           | sin definir                                      | `staging`                                             |
@@ -49,9 +49,9 @@ Nunca reutilizar el de producción.
 
 1. **Producción solo cambia moviendo `produccion`**, y solo con una autorización
    explícita y aparte. Es el único acto que despliega a producción.
-2. El trabajo vive en `feat/redisenio-movil`. Subir ahí despliega solo el staging.
+2. El trabajo vive en `feat/espacio-empresa` (desde el 19 de noviembre de 2026; antes, `feat/redisenio-movil`). Subir ahí despliega solo el staging.
 3. `claude/quirky-mayer-3caadd` ya no está conectada a ningún servicio: producción
-   sigue `produccion` y el staging `feat/redisenio-movil` (comprobado en la
+   sigue `produccion` y el staging `feat/espacio-empresa` (comprobado en la
    configuración de ambos, no empujando a ella). Aun así, hasta que se vea en un
    despliegue real, conviene no usarla para probar eso.
 4. Antes de promover: la prueba en dispositivos reales
@@ -62,7 +62,7 @@ Nunca reutilizar el de producción.
 
 ## Cómo se lanza a producción (cuando se autorice)
 
-1. Revisar `git log produccion..feat/redisenio-movil` y la prueba en dispositivos.
+1. Revisar `git log produccion..feat/espacio-empresa` y la prueba en dispositivos.
 2. Autorización explícita y por separado.
 3. Mover `produccion` al commit aprobado:
    `git push origin <commit>:produccion`. Si la rama ha avanzado, el push
