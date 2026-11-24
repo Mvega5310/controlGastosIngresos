@@ -9,9 +9,9 @@
  * Módulo puro: sin navegador ni servidor.
  */
 
-export type TipoOrigen = 'nomina' | 'compra' | 'mercadeo' | 'tramite'
+export type TipoOrigen = 'nomina' | 'compra' | 'mercadeo' | 'tramite' | 'suscripcion'
 
-/** 'compra:abc' o 'nomina:abc:2026-11'. */
+/** 'compra:abc', 'nomina:abc:2026-11' o 'suscripcion:abc:2026-11'. */
 export const origenDe = (tipo: TipoOrigen, ...partes: string[]) => [tipo, ...partes].join(':')
 
 type ConOrigen = { origen?: string }

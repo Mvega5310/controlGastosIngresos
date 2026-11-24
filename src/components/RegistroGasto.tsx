@@ -15,6 +15,7 @@ export function RegistroGasto({
   abierto,
   titulo,
   valorInicial,
+  cuentaInicial,
   cuentas,
   onGuardar,
   onCerrar
@@ -23,6 +24,8 @@ export function RegistroGasto({
   titulo: string
   /** En centavos. */
   valorInicial: number
+  /** Cuenta que sale marcada: la de la suscripción, por ejemplo. Si no existe, la primera. */
+  cuentaInicial?: string
   cuentas: Account[]
   onGuardar: (datos: DatosDeGasto) => void
   onCerrar: () => void
@@ -47,9 +50,13 @@ export function RegistroGasto({
     [clave]
   )
   const valores = useMemo(
-    () => ({ valor: valorInicial, fecha: new Date().toISOString().slice(0, 10), cuenta: nombres[0] ?? '' }),
+    () => ({
+      valor: valorInicial,
+      fecha: new Date().toISOString().slice(0, 10),
+      cuenta: cuentaInicial && nombres.includes(cuentaInicial) ? cuentaInicial : (nombres[0] ?? '')
+    }),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- las cuentas se siguen por su clave
-    [valorInicial, clave, abierto]
+    [valorInicial, cuentaInicial, clave, abierto]
   )
   return (
     <FormModal

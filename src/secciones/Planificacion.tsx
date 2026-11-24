@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useEdicion } from '../lib/useEdicion'
 import { Plus, RefreshCw, CreditCard, Target, Wallet, ArrowUpRight, CalendarClock } from 'lucide-react'
 import { Acciones } from '../components/Acciones'
@@ -14,7 +15,10 @@ import {
   porcentaje,
   diasHasta
 } from '../core/planificacion'
-import { Period, periodLabel } from '../core/finanzas'
+import { Period, newId, periodLabel } from '../core/finanzas'
+import { cobroMasCercano, gastoDeSuscripcion, proximoCobroPagado } from '../core/suscripciones'
+import { hayGastoDe } from '../core/origenes'
+import { RegistroGasto } from '../components/RegistroGasto'
 import FormModal, { Campo } from '../components/FormModal'
 import { Coleccion } from '../lib/useDatos'
 import StatCard from '../components/StatCard'
@@ -196,8 +200,44 @@ const camposSuscripcion: Campo[] = [
 const camposSuscripcionCon = (cuentas: string[]): Campo[] =>
   camposSuscripcion.map(c => (c.nombre === 'cuenta' ? { ...c, opciones: cuentas } : c))
 
-export function Suscripciones({ col, cuentas }: { col: Coleccion<Suscripcion>; cuentas: Account[] }) {
+export function Suscripciones({
+  col,
+  cuentas,
+  movimientos,
+  agregarMovimientos
+}: {
+  col: Coleccion<Suscripcion>
+  cuentas: Account[]
+  movimientos: Movement[]
+  agregarMovimientos: (m: Movement[]) => void
+}) {
   const ed = useEdicion<Suscripcion>()
+  const [registrando, setRegistrando] = useState<Suscripcion | null>(null)
+  const [aviso, setAviso] = useState<{ texto: string; tipo: 'bueno' | 'info' } | null>(null)
+
+  /**
+   * Pagar una suscripción es un gasto: se crea con lo que se pagó de verdad y
+   * se marca el cobro como pagado. Si ya hay un pago de ese mismo cobro no se
+   * duplica: quien pagó dos veces lo registra a mano como movimiento.
+   */
+  const registrar = (datos: { fecha: string; valor: number; cuenta: string }) => {
+    if (!registrando) return
+    const gasto = gastoDeSuscripcion(registrando, { id: newId(), ...datos })
+    if (hayGastoDe(movimientos, gasto.origen!)) {
+      const cobro = cobroMasCercano(registrando.diaCobro, datos.fecha)
+      setAviso({
+        texto: `Ya registraste el pago de «${registrando.nombre}» del cobro del ${fechaCorta(cobro.fecha)}, así que no lo dupliqué. Si pagaste dos veces, anótalo como un movimiento.`,
+        tipo: 'info'
+      })
+    } else {
+      agregarMovimientos([gasto])
+      setAviso({
+        texto: `Pago de «${registrando.nombre}» registrado como gasto de ${registrando.categoria}.`,
+        tipo: 'bueno'
+      })
+    }
+    setRegistrando(null)
+  }
   const filas = calcularSuscripciones(col.items)
   const mensual = gastoMensualSuscripciones(col.items)
   const activas = col.items.filter(s => s.activa).length
@@ -226,10 +266,11 @@ export function Suscripciones({ col, cuentas }: { col: Coleccion<Suscripcion>; c
           note={`de ${col.items.length} registradas`}
         />
       </div>
+      {aviso && <p className={`aviso-bloque ${aviso.tipo}`}>{aviso.texto}</p>}
       <section className="panel full-panel">
         <Cabecera
           titulo="Cobros programados"
-          nota="Ordenados por el próximo cobro"
+          nota="Ordenados por el próximo cobro. Al pagar, pulsa «Registrar pago» para que cuente como gasto."
           accion="Nueva suscripción"
           onAccion={ed.nuevo}
         />
@@ -241,35 +282,60 @@ export function Suscripciones({ col, cuentas }: { col: Coleccion<Suscripcion>; c
           />
         ) : (
           <div className="simple-list">
-            {filas.map(s => (
-              <div className={`simple-row ${s.activa ? '' : 'inactiva'}`} key={s.id}>
-                <div className="simple-bullet">{s.nombre.slice(0, 1).toUpperCase()}</div>
-                <div>
-                  <b>{s.nombre}</b>
-                  <small>
-                    {s.categoria} · {s.cuenta} · cobra el {s.diaCobro}
-                  </small>
+            {filas.map(s => {
+              const pagada = s.activa && proximoCobroPagado(s, movimientos)
+              return (
+                <div className={`simple-row ${s.activa ? '' : 'inactiva'}`} key={s.id}>
+                  <div className="simple-bullet">{s.nombre.slice(0, 1).toUpperCase()}</div>
+                  <div>
+                    <b>{s.nombre}</b>
+                    <small>
+                      {s.categoria} · {s.cuenta} · cobra el {s.diaCobro}
+                    </small>
+                  </div>
+                  <strong>{money(s.monto)}</strong>
+                  <span className={`status-pill ${s.activa && !pagada && s.dias <= 3 ? 'warn' : ''}`}>
+                    {!s.activa
+                      ? 'Pausada'
+                      : pagada
+                        ? `Pagada · cobro del ${fechaCorta(s.proximoCobro)}`
+                        : `${fechaCorta(s.proximoCobro)} · ${enDias(s.dias)}`}
+                  </span>
+                  <div className="row-actions">
+                    {s.activa && !pagada && (
+                      <button
+                        className="mini-btn"
+                        disabled={!cuentas.length}
+                        onClick={() => setRegistrando(s)}
+                      >
+                        Registrar pago
+                      </button>
+                    )}
+                    <button className="mini-btn" onClick={() => col.actualizar(s.id, { activa: !s.activa })}>
+                      {s.activa ? 'Pausar' : 'Activar'}
+                    </button>
+                    <Acciones
+                      onEditar={() => ed.editar(s)}
+                      onBorrar={() => col.eliminar(s.id)}
+                      nombre={s.nombre}
+                      que="suscripción"
+                    />
+                  </div>
                 </div>
-                <strong>{money(s.monto)}</strong>
-                <span className={`status-pill ${s.dias <= 3 ? 'warn' : ''}`}>
-                  {s.activa ? `${fechaCorta(s.proximoCobro)} · ${enDias(s.dias)}` : 'Pausada'}
-                </span>
-                <div className="row-actions">
-                  <button className="mini-btn" onClick={() => col.actualizar(s.id, { activa: !s.activa })}>
-                    {s.activa ? 'Pausar' : 'Activar'}
-                  </button>
-                  <Acciones
-                    onEditar={() => ed.editar(s)}
-                    onBorrar={() => col.eliminar(s.id)}
-                    nombre={s.nombre}
-                    que="suscripción"
-                  />
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </section>
+      <RegistroGasto
+        abierto={!!registrando}
+        titulo={registrando ? `Registrar el pago de «${registrando.nombre}»` : ''}
+        valorInicial={registrando?.monto ?? 0}
+        cuentaInicial={registrando?.cuenta}
+        cuentas={cuentas}
+        onGuardar={registrar}
+        onCerrar={() => setRegistrando(null)}
+      />
       <FormModal
         abierto={ed.abierto}
         eyebrow="SUSCRIPCIÓN"

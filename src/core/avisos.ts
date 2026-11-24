@@ -18,6 +18,7 @@ import {
   calcularVehiculos,
   diasHasta
 } from './planificacion'
+import { cobroPagado } from './suscripciones'
 
 /** `vencido` ya pasó, `pronto` está al caer, `atencion` conviene mirarlo. */
 export type NivelAviso = 'vencido' | 'pronto' | 'atencion'
@@ -60,6 +61,8 @@ export function calcularAvisos(entrada: EntradaAvisos, hoy = todayISO()): Aviso[
   // Suscripciones activas que cobran pronto.
   for (const s of calcularSuscripciones(entrada.suscripciones, hoy)) {
     if (!s.activa || s.dias > DIAS_PAGO) continue
+    // Si ya se registró el pago de este cobro, no hay nada que avisar.
+    if (cobroPagado(entrada.movimientos, s.id, s.proximoCobro.slice(0, 7))) continue
     avisos.push({
       // La fecha forma parte del identificador: el cobro del mes que viene es
       // otro aviso, no el mismo. Sin ella, dar por visto el de noviembre
@@ -150,12 +153,14 @@ export function proximosPagos(
   deudas: Deuda[],
   hoy = todayISO(),
   dentroDeDias = 45,
-  cuantos = 4
+  cuantos = 4,
+  movimientos: { origen?: string }[] = []
 ): PagoProximo[] {
   const pagos: PagoProximo[] = []
 
   for (const s of calcularSuscripciones(suscripciones, hoy)) {
     if (!s.activa || s.dias > dentroDeDias) continue
+    if (cobroPagado(movimientos, s.id, s.proximoCobro.slice(0, 7))) continue
     pagos.push({
       id: `sus-${s.id}`,
       nombre: s.nombre,

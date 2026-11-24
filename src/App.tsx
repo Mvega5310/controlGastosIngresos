@@ -325,8 +325,19 @@ function App() {
   }
 
   const pagos = useMemo(
-    () => (enEmpresa ? [] : proximosPagos(datos.suscripciones.items, datos.deudas.items)),
-    [enEmpresa, datos.suscripciones.items, datos.deudas.items]
+    () =>
+      enEmpresa
+        ? []
+        : // Los tres `undefined` son los valores por defecto de hoy, plazo y cantidad.
+          proximosPagos(
+            datos.suscripciones.items,
+            datos.deudas.items,
+            undefined,
+            undefined,
+            undefined,
+            movements
+          ),
+    [enEmpresa, datos.suscripciones.items, datos.deudas.items, movements]
   )
 
   const go = (s: string) => setActive(s)
@@ -505,7 +516,12 @@ function App() {
           ) : active === 'Calendario' ? (
             <Calendario movements={movements} period={period} setPeriod={setPeriod} />
           ) : active === 'Suscripciones' ? (
-            <Suscripciones col={datos.suscripciones} cuentas={cuentas} />
+            <Suscripciones
+              col={datos.suscripciones}
+              cuentas={cuentas}
+              movimientos={movements}
+              agregarMovimientos={movs.agregarVarios}
+            />
           ) : active === 'Deudas' ? (
             <Deudas col={datos.deudas} />
           ) : active === 'Metas de ahorro' ? (

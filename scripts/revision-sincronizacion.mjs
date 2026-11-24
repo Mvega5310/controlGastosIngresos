@@ -21,7 +21,9 @@
  *   8. los avisos de la empresa salen en la campana, se cuentan una vez y no
  *      se mezclan con los personales;
  *   9. lo guardado sube solo a los pocos segundos, sin pisar lo escrito mientras
- *      otra subida estaba en marcha, al ocultar la pestaña y al volver la conexión.
+ *      otra subida estaba en marcha, al ocultar la pestaña y al volver la conexión;
+ *  10. registrar el pago de una suscripción crea el gasto, apaga el aviso y se
+ *      ve pagado en el otro dispositivo.
  *
  * El caso 2 era un fallo real: esos registros no se subían nunca.
  *
@@ -876,6 +878,86 @@ filas.clear()
     /Uno/.test(enB) && /Dos/.test(enB) && /Tres/.test(enB) && /Cuatro/.test(enB),
     'el otro dispositivo recibe los cuatro movimientos'
   )
+  await A.ctx.close()
+  await B.ctx.close()
+}
+
+// =============================================================== ESCENARIO 9
+console.log(
+  '\n== 9. Suscripciones: registrar el pago crea el gasto, apaga el aviso y se ve pagado en el otro dispositivo =='
+)
+filas.clear()
+{
+  const insignia = p =>
+    p.evaluate(() => document.querySelector('.icon-button.notification i')?.textContent?.trim() ?? '')
+  const texto = p => p.evaluate(() => document.body.textContent)
+  // Que cobre mañana (o el día 1 si mañana pasa del 28): así el cobro cae dentro de la semana del aviso.
+  const manana = new Date().getDate() + 1
+  const diaCobro = manana > 28 ? 1 : manana
+
+  const A = await dispositivo('A-suscripcion', { conSesion: true })
+  await ir(A.p, 'Cuentas')
+  await A.p.waitForTimeout(250)
+  await A.p.evaluate(() =>
+    [...document.querySelectorAll('button')]
+      .find(b => /Agregar cuenta|Nueva cuenta|Crear/.test(b.textContent))
+      ?.click()
+  )
+  await A.p.waitForSelector('.modal form')
+  await A.p.fill('#campo-name', 'Tarjeta')
+  await A.p.fill('#campo-bank', 'Banco')
+  await A.p.click('.modal form .btn-primary')
+  await A.p.waitForTimeout(300)
+
+  await ir(A.p, 'Suscripciones')
+  await A.p.waitForTimeout(300)
+  await A.p.click('button:has-text("Nueva suscripción")')
+  await A.p.waitForSelector('.modal form')
+  await A.p.fill('#campo-nombre', 'Netflix')
+  await A.p.fill('#campo-monto', '32900')
+  await A.p.fill('#campo-diaCobro', String(diaCobro))
+  await A.p.selectOption('#campo-categoria', 'Entretenimiento')
+  await A.p.selectOption('#campo-cuenta', 'Tarjeta')
+  await A.p.click('.modal form .btn-primary')
+  await A.p.waitForTimeout(400)
+  ok((await insignia(A.p)) === '1', 'una suscripción que cobra pronto pone un 1 en la campana')
+  const botones = p => p.locator('button:has-text("Registrar pago")').count()
+  ok((await botones(A.p)) === 1, 'y ofrece el botón «Registrar pago»')
+
+  await A.p.click('button:has-text("Registrar pago")')
+  await A.p.waitForSelector('.modal form')
+  ok(
+    (await A.p.inputValue('#campo-valor')).replace(/\D/g, '') === '32900',
+    'el pago propone el importe de la suscripción'
+  )
+  ok((await A.p.inputValue('#campo-cuenta')) === 'Tarjeta', 'y la cuenta de la suscripción')
+  await A.p.click('.modal form .btn-primary')
+  await A.p.waitForTimeout(400)
+  let t = await texto(A.p)
+  ok(/Pagada/.test(t) && (await botones(A.p)) === 0, 'queda como pagada y ya no ofrece registrar el pago')
+  ok(/registrado como gasto de Entretenimiento/.test(t), 'dice en qué categoría quedó el gasto')
+  ok((await insignia(A.p)) === '', 'el aviso de cobro desaparece de la campana')
+
+  await ir(A.p, 'Movimientos')
+  await A.p.waitForTimeout(300)
+  ok(/Suscripción · Netflix/.test(await texto(A.p)), 'el pago aparece como gasto en los movimientos')
+
+  await sincronizar(A.p)
+  ok(
+    enServidor('movimientos') === 1 && enServidor('suscripciones') === 1,
+    'el gasto y la suscripción suben a la nube'
+  )
+
+  const B = await dispositivo('B-suscripcion', { conSesion: true })
+  await B.p.waitForTimeout(1500)
+  await ir(B.p, 'Suscripciones')
+  await B.p.waitForTimeout(400)
+  t = await texto(B.p)
+  ok(
+    /Pagada/.test(t) && (await botones(B.p)) === 0,
+    'el otro dispositivo la ve pagada y no ofrece registrarla de nuevo'
+  )
+  ok((await insignia(B.p)) === '', 'y tampoco avisa del cobro')
   await A.ctx.close()
   await B.ctx.close()
 }
